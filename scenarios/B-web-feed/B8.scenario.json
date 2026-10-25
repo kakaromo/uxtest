@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] B8 Gmail 받은편지함 스크롤",
+  "description": "[B8 · P2] 받은편지함을 30번 내리고 다시 올린다. 메일을 열면 읽음 표시가 계정에 남으므로 열지 않는다. SQLite 위주 작은 I/O 를 본다. 준비: Gmail 첫 실행 안내 화면 완료",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.gm",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.google.android.gm",
+        "clear_mode": "force_stop",
+        "wait_seconds": "6",
+        "label": "Gmail 실행"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "scroll",
+      "params": {
+        "direction": "down",
+        "count": "30",
+        "pause": "1.5",
+        "duration": "300",
+        "label": "받은편지함 스크롤"
+      }
+    },
+    {
+      "type": "scroll",
+      "params": {
+        "direction": "up",
+        "count": "30",
+        "pause": "0.8",
+        "duration": "300",
+        "label": "위로 스크롤"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.gm",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.google.android.gm"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] F5 캘린더 월 이동 ×12",
+  "description": "[F5 · P2] 월 보기에서 왼쪽 스와이프로 12달을 넘긴다. 일정 DB read 와 작은 write. dry-run 확인: 기본 보기가 월 보기인지",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.calendar",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.google.android.calendar",
+        "clear_mode": "force_stop",
+        "wait_seconds": "5",
+        "label": "캘린더 실행"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "for i in $(seq 12); do input swipe 1100 1600 200 1600 200; sleep 2; done; echo 12",
+        "label": "다음 달로 12번"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.calendar",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.google.android.calendar"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

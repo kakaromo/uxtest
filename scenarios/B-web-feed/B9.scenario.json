@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] B9 Play 스토어 둘러보기",
+  "description": "[B9 · P2] 검색 기록을 남기지 않으려고 검색 대신 홈 추천과 인기 차트를 스크롤 (설치 안 함). 아이콘·배너 캐시 write 를 본다. dry-run 확인: 인기 차트 탭 위치(스크롤 전 화면)",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.android.vending",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "rm -rf /data/data/com.android.vending/cache/*; echo ok",
+        "label": "Play 스토어 캐시 비우기"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.android.vending",
+        "clear_mode": "force_stop",
+        "wait_seconds": "6",
+        "label": "Play 스토어 실행"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "scroll",
+      "params": {
+        "direction": "down",
+        "count": "25",
+        "pause": "1.5",
+        "duration": "300",
+        "label": "홈 추천 스크롤"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_content_desc": "인기 차트",
+        "x": "706",
+        "y": "1540",
+        "label": "인기 차트 탭"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "4",
+        "label": "차트 로딩"
+      }
+    },
+    {
+      "type": "scroll",
+      "params": {
+        "direction": "down",
+        "count": "15",
+        "pause": "1.5",
+        "duration": "300",
+        "label": "차트 스크롤"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.android.vending",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.android.vending"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

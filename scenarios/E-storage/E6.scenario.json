@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] E6 1GB 파일 삭제",
+  "description": "[E6 · P2] 1GB 파일을 측정 밖에서 만들고 지우는 것만 잰다. UNMAP(discard)이 바로 나가는지, E4 처럼 안 나가는지 확인.",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dd if=/dev/urandom of=/sdcard/ux_big.bin bs=1M count=1024 2>&1 | tail -1; sync",
+        "label": "1GB 파일 만들기"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+        "label": "페이지 캐시 비우기"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "rm -f /sdcard/ux_big.bin; sync; echo removed",
+        "label": "1GB 파일 지우기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "10",
+        "label": "discard 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

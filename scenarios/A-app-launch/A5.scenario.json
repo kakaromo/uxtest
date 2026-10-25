@@ -1,0 +1,202 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] A5 최근 앱 화면 전환 ×6",
+  "description": "[A5 · P2] 6개 앱을 띄워 둔 뒤 최근 앱 화면(KEYCODE_APP_SWITCH)에서 이전 앱 카드를 골라 여는 것을 6번. 메모리에 남은 앱으로의 전환이라 read 가 짧은 burst 로만 나와야 한다. dry-run 확인: 최근 앱 카드 스와이프 방향·좌표",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.android.chrome",
+        "clear_mode": "force_stop",
+        "wait_seconds": "4",
+        "label": "Chrome 띄우기"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "clear_mode": "force_stop",
+        "wait_seconds": "4",
+        "label": "YouTube 띄우기"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.android.settings",
+        "clear_mode": "force_stop",
+        "wait_seconds": "4",
+        "label": "설정 띄우기"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.oneplus.gallery",
+        "clear_mode": "force_stop",
+        "wait_seconds": "4",
+        "label": "갤러리 띄우기"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.google.android.apps.maps",
+        "clear_mode": "force_stop",
+        "wait_seconds": "4",
+        "label": "지도 띄우기"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "sleep 1; dumpsys window | grep mCurrentFocus | grep -q GrantPermissionsActivity && { input keyevent 4; echo perm-closed; } || echo no-perm",
+        "label": "권한 창 있으면 닫기 (선택 안 함)"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.google.android.calendar",
+        "clear_mode": "force_stop",
+        "wait_seconds": "4",
+        "label": "캘린더 띄우기"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "key",
+      "params": {
+        "keycode": "187",
+        "label": "최근 앱 화면"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "1",
+        "label": "대기 1초"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input swipe 300 1400 1000 1400 200",
+        "label": "이전 앱 카드로"
+      }
+    },
+    {
+      "type": "tap",
+      "params": {
+        "x": "636",
+        "y": "1400",
+        "label": "가운데 카드 열기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "2",
+        "label": "앱 표시 대기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.android.chrome",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.android.settings",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.oneplus.gallery",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.apps.maps",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.calendar",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [
+    {
+      "startStep": 8,
+      "endStep": 12,
+      "count": 6
+    }
+  ],
+  "requirements": {
+    "packages": [
+      "com.android.chrome",
+      "com.google.android.youtube",
+      "com.android.settings",
+      "com.oneplus.gallery",
+      "com.google.android.apps.maps",
+      "com.google.android.calendar"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

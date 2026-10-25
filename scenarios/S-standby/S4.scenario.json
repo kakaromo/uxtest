@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] S4 화면 켜진 홈 대기 10분",
+  "description": "[S4 · P3] 앱 4개를 띄워 둔 뒤 홈 화면을 켜 둔 채(svc power stayon true) 아무 입력 없이 10분. S1 과 비교할 화면 켜짐 기준선. 끝나면 stayon 을 끈다. 준비: 무선 adb 연결 (USB 분리, 충전 없음), UX_DEVICE=<ip:port> UX_SERIAL=<ip:port>",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input keyevent KEYCODE_WAKEUP; sleep 1; wm dismiss-keyguard; sleep 1; dumpsys window | grep -c isKeyguardShowing=true || true",
+        "label": "화면 켜기·잠금 해제"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "clear_mode": "force_stop",
+        "wait_seconds": "5",
+        "label": "YouTube 띄워 두기"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.android.chrome",
+        "clear_mode": "force_stop",
+        "wait_seconds": "5",
+        "label": "Chrome 띄워 두기"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.google.android.gm",
+        "clear_mode": "force_stop",
+        "wait_seconds": "5",
+        "label": "Gmail 띄워 두기"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.google.android.apps.maps",
+        "clear_mode": "force_stop",
+        "wait_seconds": "5",
+        "label": "지도 띄워 두기"
+      }
+    },
+    {
+      "type": "key",
+      "params": {
+        "keycode": "3",
+        "label": "홈"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "5",
+        "label": "대기 5초"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "svc power stayon true; echo stayon",
+        "label": "화면 켜짐 유지"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
+        "label": "대기 상태·배터리 기록"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "600",
+        "label": "홈 화면 대기 10분"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
+        "label": "대기 상태·배터리 기록"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "svc power stayon false; echo stayoff",
+        "label": "화면 켜짐 유지 해제"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.android.chrome",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.gm",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.apps.maps",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.google.android.youtube",
+      "com.android.chrome",
+      "com.google.android.gm",
+      "com.google.android.apps.maps"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] A1 Chrome cold start ×5",
+  "description": "[A1 · P1] 페이지 캐시를 비우고 Chrome 을 강제 종료 후 실행하는 것을 5번 반복. 저장장치 기준 cold start(APK·odex·so read). 준비: Chrome 처음 실행 화면 완료",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.android.chrome",
+        "label": "Chrome 종료"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+        "label": "페이지 캐시 비우기"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.android.chrome",
+        "clear_mode": "force_stop",
+        "wait_seconds": "5",
+        "label": "Chrome cold start"
+      }
+    },
+    {
+      "type": "key",
+      "params": {
+        "keycode": "3",
+        "label": "홈"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.android.chrome",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [
+    {
+      "startStep": 2,
+      "endStep": 4,
+      "count": 5
+    }
+  ],
+  "requirements": {
+    "packages": [
+      "com.android.chrome"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

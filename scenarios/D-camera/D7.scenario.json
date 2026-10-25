@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] D7 전면 카메라 사진 5장",
+  "description": "[D7 · P2] 전면 카메라로 바꿔 2초 간격 5장. D1(후면) 대비 장당 write 양을 본다. 측정 뒤 후면으로 되돌리고 지운다. dry-run 확인: 전환 뒤 버튼 설명이 'Rear Camera' 인지",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "touch /data/local/tmp/ux_mark",
+        "label": "새 파일 기준 시각 기록"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "am start -W -a android.media.action.STILL_IMAGE_CAMERA",
+        "label": "카메라(사진) 실행"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "카메라 준비"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_resource_id": "com.oplus.camera:id/switch_camera_button",
+        "label": "카메라 전환"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "전면 전환"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input tap 635 2420",
+        "label": "워밍업 1장"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "4",
+        "label": "대기 4초"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "for i in $(seq 5); do input tap 635 2420; sleep 2; done; echo 5",
+        "label": "사진 5장 촬영"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "5",
+        "label": "저장 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_content_desc": "Rear Camera",
+        "label": "후면으로 되돌리기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "2",
+        "label": "대기 2초"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "echo CAPTURED files=$(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark | wc -l) kb=$(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark -exec du -k {} + | awk '{s+=$1} END {print s+0}'); for f in $(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark); do content delete --uri content://media/external/file --where \"_data='$f'\"; rm -f \"$f\"; done; find /storage/emulated/0/DCIM/Camera/Cshot -mindepth 1 -type d -empty -delete 2>/dev/null; echo cleaned",
+        "label": "촬영 파일 정리"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.oplus.camera",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.oplus.camera"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

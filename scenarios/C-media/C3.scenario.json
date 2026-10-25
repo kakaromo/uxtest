@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] C3 로컬 동영상 2분",
+  "description": "[C3 · P1] setup.sh 가 만든 2분 촬영 영상(Movies/uxtest_fixture.mp4)을 캐시를 비운 뒤 시스템 동영상 앱(com.coloros.video)으로 재생 — 앱을 지정하지 않으면 앱 선택 창에서 멈춘다. 스트리밍(C1)과 비교용. 준비: setup.sh 의 fixture 영상",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+        "label": "페이지 캐시 비우기"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "id=$(content query --uri content://media/external/video/media --projection _id --where \"_data='/storage/emulated/0/Movies/uxtest_fixture.mp4'\" | sed -n 's/.*_id=\\([0-9]*\\).*/\\1/p' | head -1); am start -a android.intent.action.VIEW -t video/mp4 -d content://media/external/video/media/$id -p com.coloros.video",
+        "label": "로컬 영상 열기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "120",
+        "label": "로컬 영상 재생 2분"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "key",
+      "params": {
+        "keycode": "3",
+        "label": "홈"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.oneplus.gallery",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.coloros.video",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.coloros.video"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

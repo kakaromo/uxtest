@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] F1 메모 작성·저장",
+  "description": "[F1 · P2] 새 메모에 긴 글(약 500자)을 입력하고 저장. 작은 SQLite write 와 fsync 를 본다. 측정 후 그 메모를 지운다. 준비: 메모 첫 실행 동의 화면 완료 / dry-run 확인: 저장 뒤 목록에서 메모 찾기",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "settings put secure selected_input_method_subtype -1097284911; ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME >/dev/null; settings get secure selected_input_method_subtype",
+        "label": "키보드 영문(Alphabet)으로"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.oneplus.note",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.oneplus.note",
+        "clear_mode": "force_stop",
+        "wait_seconds": "4",
+        "label": "메모 실행"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_content_desc": "새 메모",
+        "element_match_mode": "contains",
+        "label": "새 메모"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "2",
+        "label": "대기 2초"
+      }
+    },
+    {
+      "type": "text",
+      "params": {
+        "input_text": "UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note ",
+        "submit": "false",
+        "label": "긴 글 입력"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "2",
+        "label": "대기 2초"
+      }
+    },
+    {
+      "type": "key",
+      "params": {
+        "keycode": "4",
+        "label": "키보드 닫기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "1",
+        "label": "대기 1초"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_resource_id": "com.oneplus.note:id/coui_toolbar_back_view",
+        "element_content_desc": "뒤로",
+        "label": "저장하고 목록으로"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "저장 대기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "1",
+        "label": "목록 표시 대기"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input swipe 636 1428 636 1428 800",
+        "label": "방금 쓴 메모 길게 눌러 선택"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "1",
+        "label": "대기 1초"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_resource_id": "com.oneplus.note:id/note_delete",
+        "label": "삭제"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "1",
+        "label": "확인 창 대기"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_resource_id": "android:id/button3",
+        "label": "삭제 확인"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "2",
+        "label": "삭제 반영 대기"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.oneplus.note",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.oneplus.note"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

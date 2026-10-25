@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] C2 Shorts 30회 넘기기",
+  "description": "[C2 · P1] Shorts 를 3초씩 보고 넘기기를 30번.",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "clear_mode": "force_stop",
+        "wait_seconds": "6",
+        "label": "YouTube 실행"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_content_desc": "Shorts",
+        "label": "Shorts 탭"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "4",
+        "label": "첫 Shorts 로딩"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "for i in $(seq 30); do input swipe 636 2000 636 700 200; sleep 3; done; echo 30",
+        "label": "Shorts 30개 넘기기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.google.android.youtube"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

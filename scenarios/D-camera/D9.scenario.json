@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] D9 화면 녹화 1분",
+  "description": "[D9 · P2] screenrecord 로 1분 녹화하면서 설정 화면을 스크롤해 화면을 계속 바꾼다. 카메라 외 영상 생성 write 를 D3 와 비교. 측정 후 지운다.",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.android.settings",
+        "clear_mode": "force_stop",
+        "wait_seconds": "3",
+        "label": "녹화할 화면: 설정"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "screenrecord --time-limit 60 /sdcard/Movies/ux_screenrec.mp4 & sleep 2; for i in $(seq 18); do input swipe 636 2000 636 900 300; sleep 3; done; wait; ls -l /sdcard/Movies/ux_screenrec.mp4",
+        "label": "화면 녹화 1분 (설정 스크롤하며)"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "for f in /sdcard/Movies/ux_screenrec.mp4; do [ -e \"$f\" ] || continue; content delete --uri content://media/external/file --where \"_data='$f'\"; rm -rf \"$f\"; done; echo removed",
+        "label": "녹화 파일 정리"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.android.settings",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.android.settings"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

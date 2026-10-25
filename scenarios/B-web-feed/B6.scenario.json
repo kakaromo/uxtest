@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] B6 지도 이동·확대 10회",
+  "description": "[B6 · P2] 검색 기록을 남기지 않으려고 좌표 인텐트로 서울시청을 열고, 이동 5번·두 번 탭 확대 5번. 지도 타일 캐시 read/write 를 본다. dry-run 확인: 두 번 탭 확대 동작",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.apps.maps",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "rm -rf /data/data/com.google.android.apps.maps/cache/*; echo ok",
+        "label": "지도 캐시 비우기"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "am start -a android.intent.action.VIEW -d \"geo:$(echo 37.5665 126.9780 | tr ' ' '\\054')?z=15\" -p com.google.android.apps.maps",
+        "label": "서울시청 좌표 열기 (검색 없이)"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "8",
+        "label": "지도 로딩"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "sleep 1; dumpsys window | grep mCurrentFocus | grep -q GrantPermissionsActivity && { input keyevent 4; echo perm-closed; } || echo no-perm",
+        "label": "권한 창 있으면 닫기 (선택 안 함)"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "for d in '300 1400 1000 1400' '1000 1400 300 1400' '636 1000 636 1900' '636 1900 636 1000' '200 1400 1100 1400'; do input swipe $d 300; sleep 3; done; echo pan5",
+        "label": "지도 이동 5번"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input tap 636 1400 & sleep 0.12; input tap 636 1400; wait",
+        "label": "확대 1"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "대기 3초"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input tap 636 1400 & sleep 0.12; input tap 636 1400; wait",
+        "label": "확대 2"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "대기 3초"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input tap 500 1200 & sleep 0.12; input tap 500 1200; wait",
+        "label": "확대 3"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "대기 3초"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input tap 800 1600 & sleep 0.12; input tap 800 1600; wait",
+        "label": "확대 4"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "대기 3초"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input tap 636 1400 & sleep 0.12; input tap 636 1400; wait",
+        "label": "확대 5"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "대기 3초"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.apps.maps",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.google.android.apps.maps"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

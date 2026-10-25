@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] D8 사진↔동영상 모드 전환 ×5",
+  "description": "[D8 · P2] 촬영 없이 사진·동영상 모드만 5번 오간다. 카메라 앱 자체의 I/O(설정·모델 파일 read) 기준선. D1~D3 에서 이 값을 빼고 볼 수 있다.",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.oplus.camera",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "am start -W -a android.media.action.STILL_IMAGE_CAMERA",
+        "label": "카메라(사진) 실행"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "카메라 준비"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "am start -W -a android.media.action.VIDEO_CAMERA",
+        "label": "동영상 모드"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "대기 3초"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "am start -W -a android.media.action.STILL_IMAGE_CAMERA",
+        "label": "카메라(사진) 실행"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "대기 3초"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.oplus.camera",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [
+    {
+      "startStep": 4,
+      "endStep": 7,
+      "count": 5
+    }
+  ],
+  "requirements": {
+    "packages": [
+      "com.oplus.camera"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

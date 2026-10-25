@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] B3 YouTube 홈피드 40회",
+  "description": "[B3 · P1] 홈피드를 1.5초 간격으로 40번 스크롤. 썸네일·미리보기 캐시 write 가 이어진다.",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "label": "YouTube 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "rm -rf /data/data/com.google.android.youtube/cache/glide_disk_cache /data/data/com.google.android.youtube/cache/volleyCache /data/data/com.google.android.youtube/cache/image_manager_disk_cache; echo ok",
+        "label": "YouTube 이미지 캐시 비우기"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "clear_mode": "force_stop",
+        "wait_seconds": "6",
+        "label": "YouTube 실행"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "scroll",
+      "params": {
+        "direction": "down",
+        "count": "40",
+        "pause": "1.5",
+        "duration": "300",
+        "label": "홈피드 스크롤 40회"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.google.android.youtube"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

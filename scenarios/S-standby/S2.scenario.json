@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] S2 강제 deep doze 30분",
+  "description": "[S2 · P3] S1 과 같은 상태에서 화면을 끄자마자 deep doze 로 강제 진입(dumpsys deviceidle force-idle deep)시키고 30분. doze 중 정비 구간(maintenance window) I/O 만 남는지 본다. 끝나면 강제 상태를 푼다. 준비: 무선 adb 연결 (USB 분리, 충전 없음), UX_DEVICE=<ip:port> UX_SERIAL=<ip:port>",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input keyevent KEYCODE_WAKEUP; sleep 1; wm dismiss-keyguard; sleep 1; dumpsys window | grep -c isKeyguardShowing=true || true",
+        "label": "화면 켜기·잠금 해제"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "clear_mode": "force_stop",
+        "wait_seconds": "5",
+        "label": "YouTube 띄워 두기"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.android.chrome",
+        "clear_mode": "force_stop",
+        "wait_seconds": "5",
+        "label": "Chrome 띄워 두기"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.google.android.gm",
+        "clear_mode": "force_stop",
+        "wait_seconds": "5",
+        "label": "Gmail 띄워 두기"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.google.android.apps.maps",
+        "clear_mode": "force_stop",
+        "wait_seconds": "5",
+        "label": "지도 띄워 두기"
+      }
+    },
+    {
+      "type": "key",
+      "params": {
+        "keycode": "3",
+        "label": "홈"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "5",
+        "label": "대기 5초"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input keyevent KEYCODE_SLEEP; sleep 1; dumpsys power | grep -m1 mWakefulness=",
+        "label": "화면 끄기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "10",
+        "label": "화면 꺼짐 안정"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys deviceidle force-idle deep",
+        "label": "deep doze 강제 진입"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
+        "label": "대기 상태·배터리 기록"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "1800",
+        "label": "deep doze 대기 30분"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
+        "label": "대기 상태·배터리 기록"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys deviceidle unforce; echo unforced",
+        "label": "강제 doze 해제"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input keyevent KEYCODE_WAKEUP; sleep 1; wm dismiss-keyguard; sleep 1; dumpsys window | grep -c isKeyguardShowing=true || true",
+        "label": "화면 켜기·잠금 해제"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.android.chrome",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.gm",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.apps.maps",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.google.android.youtube",
+      "com.android.chrome",
+      "com.google.android.gm",
+      "com.google.android.apps.maps"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

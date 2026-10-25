@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] B1 Chrome 위키 로드+스크롤",
+  "description": "[B1 · P1] 개인 계정 로그인 상태 그대로(동기화 I/O 가 섞일 수 있음). 회차마다 Chrome 디스크 캐시를 비우고 영문 위키 문서 2개를 열어 8번씩 스크롤 (한글 URL 은 검색어로 처리되므로 ASCII URL). 준비: Chrome 처음 실행 화면 완료",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.android.chrome",
+        "label": "Chrome 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "rm -rf /data/data/com.android.chrome/cache/Cache /data/data/com.android.chrome/cache/image_manager_disk_cache; echo ok",
+        "label": "Chrome 디스크 캐시 비우기"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "am start -a android.intent.action.VIEW -d https://en.m.wikipedia.org/wiki/Solid-state_drive -p com.android.chrome",
+        "label": "위키 SSD 문서 열기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "10",
+        "label": "로딩 대기"
+      }
+    },
+    {
+      "type": "scroll",
+      "params": {
+        "direction": "down",
+        "count": "8",
+        "pause": "1.5",
+        "duration": "300",
+        "label": "문서 스크롤"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "am start -a android.intent.action.VIEW -d https://en.m.wikipedia.org/wiki/Flash_memory -p com.android.chrome",
+        "label": "위키 플래시 메모리 문서 열기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "10",
+        "label": "로딩 대기"
+      }
+    },
+    {
+      "type": "scroll",
+      "params": {
+        "direction": "down",
+        "count": "8",
+        "pause": "1.5",
+        "duration": "300",
+        "label": "문서 스크롤"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.android.chrome",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.android.chrome"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

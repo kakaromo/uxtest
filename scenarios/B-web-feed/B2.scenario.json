@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] B2 YouTube 검색+결과 스크롤",
+  "description": "[B2 · P1] 검색 바가 스크롤 시 숨으므로 검색을 먼저 한다. 회차마다 이미지 캐시를 비워 썸네일을 다시 받는다.",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "settings put secure selected_input_method_subtype -1097284911; ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME >/dev/null; settings get secure selected_input_method_subtype",
+        "label": "키보드 영문(Alphabet)으로"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "label": "YouTube 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "rm -rf /data/data/com.google.android.youtube/cache/glide_disk_cache /data/data/com.google.android.youtube/cache/volleyCache /data/data/com.google.android.youtube/cache/image_manager_disk_cache; echo ok",
+        "label": "YouTube 이미지 캐시 비우기"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "clear_mode": "force_stop",
+        "wait_seconds": "6",
+        "label": "YouTube 실행"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_content_desc": "검색",
+        "label": "검색 열기"
+      }
+    },
+    {
+      "type": "text",
+      "params": {
+        "input_text": "nasa 우주",
+        "submit": "true",
+        "label": "검색어 입력"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "4",
+        "label": "결과 로딩"
+      }
+    },
+    {
+      "type": "scroll",
+      "params": {
+        "direction": "down",
+        "count": "20",
+        "pause": "1.5",
+        "duration": "300",
+        "label": "검색 결과 스크롤"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.google.android.youtube"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

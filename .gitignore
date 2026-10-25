@@ -1,0 +1,33 @@
+# 공개 저장소: 코드만 올린다. 측정 데이터·해설 본문은 web/static/data/*.enc (암호화본)로만 올라간다.
+# 허용 목록 방식: 전부 무시하고 필요한 것만 연다.
+/*
+!/.gitignore
+!/README.md
+!/.github/
+!/run.py
+!/measure_*.sh
+
+!/scenarios/
+
+!/dataset/
+/dataset/*
+!/dataset/nasa/
+/dataset/nasa/*
+!/dataset/nasa/fetch.py
+!/dataset/nasa/push.py
+!/dataset/nasa/manifest.csv
+
+!/report/
+/report/*
+!/report/extract.py
+!/report/export_web.py
+!/report/perstep.py
+
+!/web/
+/web/node_modules/
+/web/build/
+/web/.svelte-kit/
+/web/.private/
+
+__pycache__/
+.DS_Store

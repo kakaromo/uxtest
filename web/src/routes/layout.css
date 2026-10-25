@@ -1,0 +1,287 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@plugin '@tailwindcss/typography';
+
+@custom-variant dark (&:is(.dark *));
+/* shadcn-svelte 레지스트리 컴포넌트가 쓰는 방향 변형 (bits-ui 의 data-orientation) */
+@custom-variant data-horizontal (&[data-orientation='horizontal']);
+@custom-variant data-vertical (&[data-orientation='vertical']);
+@custom-variant data-open (&:where([data-state='open'], [data-open]:not([data-open='false'])));
+@custom-variant data-closed (&:where([data-state='closed'], [data-closed]:not([data-closed='false'])));
+@custom-variant data-active (&:where([data-state='active'], [data-active]:not([data-active='false'])));
+@custom-variant data-disabled (&:where([data-disabled]:not([data-disabled='false'])));
+
+/* Pretendard (TDS 기본 서체) — static/fonts 에서 */
+@font-face {
+	font-family: 'Pretendard Variable';
+	src: url('/fonts/PretendardVariable.woff2') format('woff2-variations');
+	font-weight: 45 920;
+	font-display: swap;
+}
+
+/* shadcn-svelte 변수 ↔ Toss TDS (uxtest/DESIGN.md) 값.
+   shadcn 기본 neutral 색은 쓰지 않는다. 이름은 shadcn 컴포넌트가 읽는 그대로 두고 값만 TDS 로 바꾼다. */
+:root {
+	--radius: 16px; /* rounded.radius-xl: 카드 */
+
+	--background: #f9fafb; /* grey-50: 페이지 바탕 */
+	--foreground: #191f28; /* grey-900 */
+	--card: #ffffff;
+	--card-foreground: #191f28;
+	--popover: #ffffff;
+	--popover-foreground: #191f28;
+	--primary: #3182f6; /* blue-500 */
+	--primary-foreground: #ffffff;
+	--secondary: #f2f4f6; /* grey-100: button-secondary */
+	--secondary-foreground: #191f28;
+	--muted: #f2f4f6;
+	--muted-foreground: #4e5968; /* grey-700: 보조 글자 */
+	--accent: #e8f3ff; /* blue-50: brand-weak */
+	--accent-foreground: #1b64da;
+	--destructive: #f04452; /* red-500 */
+	--border: #e5e8eb; /* grey-200: 기본 구분선 */
+	--input: #e5e8eb;
+	--ring: #3182f6;
+
+	--sidebar: #ffffff;
+	--sidebar-foreground: #333d4b; /* grey-800 */
+	--sidebar-primary: #3182f6;
+	--sidebar-primary-foreground: #ffffff;
+	--sidebar-accent: #f2f4f6;
+	--sidebar-accent-foreground: #191f28;
+	--sidebar-border: #e5e8eb;
+	--sidebar-ring: #3182f6;
+
+	/* 보고서 전용 */
+	--ink-3: #6b7684; /* grey-600 */
+	--ink-4: #8b95a1; /* grey-500 */
+	--line-strong: #b0b8c1; /* grey-400 */
+	--success: #0f7a3d;
+	--warning: #e8890c;
+	/* 차트: 읽기 = 토스 블루, 쓰기 = grey-800 (dataviz 검증한 기존 보고서 값) */
+	--read: #3182f6;
+	--write: #333d4b;
+	--r1: #90c2ff;
+	--r2: #64a8ff;
+	--r3: #3182f6;
+	--r4: #1b64da;
+	--r5: #194aa6;
+	--heat-0: #f2f4f6;
+
+	--shadow-1: 0 1px 2px oklch(0.155 0.06 261 / 0.04), 0 1px 1px oklch(0.155 0.06 261 / 0.04);
+	--shadow-2: 0 4px 12px oklch(0.155 0.06 261 / 0.06), 0 1px 2px oklch(0.155 0.06 261 / 0.04);
+	--shadow-toast: 0 8px 24px oklch(0.155 0.06 261 / 0.16);
+}
+
+/* TDS adaptive dark (colors.dark.css 값) */
+.dark {
+	--background: #17171c;
+	--foreground: #ffffff;
+	--card: #202027; /* dark grey-50 */
+	--card-foreground: #ffffff;
+	--popover: #2c2c35;
+	--popover-foreground: #ffffff;
+	--primary: #3485fa;
+	--primary-foreground: #ffffff;
+	--secondary: #2c2c35; /* dark grey-100 */
+	--secondary-foreground: #ffffff;
+	--muted: #2c2c35;
+	--muted-foreground: #c3c3c6; /* dark grey-700 */
+	--accent: #202c4d; /* dark blue-50 */
+	--accent-foreground: #c9e2ff;
+	--destructive: #f04251;
+	--border: #3c3c47; /* dark grey-200 */
+	--input: #3c3c47;
+	--ring: #3485fa;
+
+	--sidebar: #1c1c22;
+	--sidebar-foreground: #e4e4e5;
+	--sidebar-primary: #3485fa;
+	--sidebar-primary-foreground: #ffffff;
+	--sidebar-accent: #2c2c35;
+	--sidebar-accent-foreground: #ffffff;
+	--sidebar-border: #3c3c47;
+	--sidebar-ring: #3485fa;
+
+	--ink-3: #9e9ea4;
+	--ink-4: #7e7e87;
+	--line-strong: #62626d;
+	--success: #3cc27a;
+	--warning: #ffb134;
+	--read: #3485fa;
+	--write: #c3c3c6;
+	--r1: #1957c2;
+	--r2: #2272eb;
+	--r3: #3485fa;
+	--r4: #64a8ff;
+	--r5: #c9e2ff;
+	--heat-0: #2c2c35;
+	color-scheme: dark;
+}
+
+@theme inline {
+	--font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+		'Noto Sans KR', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	--font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+
+	/* rounded.* */
+	--radius-xs: 4px;
+	--radius-sm: 8px;
+	--radius-md: 12px;
+	--radius-lg: 14px;
+	--radius-xl: 16px;
+	--radius-2xl: 20px;
+	--radius-3xl: 24px;
+	--radius-4xl: 32px;
+
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-card: var(--card);
+	--color-card-foreground: var(--card-foreground);
+	--color-popover: var(--popover);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-secondary: var(--secondary);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-muted: var(--muted);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-accent: var(--accent);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-destructive: var(--destructive);
+	--color-border: var(--border);
+	--color-input: var(--input);
+	--color-ring: var(--ring);
+	--color-sidebar: var(--sidebar);
+	--color-sidebar-foreground: var(--sidebar-foreground);
+	--color-sidebar-primary: var(--sidebar-primary);
+	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+	--color-sidebar-accent: var(--sidebar-accent);
+	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+	--color-sidebar-border: var(--sidebar-border);
+	--color-sidebar-ring: var(--sidebar-ring);
+	--color-ink-3: var(--ink-3);
+	--color-ink-4: var(--ink-4);
+	--color-line-strong: var(--line-strong);
+	--color-success: var(--success);
+	--color-warning: var(--warning);
+	--color-read: var(--read);
+	--color-write: var(--write);
+
+	/* typography ramp (DESIGN.md) */
+	--text-display-2: 40px;
+	--text-display-2--line-height: 1.2;
+	--text-display-2--letter-spacing: -0.02em;
+	--text-h1: 28px;
+	--text-h1--line-height: 1.3;
+	--text-h1--letter-spacing: -0.02em;
+	--text-h2: 24px;
+	--text-h2--line-height: 1.3;
+	--text-h2--letter-spacing: -0.02em;
+	--text-h3: 22px;
+	--text-h3--line-height: 1.3;
+	--text-h3--letter-spacing: -0.015em;
+	--text-h4: 20px;
+	--text-h4--line-height: 1.35;
+	--text-h4--letter-spacing: -0.015em;
+	--text-title-1: 18px;
+	--text-title-1--line-height: 1.45;
+	--text-title-1--letter-spacing: -0.01em;
+	--text-body-1: 17px;
+	--text-body-1--line-height: 1.5;
+	--text-body-2: 15px;
+	--text-body-2--line-height: 1.5;
+	--text-body-3: 13px;
+	--text-body-3--line-height: 1.5;
+	--text-label-s: 13px;
+	--text-label-s--line-height: 1.25;
+	--text-caption: 12px;
+	--text-caption--line-height: 1.4;
+
+	--shadow-1: var(--shadow-1);
+	--shadow-2: var(--shadow-2);
+	--shadow-toast: var(--shadow-toast);
+}
+
+@layer base {
+	* {
+		@apply border-border outline-ring/50;
+	}
+	html {
+		-webkit-text-size-adjust: 100%;
+	}
+	body {
+		@apply bg-background text-foreground font-sans text-body-2 antialiased;
+		letter-spacing: -0.005em;
+		word-break: keep-all;
+	}
+	.num,
+	td.num,
+	th.num {
+		font-variant-numeric: tabular-nums;
+	}
+}
+
+/* 해설 본문(암호 해제 후 {@html} 로 넣는 문단) */
+.prose-ux {
+	@apply text-body-2 text-foreground;
+}
+.prose-ux p {
+	@apply my-3;
+}
+.prose-ux ul.points,
+.prose-ux .prose ul {
+	@apply my-3 list-disc space-y-2 pl-5 marker:text-ink-4;
+}
+.prose-ux b {
+	@apply font-semibold;
+}
+.prose-ux code {
+	@apply rounded-xs bg-muted px-1 py-0.5 font-mono text-[0.9em];
+}
+.prose-ux a {
+	@apply text-primary underline-offset-2 hover:underline;
+}
+.prose-ux .stats {
+	@apply my-4 grid grid-cols-1 gap-3 sm:grid-cols-3;
+}
+.prose-ux .stats > div {
+	@apply flex flex-col gap-1 rounded-xl bg-muted px-4 py-3;
+}
+.prose-ux .stats b {
+	@apply text-h3 font-bold tabular-nums;
+}
+.prose-ux .stats span {
+	@apply text-body-3 text-muted-foreground;
+}
+.prose-ux .sowhat {
+	@apply my-4 rounded-xl bg-accent px-4 py-3 text-body-2;
+}
+.prose-ux .sowhat b {
+	@apply mr-2 text-primary;
+}
+.prose-ux .more h4 {
+	@apply mt-6 mb-2 text-title-1 font-semibold;
+}
+.prose-ux .note {
+	@apply my-4 flex flex-col gap-1 rounded-xl border px-4 py-3;
+}
+.prose-ux ol.takes {
+	@apply my-4 grid gap-3 sm:grid-cols-2;
+}
+.prose-ux ol.takes li a {
+	@apply flex h-full flex-col gap-1 rounded-xl border bg-card px-4 py-3 text-foreground no-underline transition-colors hover:border-primary;
+}
+.prose-ux ol.takes li a b {
+	@apply text-title-1 font-semibold;
+}
+.prose-ux ol.takes li a span {
+	@apply text-body-3 text-muted-foreground;
+}
+.prose-ux ol.takes li.caution a {
+	@apply bg-muted;
+}
+.prose-ux .rg,
+.prose-ux .muted {
+	@apply text-ink-3;
+}

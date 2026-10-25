@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] A8 백그라운드 5분 뒤 복귀",
+  "description": "[A8 · P2] YouTube 를 띄운 뒤 다른 앱 3개를 거쳐 5분 둔 뒤 돌아온다. 측정은 복귀 구간만. 프로세스가 살아 있었는지(YT_ALIVE/KILLED)를 측정 전에 기록해 warm/cold 복귀를 나눈다.",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "clear_mode": "force_stop",
+        "wait_seconds": "6",
+        "label": "YouTube 실행"
+      }
+    },
+    {
+      "type": "scroll",
+      "params": {
+        "direction": "down",
+        "count": "5",
+        "pause": "1.5",
+        "duration": "300",
+        "label": "피드 스크롤"
+      }
+    },
+    {
+      "type": "key",
+      "params": {
+        "keycode": "3",
+        "label": "홈"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.android.chrome",
+        "clear_mode": "force_stop",
+        "wait_seconds": "4",
+        "label": "다른 앱: Chrome"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.google.android.apps.maps",
+        "clear_mode": "force_stop",
+        "wait_seconds": "6",
+        "label": "다른 앱: 지도"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.oplus.camera",
+        "clear_mode": "force_stop",
+        "wait_seconds": "4",
+        "label": "다른 앱: 카메라"
+      }
+    },
+    {
+      "type": "key",
+      "params": {
+        "keycode": "3",
+        "label": "홈"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "300",
+        "label": "백그라운드 5분"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "pidof com.google.android.youtube >/dev/null && echo YT_ALIVE || echo YT_KILLED",
+        "label": "YouTube 프로세스 생존 여부"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "clear_mode": "none",
+        "wait_seconds": "5",
+        "label": "5분 뒤 YouTube 복귀"
+      }
+    },
+    {
+      "type": "scroll",
+      "params": {
+        "direction": "down",
+        "count": "3",
+        "pause": "1.5",
+        "duration": "300",
+        "label": "피드 스크롤"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.android.chrome",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.apps.maps",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.oplus.camera",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.google.android.youtube",
+      "com.android.chrome",
+      "com.google.android.apps.maps",
+      "com.oplus.camera"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}
