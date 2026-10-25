@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] G6 20장 삭제 → 휴지통 비우기",
+  "description": "[G6 · P2] 사진 탭 맨 앞 20장(모두 NASA 세트)을 골라 지우고 최근 삭제된 항목을 비운다. 회차마다 20장씩 줄어 3회 뒤 940장이 남고, measure_p2.sh 가 끝난 뒤 push.py 로 빠진 60장만 다시 넣는다. 준비: NASA 세트 1000장 (기기에 다른 사진 없음) / dry-run 확인: 모두 삭제 버튼 이름, 영구 삭제 확인 버튼 id",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.oneplus.gallery",
+        "clear_mode": "force_stop",
+        "wait_seconds": "5",
+        "label": "갤러리 실행"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input swipe 126 550 126 550 800",
+        "label": "첫 사진 길게 눌러 선택"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input tap 381 550; input tap 636 550; input tap 891 550; input tap 1146 550; input tap 126 805; input tap 381 805; input tap 636 805; input tap 891 805; input tap 1146 805; input tap 126 1060; input tap 381 1060; input tap 636 1060; input tap 891 1060; input tap 1146 1060; input tap 126 1315; input tap 381 1315; input tap 636 1315; input tap 891 1315; input tap 1146 1315; echo 19",
+        "label": "19장 더 선택"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_resource_id": "com.oneplus.gallery:id/action_recycle",
+        "label": "삭제"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_resource_id": "android:id/button3",
+        "label": "삭제 확인"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "5",
+        "label": "휴지통 이동 대기"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_text": "앨범",
+        "label": "앨범 탭"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "2",
+        "label": "대기 2초"
+      }
+    },
+    {
+      "type": "scroll",
+      "params": {
+        "direction": "down",
+        "count": "2",
+        "pause": "1",
+        "duration": "300",
+        "label": "기타 앨범까지"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_text": "최근 삭제된 항목",
+        "label": "최근 삭제된 항목"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "2",
+        "label": "대기 2초"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_text": "모두 삭제",
+        "element_match_mode": "contains",
+        "label": "모두 삭제"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_resource_id": "android:id/button3",
+        "label": "영구 삭제 확인"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "5",
+        "label": "삭제 대기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.oneplus.gallery",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "echo NASA_LEFT=$(ls /storage/emulated/0/Pictures/NASA | wc -l)",
+        "label": "남은 장수 기록"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.oneplus.gallery"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

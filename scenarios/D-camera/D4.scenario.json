@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] D4 동영상 2분 1080p",
+  "description": "[D4 · P2] D3 와 같은 조건으로 2분 녹화. 장시간 지속 write 의 대역·주기를 본다. 측정 후 지운다.",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "touch /data/local/tmp/ux_mark",
+        "label": "새 파일 기준 시각 기록"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "am start -W -a android.media.action.VIDEO_CAMERA",
+        "label": "카메라(동영상) 실행"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "카메라 준비"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input tap 635 2420",
+        "label": "녹화 시작"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "120",
+        "label": "녹화 2분"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input tap 635 2420",
+        "label": "녹화 종료"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "5",
+        "label": "저장 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "echo CAPTURED files=$(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark | wc -l) kb=$(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark -exec du -k {} + | awk '{s+=$1} END {print s+0}'); for f in $(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark); do content delete --uri content://media/external/file --where \"_data='$f'\"; rm -f \"$f\"; done; find /storage/emulated/0/DCIM/Camera/Cshot -mindepth 1 -type d -empty -delete 2>/dev/null; echo cleaned",
+        "label": "촬영 파일 정리"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.oplus.camera",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.oplus.camera"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] A3 3앱 왕복 전환 ×6",
+  "description": "[A3 · P1] Chrome·YouTube·설정을 띄워 둔 상태(warm)에서 앱을 오가며 짧게 스크롤. 기존 #15 구조. 백그라운드 동기화 영향으로 변동이 크다.",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.android.chrome",
+        "clear_mode": "force_stop",
+        "wait_seconds": "4",
+        "label": "Chrome 준비"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "am start -a android.intent.action.VIEW -d https://en.m.wikipedia.org/wiki/Solid-state_drive -p com.android.chrome",
+        "label": "위키 문서 열기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "8",
+        "label": "로딩 대기"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "clear_mode": "force_stop",
+        "wait_seconds": "5",
+        "label": "YouTube 준비"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.android.settings",
+        "clear_mode": "force_stop",
+        "wait_seconds": "3",
+        "label": "설정 준비"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.android.chrome",
+        "clear_mode": "none",
+        "wait_seconds": "3",
+        "label": "Chrome 으로 전환"
+      }
+    },
+    {
+      "type": "scroll",
+      "params": {
+        "direction": "down",
+        "count": "3",
+        "pause": "1.5",
+        "duration": "300",
+        "label": "Chrome 스크롤"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "clear_mode": "none",
+        "wait_seconds": "3",
+        "label": "YouTube 로 전환"
+      }
+    },
+    {
+      "type": "scroll",
+      "params": {
+        "direction": "down",
+        "count": "3",
+        "pause": "1.5",
+        "duration": "300",
+        "label": "YouTube 스크롤"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.android.settings",
+        "clear_mode": "none",
+        "wait_seconds": "3",
+        "label": "설정으로 전환"
+      }
+    },
+    {
+      "type": "scroll",
+      "params": {
+        "direction": "down",
+        "count": "3",
+        "pause": "1.5",
+        "duration": "300",
+        "label": "설정 스크롤"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.android.chrome",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.android.settings",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [
+    {
+      "startStep": 6,
+      "endStep": 11,
+      "count": 2
+    }
+  ],
+  "requirements": {
+    "packages": [
+      "com.android.chrome",
+      "com.google.android.youtube",
+      "com.android.settings"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] C6 YouTube Music 3분",
+  "description": "[C6 · P2] 링크로 곡 하나(3분 33초)를 열어 3분 재생 (화면 켜짐). 오디오 캐시 write 를 C1(영상)과 비교. 재생 기록은 C1 처럼 남는다. dry-run 확인: 링크로 바로 재생되는지(PlaybackState state=3)",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.apps.youtube.music",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "am start -a android.intent.action.VIEW -d 'https://music.youtube.com/watch?v=dQw4w9WgXcQ' -p com.google.android.apps.youtube.music",
+        "label": "곡 열기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "180",
+        "label": "음악 재생 3분"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys media_session | grep -m3 -E 'package=|state=PlaybackState'",
+        "label": "재생 상태 확인"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.apps.youtube.music",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.google.android.apps.youtube.music"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

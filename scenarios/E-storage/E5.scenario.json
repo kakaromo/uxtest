@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] E5 작은 파일 1000개 생성·삭제",
+  "description": "[E5 · P2] /sdcard(FUSE)에 4KB 파일 1000개를 만들고 지운다. 데이터보다 메타데이터(노드·checkpoint) write 가 얼마나 되는지 본다.",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "rm -rf /sdcard/ux_small; mkdir -p /sdcard/ux_small; sync",
+        "label": "폴더 준비"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+        "label": "페이지 캐시 비우기"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "cd /sdcard/ux_small && for i in $(seq 1000); do head -c 4096 /dev/urandom > f$i; done; sync; ls | wc -l",
+        "label": "4KB 파일 1000개 만들기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "대기 3초"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "rm -rf /sdcard/ux_small; sync; echo removed",
+        "label": "1000개 지우기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

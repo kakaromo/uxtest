@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] D6 사진 5장 → 바로 갤러리",
+  "description": "[D6 · P2] 사진 5장을 찍자마자 카메라의 최근 사진 버튼으로 뷰어에 들어가 5장을 넘겨 본다. 저장 write 직후의 read·썸네일 생성을 본다. 측정 후 지운다. dry-run 확인: 최근 사진 버튼이 여는 앱·넘김 방향",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "touch /data/local/tmp/ux_mark",
+        "label": "새 파일 기준 시각 기록"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "am start -W -a android.media.action.STILL_IMAGE_CAMERA",
+        "label": "카메라(사진) 실행"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "카메라 준비"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input tap 635 2420",
+        "label": "워밍업 1장"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "4",
+        "label": "대기 4초"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "for i in $(seq 5); do input tap 635 2420; sleep 2; done; echo 5",
+        "label": "사진 5장 촬영"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_resource_id": "com.oplus.camera:id/thumbnail",
+        "label": "최근 사진 열기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "뷰어 로딩"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "for i in 1 2 3 4 5; do input swipe 170 1386 1100 1386 150; sleep 1.5; done; echo 5",
+        "label": "이전 사진 5장 넘기기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "echo CAPTURED files=$(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark | wc -l) kb=$(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark -exec du -k {} + | awk '{s+=$1} END {print s+0}'); for f in $(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark); do content delete --uri content://media/external/file --where \"_data='$f'\"; rm -f \"$f\"; done; find /storage/emulated/0/DCIM/Camera/Cshot -mindepth 1 -type d -empty -delete 2>/dev/null; echo cleaned",
+        "label": "촬영 파일 정리"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.oplus.camera",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.oneplus.gallery",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.oplus.camera",
+      "com.oneplus.gallery"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

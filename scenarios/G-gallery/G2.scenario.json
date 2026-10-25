@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] G2 뷰어 1→1000장",
+  "description": "[G2 · P1] 뷰어에서 0.5초 간격으로 다음 사진 넘기기 999번. 원본 디코딩 read 와 jank 를 같이 본다. 준비: NASA 1000장 푸시 (dataset/nasa/push.py), 갤러리 처음 실행 화면 완료, 1회차 cold 는 push.py --repush 직후 / dry-run 확인: 첫 사진 좌표, 넘김 방향",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+        "label": "페이지 캐시 비우기"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.oneplus.gallery",
+        "clear_mode": "force_stop",
+        "wait_seconds": "5",
+        "label": "갤러리 실행"
+      }
+    },
+    {
+      "type": "tap",
+      "params": {
+        "x": "160",
+        "y": "600",
+        "label": "첫 사진 열기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "2",
+        "label": "뷰어 로딩"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys gfxinfo com.oneplus.gallery reset >/dev/null; echo reset",
+        "label": "프레임 통계 초기화"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "mkdir -p /dev/ux; cat /data/local/tmp/ux_perfetto_light.cfg | perfetto --txt -c - --background -o /dev/ux/ux_G2_$(date +%Y%m%d_%H%M%S).pftrace",
+        "label": "Perfetto(FrameTimeline) 시작"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "for i in $(seq 999); do input swipe 1100 1386 170 1386 150; sleep 0.5; done; echo 999",
+        "label": "다음 사진 999장"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "kill -TERM $(pidof perfetto) 2>/dev/null; while pidof perfetto >/dev/null; do sleep 1; done; ls -l /dev/ux/*.pftrace | tail -1",
+        "label": "Perfetto 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys gfxinfo com.oneplus.gallery framestats > /dev/ux/ux_gfx_G2_$(date +%Y%m%d_%H%M%S).txt; grep -E 'Total frames|Janky frames|90th|99th' /dev/ux/ux_gfx_G2_*.txt | tail -4",
+        "label": "프레임 통계 저장"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.oneplus.gallery",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.oneplus.gallery"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

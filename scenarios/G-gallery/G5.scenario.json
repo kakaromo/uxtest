@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] G5 사진 20장 확대",
+  "description": "[G5 · P2] 사진마다 두 번 탭으로 확대해 이리저리 옮겨 본 뒤 다음 사진으로 (20장). 원본 부분(타일) read 를 본다. input 으로는 두 손가락 확대가 안 돼 두 번 탭으로 대신한다. 준비: NASA 1000장 푸시 (dataset/nasa/push.py), 갤러리 처음 실행 화면 완료, 1회차 cold 는 push.py --repush 직후",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+        "label": "페이지 캐시 비우기"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.oneplus.gallery",
+        "clear_mode": "force_stop",
+        "wait_seconds": "5",
+        "label": "갤러리 실행"
+      }
+    },
+    {
+      "type": "tap",
+      "params": {
+        "x": "126",
+        "y": "550",
+        "label": "첫 사진 열기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "2",
+        "label": "뷰어 로딩"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys gfxinfo com.oneplus.gallery reset >/dev/null; echo reset",
+        "label": "프레임 통계 초기화"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "mkdir -p /dev/ux; cat /data/local/tmp/ux_perfetto.cfg | perfetto --txt -c - --background -o /dev/ux/ux_G5_$(date +%Y%m%d_%H%M%S).pftrace",
+        "label": "Perfetto(FrameTimeline) 시작"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input tap 636 1386 & sleep 0.12; input tap 636 1386; wait",
+        "label": "두 번 탭 확대"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "1.5",
+        "label": "원본 타일 로딩"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input swipe 900 1386 400 1386 300; sleep 1; input swipe 636 1800 636 1000 300",
+        "label": "확대한 채 이동"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "1",
+        "label": "대기 1초"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input tap 636 1386 & sleep 0.12; input tap 636 1386; wait",
+        "label": "원래 크기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "0.5",
+        "label": "대기 0.5초"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input swipe 1100 1386 170 1386 150",
+        "label": "다음 사진"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "1",
+        "label": "대기 1초"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "kill -TERM $(pidof perfetto) 2>/dev/null; while pidof perfetto >/dev/null; do sleep 1; done; ls -l /dev/ux/*.pftrace | tail -1",
+        "label": "Perfetto 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys gfxinfo com.oneplus.gallery framestats > /dev/ux/ux_gfx_G5_$(date +%Y%m%d_%H%M%S).txt; grep -E 'Total frames|Janky frames|90th|99th' /dev/ux/ux_gfx_G5_*.txt | tail -4",
+        "label": "프레임 통계 저장"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.oneplus.gallery",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [
+    {
+      "startStep": 7,
+      "endStep": 14,
+      "count": 20
+    }
+  ],
+  "requirements": {
+    "packages": [
+      "com.oneplus.gallery"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

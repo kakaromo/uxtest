@@ -1,0 +1,311 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] B4 Chrome 탭 5개 열기+전환",
+  "description": "[B4 · P2] 시크릿 탭 5개에 위키 문서를 열고 주소창 좌우 스와이프로 탭을 오간다. 개인 Chrome 의 기존 탭을 건드리지 않으려고 시크릿 탭을 쓰고, 종료하면 사라진다. 탭 상태 저장 write 를 본다. 준비: Chrome 처음 실행 화면 완료 / dry-run 확인: 두 번째 이후 새 시크릿 탭의 주소창 id, 주소창 스와이프 탭 전환 좌표",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "settings put secure selected_input_method_subtype -1097284911; ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME >/dev/null; settings get secure selected_input_method_subtype",
+        "label": "키보드 영문(Alphabet)으로"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.android.chrome",
+        "label": "Chrome 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "rm -rf /data/data/com.android.chrome/cache/Cache /data/data/com.android.chrome/cache/image_manager_disk_cache; echo ok",
+        "label": "Chrome 디스크 캐시 비우기"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.android.chrome",
+        "clear_mode": "force_stop",
+        "wait_seconds": "4",
+        "label": "Chrome 실행"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_resource_id": "com.android.chrome:id/menu_button",
+        "label": "메뉴 열기"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_text": "새 시크릿 탭",
+        "label": "새 시크릿 탭"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "1",
+        "label": "대기 1초"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_resource_id": "com.android.chrome:id/url_bar",
+        "label": "주소창"
+      }
+    },
+    {
+      "type": "text",
+      "params": {
+        "input_text": "https://en.m.wikipedia.org/wiki/NAND_flash",
+        "submit": "true",
+        "label": "탭 1 열기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "6",
+        "label": "로딩 대기"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_resource_id": "com.android.chrome:id/menu_button",
+        "label": "메뉴 열기"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_text": "새 시크릿 탭",
+        "label": "새 시크릿 탭"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "1",
+        "label": "대기 1초"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_resource_id": "com.android.chrome:id/url_bar",
+        "label": "주소창"
+      }
+    },
+    {
+      "type": "text",
+      "params": {
+        "input_text": "https://en.m.wikipedia.org/wiki/Universal_Flash_Storage",
+        "submit": "true",
+        "label": "탭 2 열기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "6",
+        "label": "로딩 대기"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_resource_id": "com.android.chrome:id/menu_button",
+        "label": "메뉴 열기"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_text": "새 시크릿 탭",
+        "label": "새 시크릿 탭"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "1",
+        "label": "대기 1초"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_resource_id": "com.android.chrome:id/url_bar",
+        "label": "주소창"
+      }
+    },
+    {
+      "type": "text",
+      "params": {
+        "input_text": "https://en.m.wikipedia.org/wiki/F2FS",
+        "submit": "true",
+        "label": "탭 3 열기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "6",
+        "label": "로딩 대기"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_resource_id": "com.android.chrome:id/menu_button",
+        "label": "메뉴 열기"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_text": "새 시크릿 탭",
+        "label": "새 시크릿 탭"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "1",
+        "label": "대기 1초"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_resource_id": "com.android.chrome:id/url_bar",
+        "label": "주소창"
+      }
+    },
+    {
+      "type": "text",
+      "params": {
+        "input_text": "https://en.m.wikipedia.org/wiki/Android_(operating_system)",
+        "submit": "true",
+        "label": "탭 4 열기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "6",
+        "label": "로딩 대기"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_resource_id": "com.android.chrome:id/menu_button",
+        "label": "메뉴 열기"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_text": "새 시크릿 탭",
+        "label": "새 시크릿 탭"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "1",
+        "label": "대기 1초"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_resource_id": "com.android.chrome:id/url_bar",
+        "label": "주소창"
+      }
+    },
+    {
+      "type": "text",
+      "params": {
+        "input_text": "https://en.m.wikipedia.org/wiki/Mars",
+        "submit": "true",
+        "label": "탭 5 열기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "6",
+        "label": "로딩 대기"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "for i in 1 2 3 4 5 6 7 8; do input swipe 300 250 1000 250 150; sleep 2; done; echo 8",
+        "label": "주소창 스와이프로 탭 8번 전환"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.android.chrome",
+        "label": "Chrome 종료 (시크릿 탭 폐기)"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.android.chrome"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

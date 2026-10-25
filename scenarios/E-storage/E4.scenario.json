@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] E4 캐시 정리 trim-caches",
+  "description": "[E4 · P1] 회차마다 YouTube·Chrome 캐시를 채운 뒤 전체 앱 캐시를 비운다. 파일 삭제의 메타데이터·discard 성격을 본다.",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "clear_mode": "force_stop",
+        "wait_seconds": "5",
+        "label": "캐시 채우기: YouTube"
+      }
+    },
+    {
+      "type": "scroll",
+      "params": {
+        "direction": "down",
+        "count": "15",
+        "pause": "1",
+        "duration": "300",
+        "label": "캐시 채우기: 피드 스크롤"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.android.chrome",
+        "clear_mode": "force_stop",
+        "wait_seconds": "4",
+        "label": "캐시 채우기: Chrome"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "am start -a android.intent.action.VIEW -d https://en.m.wikipedia.org/wiki/Solid-state_drive -p com.android.chrome",
+        "label": "캐시 채우기: 위키"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "10",
+        "label": "대기 10초"
+      }
+    },
+    {
+      "type": "key",
+      "params": {
+        "keycode": "3",
+        "label": "홈"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.android.chrome",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "sync",
+        "label": "sync"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "pm trim-caches 999G; echo trimmed",
+        "label": "캐시 정리 (trim-caches)"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "5",
+        "label": "discard 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.google.android.youtube",
+      "com.android.chrome"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

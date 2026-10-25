@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] F2 녹음 1분",
+  "description": "[F2 · P2] 녹음기로 1분 녹음. 낮은 대역의 지속 write 를 D3(동영상)와 비교. 측정 후 녹음 파일을 지운다. 준비: 녹음기 첫 실행 동의 화면 완료, 마이크 권한 / dry-run 확인: 녹음 파일 정리",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "touch /data/local/tmp/ux_mark",
+        "label": "새 파일 기준 시각 기록"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.oneplus.soundrecorder",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.oneplus.soundrecorder",
+        "clear_mode": "force_stop",
+        "wait_seconds": "4",
+        "label": "녹음기 실행"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_resource_id": "com.oneplus.soundrecorder:id/middle_control",
+        "label": "녹음 시작"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "60",
+        "label": "녹음 1분"
+      }
+    },
+    {
+      "type": "tap",
+      "params": {
+        "x": "635",
+        "y": "2478",
+        "label": "녹음 종료(자동 저장)"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "4",
+        "label": "저장 대기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.oneplus.soundrecorder",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "find /storage/emulated/0/Music /storage/emulated/0/Recordings -type f -newer /data/local/tmp/ux_mark -exec sh -c 'for f; do content delete --uri content://media/external/file --where \"_data='\"'\"'$f'\"'\"'\"; rm -f \"$f\"; echo \"rm $f\"; done' _ {} + 2>/dev/null; echo done",
+        "label": "녹음 파일 정리"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.oneplus.soundrecorder"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

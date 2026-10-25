@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] C5 YouTube 구간 이동 ×10",
+  "description": "[C5 · P2] 재생 중 플레이어 오른쪽 연속 탭(+40초)과 왼쪽(-20초)을 번갈아 10번. 버퍼 밖으로 건너뛸 때 다시 받는 캐시 write 를 본다. dry-run 확인: 플레이어 좌표·연속 탭 이동량, 영상 길이 4분 이상",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "settings put secure selected_input_method_subtype -1097284911; ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME >/dev/null; settings get secure selected_input_method_subtype",
+        "label": "키보드 영문(Alphabet)으로"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "clear_mode": "force_stop",
+        "wait_seconds": "6",
+        "label": "YouTube 실행"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_content_desc": "검색",
+        "label": "검색 열기"
+      }
+    },
+    {
+      "type": "text",
+      "params": {
+        "input_text": "nasa 4k",
+        "submit": "true",
+        "label": "검색어 입력"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "4",
+        "label": "결과 로딩"
+      }
+    },
+    {
+      "type": "youtube",
+      "params": {
+        "action": "select_video",
+        "label": "일반 영상 선택"
+      }
+    },
+    {
+      "type": "youtube",
+      "params": {
+        "action": "watch",
+        "seconds": "0",
+        "label": "재생 준비 확인"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "20",
+        "label": "앞부분 버퍼링"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input tap 1000 420 & sleep 0.12; input tap 1000 420 & sleep 0.12; input tap 1000 420 & sleep 0.12; input tap 1000 420 & sleep 0.12; input tap 1000 420; wait",
+        "label": "앞으로 40초"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "6",
+        "label": "재생"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input tap 272 420 & sleep 0.12; input tap 272 420 & sleep 0.12; input tap 272 420; wait",
+        "label": "뒤로 20초"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "6",
+        "label": "재생"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [
+    {
+      "startStep": 9,
+      "endStep": 12,
+      "count": 5
+    }
+  ],
+  "requirements": {
+    "packages": [
+      "com.google.android.youtube"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

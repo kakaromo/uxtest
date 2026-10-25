@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] E3 앱 재설치 (pm install)",
+  "description": "[E3 · P1] 설치된 Instagram 의 APK(분할 포함)를 그대로 다시 설치(-r, 데이터 유지). 버전이 같아 앱 상태는 바뀌지 않는다.",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "rm -rf /data/local/tmp/ux_apk; mkdir -p /data/local/tmp/ux_apk; for p in $(pm path com.instagram.android | sed 's/package://'); do cp $p /data/local/tmp/ux_apk/; done; sync; ls /data/local/tmp/ux_apk",
+        "label": "설치 파일 복사"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+        "label": "페이지 캐시 비우기"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "s=$(pm install-create -r | sed 's/.*\\[\\([0-9]*\\)\\].*/\\1/'); i=0; for f in /data/local/tmp/ux_apk/*.apk; do pm install-write $s $i $f >/dev/null; i=$((i+1)); done; pm install-commit $s",
+        "label": "Instagram 재설치"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "15",
+        "label": "설치 후 dexopt 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "rm -rf /data/local/tmp/ux_apk; echo removed",
+        "label": "설치 파일 정리"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.instagram.android"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

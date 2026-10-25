@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] E7 파일 관리자로 256MB 복사",
+  "description": "[E7 · P2] 파일 관리자 앱에서 다운로드의 256MB 파일을 Documents 로 복사. E2(셸 cp)와 같은 일을 앱으로 했을 때 차이를 본다. dry-run 확인: 다운로드 목록 첫 파일 위치",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "mkdir -p /sdcard/Download && dd if=/dev/urandom of=/sdcard/Download/ux_e7.bin bs=1M count=256 2>&1 | tail -1; am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///sdcard/Download/ux_e7.bin >/dev/null; sync",
+        "label": "원본 256MB 만들기"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "for f in /sdcard/Documents/ux_e7*.bin; do [ -e \"$f\" ] || continue; content delete --uri content://media/external/file --where \"_data='$f'\"; rm -rf \"$f\"; done; echo removed",
+        "label": "이전 복사본 정리"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+        "label": "페이지 캐시 비우기"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.oneplus.filemanager",
+        "clear_mode": "force_stop",
+        "wait_seconds": "4",
+        "label": "파일 관리자 실행"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_text": "다운로드",
+        "label": "다운로드 열기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "2",
+        "label": "대기 2초"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input swipe 238 850 238 850 800",
+        "label": "파일 길게 눌러 선택"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_content_desc": "더 보기",
+        "label": "더 보기"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_text": "복사",
+        "label": "복사"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_text": "Documents",
+        "label": "Documents 폴더"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_text": "여기에 붙여넣기",
+        "label": "여기에 붙여넣기"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "for i in $(seq 60); do [ \"$(stat -c %s /sdcard/Documents/ux_e7.bin 2>/dev/null)\" = 268435456 ] && break; sleep 1; done; sleep 2; sync; ls -l /sdcard/Documents/ux_e7.bin",
+        "label": "복사 끝날 때까지 대기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.oneplus.filemanager",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "for f in /sdcard/Download/ux_e7.bin /sdcard/Documents/ux_e7.bin; do [ -e \"$f\" ] || continue; content delete --uri content://media/external/file --where \"_data='$f'\"; rm -rf \"$f\"; done; echo removed",
+        "label": "파일 정리"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.oneplus.filemanager"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

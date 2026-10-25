@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] C4b YouTube 1080p 3분",
+  "description": "[C4b · P2] C1 과 같은 영상을 화질 1080p 로 고정해 3분 재생. 화질별 버퍼(캐시) write 차이를 본다.",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "settings put secure selected_input_method_subtype -1097284911; ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME >/dev/null; settings get secure selected_input_method_subtype",
+        "label": "키보드 영문(Alphabet)으로"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "clear_mode": "force_stop",
+        "wait_seconds": "6",
+        "label": "YouTube 실행"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_content_desc": "검색",
+        "label": "검색 열기"
+      }
+    },
+    {
+      "type": "text",
+      "params": {
+        "input_text": "nasa 4k",
+        "submit": "true",
+        "label": "검색어 입력"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "4",
+        "label": "결과 로딩"
+      }
+    },
+    {
+      "type": "youtube",
+      "params": {
+        "action": "select_video",
+        "label": "일반 영상 선택"
+      }
+    },
+    {
+      "type": "youtube",
+      "params": {
+        "action": "watch",
+        "seconds": "0",
+        "label": "재생 준비 확인"
+      }
+    },
+    {
+      "type": "youtube",
+      "params": {
+        "action": "quality",
+        "quality": "1080p",
+        "label": "화질 1080p 고정"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "youtube",
+      "params": {
+        "action": "watch",
+        "seconds": "180",
+        "ad_timeout": "180",
+        "label": "1080p 재생 3분"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.google.android.youtube",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.google.android.youtube"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

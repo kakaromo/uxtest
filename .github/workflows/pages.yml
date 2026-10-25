@@ -1,0 +1,61 @@
+# web/ 의 SvelteKit 정적 사이트를 GitHub Pages 로 배포한다.
+# 데이터는 web/static/data/*.enc (로컬에서 암호화해 커밋한 것)만 쓴다. 비밀번호는 CI 에 두지 않는다.
+name: Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ['web/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.data.outputs.ready }}
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      # 암호화 데이터가 아직 커밋되지 않았으면 빌드·배포를 건너뛴다
+      - id: data
+        run: |
+          if [ -f static/data/manifest.json ]; then echo "ready=true" >> "$GITHUB_OUTPUT"
+          else echo "ready=false" >> "$GITHUB_OUTPUT"; echo "::notice::web/static/data 가 없어 배포를 건너뛰어요"; fi
+      - if: steps.data.outputs.ready == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - if: steps.data.outputs.ready == 'true'
+        run: npm ci
+      - if: steps.data.outputs.ready == 'true'
+        run: npm run build
+        env:
+          BASE_PATH: /uxtest
+      - if: steps.data.outputs.ready == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/build
+
+  deploy:
+    needs: build
+    if: needs.build.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

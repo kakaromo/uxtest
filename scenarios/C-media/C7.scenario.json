@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] C7 로컬 동영상 이동 ×10",
+  "description": "[C7 · P2] C3 의 2분 영상을 캐시를 비우고 열어, 화면을 눌러 진행 막대를 띄운 뒤 10곳으로 건너뛴다. 비순차 read 를 C3(순차)와 비교. 준비: setup.sh 의 fixture 영상 / dry-run 확인: 진행 막대 y 좌표",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+        "label": "페이지 캐시 비우기"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "id=$(content query --uri content://media/external/video/media --projection _id --where \"_data='/storage/emulated/0/Movies/uxtest_fixture.mp4'\" | sed -n 's/.*_id=\\([0-9]*\\).*/\\1/p' | head -1); am start -a android.intent.action.VIEW -t video/mp4 -d content://media/external/video/media/$id -p com.coloros.video",
+        "label": "로컬 영상 열기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "재생 시작"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "for x in 880 300 760 260 620 840 420 900 340 700; do input tap 636 1386; sleep 0.5; input tap $x 2393; sleep 4; done; echo seek10",
+        "label": "진행 막대 10곳 이동"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "key",
+      "params": {
+        "keycode": "3",
+        "label": "홈"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.coloros.video",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.coloros.video"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

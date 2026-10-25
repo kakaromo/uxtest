@@ -1,0 +1,7345 @@
+[
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] A1 Chrome cold start ×5",
+    "description": "[A1 · P1] 페이지 캐시를 비우고 Chrome 을 강제 종료 후 실행하는 것을 5번 반복. 저장장치 기준 cold start(APK·odex·so read). 준비: Chrome 처음 실행 화면 완료",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "label": "Chrome 종료"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "Chrome cold start"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "3",
+          "label": "홈"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [
+      {
+        "startStep": 2,
+        "endStep": 4,
+        "count": 5
+      }
+    ],
+    "requirements": {
+      "packages": [
+        "com.android.chrome"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] A2 cold start 순회 6앱",
+    "description": "[A2 · P1] Chrome→YouTube→설정→갤러리→카메라→지도를 각각 캐시를 비우고 cold start. Behavior 구간 이름으로 앱별 실행 I/O 를 나눠 본다. 준비: Chrome·갤러리 처음 실행 화면 완료",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "clear_mode": "force_stop",
+          "wait_seconds": "6",
+          "label": "Chrome cold start"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "3",
+          "label": "홈"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "clear_mode": "force_stop",
+          "wait_seconds": "6",
+          "label": "YouTube cold start"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "3",
+          "label": "홈"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.android.settings",
+          "clear_mode": "force_stop",
+          "wait_seconds": "6",
+          "label": "설정 cold start"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "3",
+          "label": "홈"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.oneplus.gallery",
+          "clear_mode": "force_stop",
+          "wait_seconds": "6",
+          "label": "갤러리 cold start"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "3",
+          "label": "홈"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.oplus.camera",
+          "clear_mode": "force_stop",
+          "wait_seconds": "6",
+          "label": "카메라 cold start"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "3",
+          "label": "홈"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.apps.maps",
+          "clear_mode": "force_stop",
+          "wait_seconds": "6",
+          "label": "지도 cold start"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "3",
+          "label": "홈"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "label": "Chrome 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "label": "YouTube 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.settings",
+          "label": "설정 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oneplus.gallery",
+          "label": "갤러리 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oplus.camera",
+          "label": "카메라 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.apps.maps",
+          "label": "지도 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.android.chrome",
+        "com.google.android.youtube",
+        "com.android.settings",
+        "com.oneplus.gallery",
+        "com.oplus.camera",
+        "com.google.android.apps.maps"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] A3 3앱 왕복 전환 ×6",
+    "description": "[A3 · P1] Chrome·YouTube·설정을 띄워 둔 상태(warm)에서 앱을 오가며 짧게 스크롤. 기존 #15 구조. 백그라운드 동기화 영향으로 변동이 크다.",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "clear_mode": "force_stop",
+          "wait_seconds": "4",
+          "label": "Chrome 준비"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "am start -a android.intent.action.VIEW -d https://en.m.wikipedia.org/wiki/Solid-state_drive -p com.android.chrome",
+          "label": "위키 문서 열기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "8",
+          "label": "로딩 대기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "YouTube 준비"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.android.settings",
+          "clear_mode": "force_stop",
+          "wait_seconds": "3",
+          "label": "설정 준비"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "clear_mode": "none",
+          "wait_seconds": "3",
+          "label": "Chrome 으로 전환"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "3",
+          "pause": "1.5",
+          "duration": "300",
+          "label": "Chrome 스크롤"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "clear_mode": "none",
+          "wait_seconds": "3",
+          "label": "YouTube 로 전환"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "3",
+          "pause": "1.5",
+          "duration": "300",
+          "label": "YouTube 스크롤"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.android.settings",
+          "clear_mode": "none",
+          "wait_seconds": "3",
+          "label": "설정으로 전환"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "3",
+          "pause": "1.5",
+          "duration": "300",
+          "label": "설정 스크롤"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.settings",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [
+      {
+        "startStep": 6,
+        "endStep": 11,
+        "count": 2
+      }
+    ],
+    "requirements": {
+      "packages": [
+        "com.android.chrome",
+        "com.google.android.youtube",
+        "com.android.settings"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] B1 Chrome 위키 로드+스크롤",
+    "description": "[B1 · P1] 개인 계정 로그인 상태 그대로(동기화 I/O 가 섞일 수 있음). 회차마다 Chrome 디스크 캐시를 비우고 영문 위키 문서 2개를 열어 8번씩 스크롤 (한글 URL 은 검색어로 처리되므로 ASCII URL). 준비: Chrome 처음 실행 화면 완료",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "label": "Chrome 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "rm -rf /data/data/com.android.chrome/cache/Cache /data/data/com.android.chrome/cache/image_manager_disk_cache; echo ok",
+          "label": "Chrome 디스크 캐시 비우기"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "am start -a android.intent.action.VIEW -d https://en.m.wikipedia.org/wiki/Solid-state_drive -p com.android.chrome",
+          "label": "위키 SSD 문서 열기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "10",
+          "label": "로딩 대기"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "8",
+          "pause": "1.5",
+          "duration": "300",
+          "label": "문서 스크롤"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "am start -a android.intent.action.VIEW -d https://en.m.wikipedia.org/wiki/Flash_memory -p com.android.chrome",
+          "label": "위키 플래시 메모리 문서 열기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "10",
+          "label": "로딩 대기"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "8",
+          "pause": "1.5",
+          "duration": "300",
+          "label": "문서 스크롤"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.android.chrome"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] B1i Chrome 위키 (시크릿 모드)",
+    "description": "[B1i · P2] B1 과 같은 동작을 시크릿 탭에서. 시크릿은 HTTP 캐시·쿠키를 메모리에만 두므로 B1 대비 write 가 얼마나 줄어드는지 비교용. 준비: Chrome 처음 실행 화면 완료 / dry-run 확인: 메뉴·시크릿 탭·주소창 요소 이름",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "settings put secure selected_input_method_subtype -1097284911; ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME >/dev/null; settings get secure selected_input_method_subtype",
+          "label": "키보드 영문(Alphabet)으로"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "label": "Chrome 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "rm -rf /data/data/com.android.chrome/cache/Cache /data/data/com.android.chrome/cache/image_manager_disk_cache; echo ok",
+          "label": "Chrome 디스크 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "clear_mode": "force_stop",
+          "wait_seconds": "4",
+          "label": "Chrome 실행"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "com.android.chrome:id/menu_button",
+          "label": "메뉴 열기"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_text": "새 시크릿 탭",
+          "label": "새 시크릿 탭"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "2",
+          "label": "대기 2초"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "com.android.chrome:id/url_bar",
+          "label": "주소창"
+        }
+      },
+      {
+        "type": "text",
+        "params": {
+          "input_text": "https://en.m.wikipedia.org/wiki/Solid-state_drive",
+          "submit": "true",
+          "label": "위키 SSD 문서 열기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "10",
+          "label": "로딩 대기"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "8",
+          "pause": "1.5",
+          "duration": "300",
+          "label": "문서 스크롤"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "com.android.chrome:id/url_bar",
+          "label": "주소창"
+        }
+      },
+      {
+        "type": "text",
+        "params": {
+          "input_text": "https://en.m.wikipedia.org/wiki/Flash_memory",
+          "submit": "true",
+          "label": "위키 플래시 메모리 문서 열기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "10",
+          "label": "로딩 대기"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "8",
+          "pause": "1.5",
+          "duration": "300",
+          "label": "문서 스크롤"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "label": "Chrome 종료 (시크릿 탭 폐기)"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.android.chrome"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] B2 YouTube 검색+결과 스크롤",
+    "description": "[B2 · P1] 검색 바가 스크롤 시 숨으므로 검색을 먼저 한다. 회차마다 이미지 캐시를 비워 썸네일을 다시 받는다.",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "settings put secure selected_input_method_subtype -1097284911; ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME >/dev/null; settings get secure selected_input_method_subtype",
+          "label": "키보드 영문(Alphabet)으로"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "label": "YouTube 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "rm -rf /data/data/com.google.android.youtube/cache/glide_disk_cache /data/data/com.google.android.youtube/cache/volleyCache /data/data/com.google.android.youtube/cache/image_manager_disk_cache; echo ok",
+          "label": "YouTube 이미지 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "clear_mode": "force_stop",
+          "wait_seconds": "6",
+          "label": "YouTube 실행"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_content_desc": "검색",
+          "label": "검색 열기"
+        }
+      },
+      {
+        "type": "text",
+        "params": {
+          "input_text": "nasa 우주",
+          "submit": "true",
+          "label": "검색어 입력"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "4",
+          "label": "결과 로딩"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "20",
+          "pause": "1.5",
+          "duration": "300",
+          "label": "검색 결과 스크롤"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.google.android.youtube"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] B3 YouTube 홈피드 40회",
+    "description": "[B3 · P1] 홈피드를 1.5초 간격으로 40번 스크롤. 썸네일·미리보기 캐시 write 가 이어진다.",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "label": "YouTube 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "rm -rf /data/data/com.google.android.youtube/cache/glide_disk_cache /data/data/com.google.android.youtube/cache/volleyCache /data/data/com.google.android.youtube/cache/image_manager_disk_cache; echo ok",
+          "label": "YouTube 이미지 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "clear_mode": "force_stop",
+          "wait_seconds": "6",
+          "label": "YouTube 실행"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "40",
+          "pause": "1.5",
+          "duration": "300",
+          "label": "홈피드 스크롤 40회"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.google.android.youtube"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] C1 YouTube 영상 3분",
+    "description": "[C1 · P1] 검색 결과의 일반 영상을 3분 재생. Premium 계정이라 광고가 없다. 재생 화질은 자동.",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "settings put secure selected_input_method_subtype -1097284911; ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME >/dev/null; settings get secure selected_input_method_subtype",
+          "label": "키보드 영문(Alphabet)으로"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "clear_mode": "force_stop",
+          "wait_seconds": "6",
+          "label": "YouTube 실행"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_content_desc": "검색",
+          "label": "검색 열기"
+        }
+      },
+      {
+        "type": "text",
+        "params": {
+          "input_text": "nasa 4k",
+          "submit": "true",
+          "label": "검색어 입력"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "4",
+          "label": "결과 로딩"
+        }
+      },
+      {
+        "type": "youtube",
+        "params": {
+          "action": "select_video",
+          "label": "일반 영상 선택"
+        }
+      },
+      {
+        "type": "youtube",
+        "params": {
+          "action": "watch",
+          "seconds": "0",
+          "label": "재생 준비 확인"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "youtube",
+        "params": {
+          "action": "watch",
+          "seconds": "180",
+          "ad_timeout": "180",
+          "label": "본영상 재생 3분"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.google.android.youtube"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] C2 Shorts 30회 넘기기",
+    "description": "[C2 · P1] Shorts 를 3초씩 보고 넘기기를 30번.",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "clear_mode": "force_stop",
+          "wait_seconds": "6",
+          "label": "YouTube 실행"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_content_desc": "Shorts",
+          "label": "Shorts 탭"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "4",
+          "label": "첫 Shorts 로딩"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "for i in $(seq 30); do input swipe 636 2000 636 700 200; sleep 3; done; echo 30",
+          "label": "Shorts 30개 넘기기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.google.android.youtube"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] C3 로컬 동영상 2분",
+    "description": "[C3 · P1] setup.sh 가 만든 2분 촬영 영상(Movies/uxtest_fixture.mp4)을 캐시를 비운 뒤 시스템 동영상 앱(com.coloros.video)으로 재생 — 앱을 지정하지 않으면 앱 선택 창에서 멈춘다. 스트리밍(C1)과 비교용. 준비: setup.sh 의 fixture 영상",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "id=$(content query --uri content://media/external/video/media --projection _id --where \"_data='/storage/emulated/0/Movies/uxtest_fixture.mp4'\" | sed -n 's/.*_id=\\([0-9]*\\).*/\\1/p' | head -1); am start -a android.intent.action.VIEW -t video/mp4 -d content://media/external/video/media/$id -p com.coloros.video",
+          "label": "로컬 영상 열기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "120",
+          "label": "로컬 영상 재생 2분"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "3",
+          "label": "홈"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oneplus.gallery",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.coloros.video",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.coloros.video"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] D1 사진 10장",
+    "description": "[D1 · P1] 워밍업 1장 뒤 2초 간격 10장 (1초 간격은 처리 중 셔터 입력이 빠져 6장만 저장됨, 모션 사진 꺼짐). 촬영한 파일은 측정 후 지운다.",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "touch /data/local/tmp/ux_mark",
+          "label": "새 파일 기준 시각 기록"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "am start -W -a android.media.action.STILL_IMAGE_CAMERA",
+          "label": "카메라(사진) 실행"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "카메라 준비"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input tap 635 2420",
+          "label": "워밍업 1장"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "4",
+          "label": "대기 4초"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "for i in $(seq 10); do input tap 635 2420; sleep 2; done; echo 10",
+          "label": "사진 10장 촬영"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "5",
+          "label": "저장 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "echo CAPTURED files=$(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark | wc -l) kb=$(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark -exec du -k {} + | awk '{s+=$1} END {print s+0}'); for f in $(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark); do content delete --uri content://media/external/file --where \"_data='$f'\"; rm -f \"$f\"; done; find /storage/emulated/0/DCIM/Camera/Cshot -mindepth 1 -type d -empty -delete 2>/dev/null; echo cleaned",
+          "label": "촬영 파일 정리"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oplus.camera",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.oplus.camera"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] D2 버스트샷 3초",
+    "description": "[D2 · P1] 셔터를 3초 길게 눌러 연속 촬영 (실측 3초 ≈ 20장, Cshot 폴더). 측정 후 지운다.",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "touch /data/local/tmp/ux_mark",
+          "label": "새 파일 기준 시각 기록"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "am start -W -a android.media.action.STILL_IMAGE_CAMERA",
+          "label": "카메라(사진) 실행"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "카메라 준비"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input tap 635 2420",
+          "label": "워밍업 1장"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "4",
+          "label": "대기 4초"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input swipe 635 2420 635 2420 3000",
+          "label": "셔터 3초 누르기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "8",
+          "label": "저장 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "echo CAPTURED files=$(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark | wc -l) kb=$(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark -exec du -k {} + | awk '{s+=$1} END {print s+0}'); for f in $(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark); do content delete --uri content://media/external/file --where \"_data='$f'\"; rm -f \"$f\"; done; find /storage/emulated/0/DCIM/Camera/Cshot -mindepth 1 -type d -empty -delete 2>/dev/null; echo cleaned",
+          "label": "촬영 파일 정리"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oplus.camera",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.oplus.camera"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] D3 동영상 30초 1080p",
+    "description": "[D3 · P1] 동영상 모드는 VIDEO_CAMERA 인텐트로 바로 연다(모드 전환 UI 를 거치지 않음). 기기 기본값 1920×1080 (fixture 실측, 약 2MB/s). 측정 후 지운다.",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "touch /data/local/tmp/ux_mark",
+          "label": "새 파일 기준 시각 기록"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "am start -W -a android.media.action.VIDEO_CAMERA",
+          "label": "카메라(동영상) 실행"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "카메라 준비"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input tap 635 2420",
+          "label": "녹화 시작"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "30",
+          "label": "녹화 30초"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input tap 635 2420",
+          "label": "녹화 종료"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "5",
+          "label": "저장 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "echo CAPTURED files=$(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark | wc -l) kb=$(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark -exec du -k {} + | awk '{s+=$1} END {print s+0}'); for f in $(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark); do content delete --uri content://media/external/file --where \"_data='$f'\"; rm -f \"$f\"; done; find /storage/emulated/0/DCIM/Camera/Cshot -mindepth 1 -type d -empty -delete 2>/dev/null; echo cleaned",
+          "label": "촬영 파일 정리"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oplus.camera",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.oplus.camera"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] E2 512MB 파일 복사",
+    "description": "[E2 · P1] /sdcard(FUSE 경유)에서 512MB 파일 복사. 원본 생성과 캐시 비우기는 측정 밖.",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dd if=/dev/urandom of=/sdcard/ux_src.bin bs=1M count=512 2>&1 | tail -1; sync",
+          "label": "원본 512MB 만들기"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "cp /sdcard/ux_src.bin /sdcard/ux_dst.bin && sync && ls -l /sdcard/ux_dst.bin",
+          "label": "512MB 복사"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "rm -f /sdcard/ux_src.bin /sdcard/ux_dst.bin; echo removed",
+          "label": "파일 정리"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] E3 앱 재설치 (pm install)",
+    "description": "[E3 · P1] 설치된 Instagram 의 APK(분할 포함)를 그대로 다시 설치(-r, 데이터 유지). 버전이 같아 앱 상태는 바뀌지 않는다.",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "rm -rf /data/local/tmp/ux_apk; mkdir -p /data/local/tmp/ux_apk; for p in $(pm path com.instagram.android | sed 's/package://'); do cp $p /data/local/tmp/ux_apk/; done; sync; ls /data/local/tmp/ux_apk",
+          "label": "설치 파일 복사"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "s=$(pm install-create -r | sed 's/.*\\[\\([0-9]*\\)\\].*/\\1/'); i=0; for f in /data/local/tmp/ux_apk/*.apk; do pm install-write $s $i $f >/dev/null; i=$((i+1)); done; pm install-commit $s",
+          "label": "Instagram 재설치"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "15",
+          "label": "설치 후 dexopt 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "rm -rf /data/local/tmp/ux_apk; echo removed",
+          "label": "설치 파일 정리"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.instagram.android"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] E4 캐시 정리 trim-caches",
+    "description": "[E4 · P1] 회차마다 YouTube·Chrome 캐시를 채운 뒤 전체 앱 캐시를 비운다. 파일 삭제의 메타데이터·discard 성격을 본다.",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "캐시 채우기: YouTube"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "15",
+          "pause": "1",
+          "duration": "300",
+          "label": "캐시 채우기: 피드 스크롤"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "clear_mode": "force_stop",
+          "wait_seconds": "4",
+          "label": "캐시 채우기: Chrome"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "am start -a android.intent.action.VIEW -d https://en.m.wikipedia.org/wiki/Solid-state_drive -p com.android.chrome",
+          "label": "캐시 채우기: 위키"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "10",
+          "label": "대기 10초"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "3",
+          "label": "홈"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync",
+          "label": "sync"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "pm trim-caches 999G; echo trimmed",
+          "label": "캐시 정리 (trim-caches)"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "5",
+          "label": "discard 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.google.android.youtube",
+        "com.android.chrome"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] G1 그리드 처음→끝",
+    "description": "[G1 · P1] NASA 1000장 그리드를 끝까지 스크롤 (4열 기준 약 250줄). 1회차 = cold(썸네일 미생성), 2·3회차 = warm. Perfetto FrameTimeline 과 gfxinfo 를 함께 남긴다. 준비: NASA 1000장 푸시 (dataset/nasa/push.py), 갤러리 처음 실행 화면 완료, 1회차 cold 는 push.py --repush 직후 / dry-run 확인: 끝까지 닿는 스크롤 횟수, Perfetto 와 fsiotrace 동시 수집",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.oneplus.gallery",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "갤러리 실행"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys gfxinfo com.oneplus.gallery reset >/dev/null; echo reset",
+          "label": "프레임 통계 초기화"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "mkdir -p /dev/ux; cat /data/local/tmp/ux_perfetto.cfg | perfetto --txt -c - --background -o /dev/ux/ux_G1_$(date +%Y%m%d_%H%M%S).pftrace",
+          "label": "Perfetto(FrameTimeline) 시작"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "70",
+          "pause": "0.5",
+          "duration": "300",
+          "label": "그리드 처음→끝"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "kill -TERM $(pidof perfetto) 2>/dev/null; while pidof perfetto >/dev/null; do sleep 1; done; ls -l /dev/ux/*.pftrace | tail -1",
+          "label": "Perfetto 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys gfxinfo com.oneplus.gallery framestats > /dev/ux/ux_gfx_G1_$(date +%Y%m%d_%H%M%S).txt; grep -E 'Total frames|Janky frames|90th|99th' /dev/ux/ux_gfx_G1_*.txt | tail -4",
+          "label": "프레임 통계 저장"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oneplus.gallery",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.oneplus.gallery"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] G2 뷰어 1→1000장",
+    "description": "[G2 · P1] 뷰어에서 0.5초 간격으로 다음 사진 넘기기 999번. 원본 디코딩 read 와 jank 를 같이 본다. 준비: NASA 1000장 푸시 (dataset/nasa/push.py), 갤러리 처음 실행 화면 완료, 1회차 cold 는 push.py --repush 직후 / dry-run 확인: 첫 사진 좌표, 넘김 방향",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.oneplus.gallery",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "갤러리 실행"
+        }
+      },
+      {
+        "type": "tap",
+        "params": {
+          "x": "160",
+          "y": "600",
+          "label": "첫 사진 열기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "2",
+          "label": "뷰어 로딩"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys gfxinfo com.oneplus.gallery reset >/dev/null; echo reset",
+          "label": "프레임 통계 초기화"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "mkdir -p /dev/ux; cat /data/local/tmp/ux_perfetto_light.cfg | perfetto --txt -c - --background -o /dev/ux/ux_G2_$(date +%Y%m%d_%H%M%S).pftrace",
+          "label": "Perfetto(FrameTimeline) 시작"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "for i in $(seq 999); do input swipe 1100 1386 170 1386 150; sleep 0.5; done; echo 999",
+          "label": "다음 사진 999장"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "kill -TERM $(pidof perfetto) 2>/dev/null; while pidof perfetto >/dev/null; do sleep 1; done; ls -l /dev/ux/*.pftrace | tail -1",
+          "label": "Perfetto 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys gfxinfo com.oneplus.gallery framestats > /dev/ux/ux_gfx_G2_$(date +%Y%m%d_%H%M%S).txt; grep -E 'Total frames|Janky frames|90th|99th' /dev/ux/ux_gfx_G2_*.txt | tail -4",
+          "label": "프레임 통계 저장"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oneplus.gallery",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.oneplus.gallery"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] A4 무거운 앱 cold start",
+    "description": "[A4 · P2] 지도·Facebook·Instagram 을 캐시를 비우고 실행만 한다 (Netflix 제외). Facebook·Instagram 은 로그아웃 상태라 첫 화면까지의 실행 read 만 본다.",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.apps.maps",
+          "clear_mode": "force_stop",
+          "wait_seconds": "8",
+          "label": "지도 cold start"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "3",
+          "label": "홈"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.facebook.katana",
+          "clear_mode": "force_stop",
+          "wait_seconds": "8",
+          "label": "Facebook(로그아웃 화면) cold start"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "3",
+          "label": "홈"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.instagram.android",
+          "clear_mode": "force_stop",
+          "wait_seconds": "8",
+          "label": "Instagram(약관 화면) cold start"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "3",
+          "label": "홈"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.apps.maps",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.facebook.katana",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.instagram.android",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.google.android.apps.maps",
+        "com.facebook.katana",
+        "com.instagram.android"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] A5 최근 앱 화면 전환 ×6",
+    "description": "[A5 · P2] 6개 앱을 띄워 둔 뒤 최근 앱 화면(KEYCODE_APP_SWITCH)에서 이전 앱 카드를 골라 여는 것을 6번. 메모리에 남은 앱으로의 전환이라 read 가 짧은 burst 로만 나와야 한다. dry-run 확인: 최근 앱 카드 스와이프 방향·좌표",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "clear_mode": "force_stop",
+          "wait_seconds": "4",
+          "label": "Chrome 띄우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "clear_mode": "force_stop",
+          "wait_seconds": "4",
+          "label": "YouTube 띄우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.android.settings",
+          "clear_mode": "force_stop",
+          "wait_seconds": "4",
+          "label": "설정 띄우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.oneplus.gallery",
+          "clear_mode": "force_stop",
+          "wait_seconds": "4",
+          "label": "갤러리 띄우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.apps.maps",
+          "clear_mode": "force_stop",
+          "wait_seconds": "4",
+          "label": "지도 띄우기"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sleep 1; dumpsys window | grep mCurrentFocus | grep -q GrantPermissionsActivity && { input keyevent 4; echo perm-closed; } || echo no-perm",
+          "label": "권한 창 있으면 닫기 (선택 안 함)"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.calendar",
+          "clear_mode": "force_stop",
+          "wait_seconds": "4",
+          "label": "캘린더 띄우기"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "187",
+          "label": "최근 앱 화면"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "1",
+          "label": "대기 1초"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input swipe 300 1400 1000 1400 200",
+          "label": "이전 앱 카드로"
+        }
+      },
+      {
+        "type": "tap",
+        "params": {
+          "x": "636",
+          "y": "1400",
+          "label": "가운데 카드 열기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "2",
+          "label": "앱 표시 대기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.settings",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oneplus.gallery",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.apps.maps",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.calendar",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [
+      {
+        "startStep": 8,
+        "endStep": 12,
+        "count": 6
+      }
+    ],
+    "requirements": {
+      "packages": [
+        "com.android.chrome",
+        "com.google.android.youtube",
+        "com.android.settings",
+        "com.oneplus.gallery",
+        "com.google.android.apps.maps",
+        "com.google.android.calendar"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] A6 데이터 초기화 후 첫 실행 (날씨)",
+    "description": "[A6 · P2] pm clear 직후 첫 실행 — 앱 데이터(DB·설정·캐시) 초기 생성 write. A1(같은 앱 재실행)과 비교용. Chrome 은 초기화하면 로그인·탭이 사라져 계정 앱이 아닌 날씨 앱으로 바꿨다. 첫 실행 동의 화면이 나오면 그 화면까지가 측정 범위다. dry-run 확인: 첫 실행 화면에서 멈추는지",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "net.oneplus.weather",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "pm clear net.oneplus.weather",
+          "label": "날씨 앱 데이터 초기화"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "net.oneplus.weather",
+          "clear_mode": "none",
+          "wait_seconds": "15",
+          "label": "초기화 후 첫 실행"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "net.oneplus.weather",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "net.oneplus.weather"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] A7 홈↔YouTube 복귀 ×10",
+    "description": "[A7 · P2] YouTube 를 띄워 둔 채 홈과 앱을 10번 오간다. 백그라운드 진입 때 상태 저장 write 를 본다.",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "clear_mode": "force_stop",
+          "wait_seconds": "6",
+          "label": "YouTube 실행"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "3",
+          "label": "홈"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "2",
+          "label": "대기 2초"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "clear_mode": "none",
+          "wait_seconds": "3",
+          "label": "YouTube 로 복귀"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "3",
+          "label": "홈"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "2",
+          "label": "홈 대기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [
+      {
+        "startStep": 4,
+        "endStep": 6,
+        "count": 10
+      }
+    ],
+    "requirements": {
+      "packages": [
+        "com.google.android.youtube"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] A8 백그라운드 5분 뒤 복귀",
+    "description": "[A8 · P2] YouTube 를 띄운 뒤 다른 앱 3개를 거쳐 5분 둔 뒤 돌아온다. 측정은 복귀 구간만. 프로세스가 살아 있었는지(YT_ALIVE/KILLED)를 측정 전에 기록해 warm/cold 복귀를 나눈다.",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "clear_mode": "force_stop",
+          "wait_seconds": "6",
+          "label": "YouTube 실행"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "5",
+          "pause": "1.5",
+          "duration": "300",
+          "label": "피드 스크롤"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "3",
+          "label": "홈"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "clear_mode": "force_stop",
+          "wait_seconds": "4",
+          "label": "다른 앱: Chrome"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.apps.maps",
+          "clear_mode": "force_stop",
+          "wait_seconds": "6",
+          "label": "다른 앱: 지도"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.oplus.camera",
+          "clear_mode": "force_stop",
+          "wait_seconds": "4",
+          "label": "다른 앱: 카메라"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "3",
+          "label": "홈"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "300",
+          "label": "백그라운드 5분"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "pidof com.google.android.youtube >/dev/null && echo YT_ALIVE || echo YT_KILLED",
+          "label": "YouTube 프로세스 생존 여부"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "clear_mode": "none",
+          "wait_seconds": "5",
+          "label": "5분 뒤 YouTube 복귀"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "3",
+          "pause": "1.5",
+          "duration": "300",
+          "label": "피드 스크롤"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.apps.maps",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oplus.camera",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.google.android.youtube",
+        "com.android.chrome",
+        "com.google.android.apps.maps",
+        "com.oplus.camera"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] B4 Chrome 탭 5개 열기+전환",
+    "description": "[B4 · P2] 시크릿 탭 5개에 위키 문서를 열고 주소창 좌우 스와이프로 탭을 오간다. 개인 Chrome 의 기존 탭을 건드리지 않으려고 시크릿 탭을 쓰고, 종료하면 사라진다. 탭 상태 저장 write 를 본다. 준비: Chrome 처음 실행 화면 완료 / dry-run 확인: 두 번째 이후 새 시크릿 탭의 주소창 id, 주소창 스와이프 탭 전환 좌표",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "settings put secure selected_input_method_subtype -1097284911; ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME >/dev/null; settings get secure selected_input_method_subtype",
+          "label": "키보드 영문(Alphabet)으로"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "label": "Chrome 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "rm -rf /data/data/com.android.chrome/cache/Cache /data/data/com.android.chrome/cache/image_manager_disk_cache; echo ok",
+          "label": "Chrome 디스크 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "clear_mode": "force_stop",
+          "wait_seconds": "4",
+          "label": "Chrome 실행"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "com.android.chrome:id/menu_button",
+          "label": "메뉴 열기"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_text": "새 시크릿 탭",
+          "label": "새 시크릿 탭"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "1",
+          "label": "대기 1초"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "com.android.chrome:id/url_bar",
+          "label": "주소창"
+        }
+      },
+      {
+        "type": "text",
+        "params": {
+          "input_text": "https://en.m.wikipedia.org/wiki/NAND_flash",
+          "submit": "true",
+          "label": "탭 1 열기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "6",
+          "label": "로딩 대기"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "com.android.chrome:id/menu_button",
+          "label": "메뉴 열기"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_text": "새 시크릿 탭",
+          "label": "새 시크릿 탭"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "1",
+          "label": "대기 1초"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "com.android.chrome:id/url_bar",
+          "label": "주소창"
+        }
+      },
+      {
+        "type": "text",
+        "params": {
+          "input_text": "https://en.m.wikipedia.org/wiki/Universal_Flash_Storage",
+          "submit": "true",
+          "label": "탭 2 열기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "6",
+          "label": "로딩 대기"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "com.android.chrome:id/menu_button",
+          "label": "메뉴 열기"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_text": "새 시크릿 탭",
+          "label": "새 시크릿 탭"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "1",
+          "label": "대기 1초"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "com.android.chrome:id/url_bar",
+          "label": "주소창"
+        }
+      },
+      {
+        "type": "text",
+        "params": {
+          "input_text": "https://en.m.wikipedia.org/wiki/F2FS",
+          "submit": "true",
+          "label": "탭 3 열기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "6",
+          "label": "로딩 대기"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "com.android.chrome:id/menu_button",
+          "label": "메뉴 열기"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_text": "새 시크릿 탭",
+          "label": "새 시크릿 탭"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "1",
+          "label": "대기 1초"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "com.android.chrome:id/url_bar",
+          "label": "주소창"
+        }
+      },
+      {
+        "type": "text",
+        "params": {
+          "input_text": "https://en.m.wikipedia.org/wiki/Android_(operating_system)",
+          "submit": "true",
+          "label": "탭 4 열기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "6",
+          "label": "로딩 대기"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "com.android.chrome:id/menu_button",
+          "label": "메뉴 열기"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_text": "새 시크릿 탭",
+          "label": "새 시크릿 탭"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "1",
+          "label": "대기 1초"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "com.android.chrome:id/url_bar",
+          "label": "주소창"
+        }
+      },
+      {
+        "type": "text",
+        "params": {
+          "input_text": "https://en.m.wikipedia.org/wiki/Mars",
+          "submit": "true",
+          "label": "탭 5 열기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "6",
+          "label": "로딩 대기"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "for i in 1 2 3 4 5 6 7 8; do input swipe 300 250 1000 250 150; sleep 2; done; echo 8",
+          "label": "주소창 스와이프로 탭 8번 전환"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "label": "Chrome 종료 (시크릿 탭 폐기)"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.android.chrome"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] B5 Chrome 이미지 많은 문서",
+    "description": "[B5 · P2] 국기 이미지 200여 개가 있는 위키 문서를 캐시를 비우고 열어 30번 스크롤. B1(글 위주 문서)과 캐시 write 양 비교. 준비: Chrome 처음 실행 화면 완료",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "label": "Chrome 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "rm -rf /data/data/com.android.chrome/cache/Cache /data/data/com.android.chrome/cache/image_manager_disk_cache; echo ok",
+          "label": "Chrome 디스크 캐시 비우기"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "am start -a android.intent.action.VIEW -d https://en.m.wikipedia.org/wiki/Gallery_of_sovereign_state_flags -p com.android.chrome",
+          "label": "국기 갤러리 문서 열기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "10",
+          "label": "로딩 대기"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "30",
+          "pause": "1",
+          "duration": "300",
+          "label": "이미지 문서 스크롤"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.android.chrome"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] B6 지도 이동·확대 10회",
+    "description": "[B6 · P2] 검색 기록을 남기지 않으려고 좌표 인텐트로 서울시청을 열고, 이동 5번·두 번 탭 확대 5번. 지도 타일 캐시 read/write 를 본다. dry-run 확인: 두 번 탭 확대 동작",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.apps.maps",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "rm -rf /data/data/com.google.android.apps.maps/cache/*; echo ok",
+          "label": "지도 캐시 비우기"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "am start -a android.intent.action.VIEW -d \"geo:$(echo 37.5665 126.9780 | tr ' ' '\\054')?z=15\" -p com.google.android.apps.maps",
+          "label": "서울시청 좌표 열기 (검색 없이)"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "8",
+          "label": "지도 로딩"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sleep 1; dumpsys window | grep mCurrentFocus | grep -q GrantPermissionsActivity && { input keyevent 4; echo perm-closed; } || echo no-perm",
+          "label": "권한 창 있으면 닫기 (선택 안 함)"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "for d in '300 1400 1000 1400' '1000 1400 300 1400' '636 1000 636 1900' '636 1900 636 1000' '200 1400 1100 1400'; do input swipe $d 300; sleep 3; done; echo pan5",
+          "label": "지도 이동 5번"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input tap 636 1400 & sleep 0.12; input tap 636 1400; wait",
+          "label": "확대 1"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "대기 3초"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input tap 636 1400 & sleep 0.12; input tap 636 1400; wait",
+          "label": "확대 2"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "대기 3초"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input tap 500 1200 & sleep 0.12; input tap 500 1200; wait",
+          "label": "확대 3"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "대기 3초"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input tap 800 1600 & sleep 0.12; input tap 800 1600; wait",
+          "label": "확대 4"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "대기 3초"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input tap 636 1400 & sleep 0.12; input tap 636 1400; wait",
+          "label": "확대 5"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "대기 3초"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.apps.maps",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.google.android.apps.maps"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] B8 Gmail 받은편지함 스크롤",
+    "description": "[B8 · P2] 받은편지함을 30번 내리고 다시 올린다. 메일을 열면 읽음 표시가 계정에 남으므로 열지 않는다. SQLite 위주 작은 I/O 를 본다. 준비: Gmail 첫 실행 안내 화면 완료",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.gm",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.gm",
+          "clear_mode": "force_stop",
+          "wait_seconds": "6",
+          "label": "Gmail 실행"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "30",
+          "pause": "1.5",
+          "duration": "300",
+          "label": "받은편지함 스크롤"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "up",
+          "count": "30",
+          "pause": "0.8",
+          "duration": "300",
+          "label": "위로 스크롤"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.gm",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.google.android.gm"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] B9 Play 스토어 둘러보기",
+    "description": "[B9 · P2] 검색 기록을 남기지 않으려고 검색 대신 홈 추천과 인기 차트를 스크롤 (설치 안 함). 아이콘·배너 캐시 write 를 본다. dry-run 확인: 인기 차트 탭 위치(스크롤 전 화면)",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.vending",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "rm -rf /data/data/com.android.vending/cache/*; echo ok",
+          "label": "Play 스토어 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.android.vending",
+          "clear_mode": "force_stop",
+          "wait_seconds": "6",
+          "label": "Play 스토어 실행"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "25",
+          "pause": "1.5",
+          "duration": "300",
+          "label": "홈 추천 스크롤"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_content_desc": "인기 차트",
+          "x": "706",
+          "y": "1540",
+          "label": "인기 차트 탭"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "4",
+          "label": "차트 로딩"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "15",
+          "pause": "1.5",
+          "duration": "300",
+          "label": "차트 스크롤"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.vending",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.android.vending"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] C4a YouTube 360p 3분",
+    "description": "[C4a · P2] C1 과 같은 영상을 화질 360p 로 고정해 3분 재생. 화질별 버퍼(캐시) write 차이를 본다.",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "settings put secure selected_input_method_subtype -1097284911; ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME >/dev/null; settings get secure selected_input_method_subtype",
+          "label": "키보드 영문(Alphabet)으로"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "clear_mode": "force_stop",
+          "wait_seconds": "6",
+          "label": "YouTube 실행"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_content_desc": "검색",
+          "label": "검색 열기"
+        }
+      },
+      {
+        "type": "text",
+        "params": {
+          "input_text": "nasa 4k",
+          "submit": "true",
+          "label": "검색어 입력"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "4",
+          "label": "결과 로딩"
+        }
+      },
+      {
+        "type": "youtube",
+        "params": {
+          "action": "select_video",
+          "label": "일반 영상 선택"
+        }
+      },
+      {
+        "type": "youtube",
+        "params": {
+          "action": "watch",
+          "seconds": "0",
+          "label": "재생 준비 확인"
+        }
+      },
+      {
+        "type": "youtube",
+        "params": {
+          "action": "quality",
+          "quality": "360p",
+          "label": "화질 360p 고정"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "youtube",
+        "params": {
+          "action": "watch",
+          "seconds": "180",
+          "ad_timeout": "180",
+          "label": "360p 재생 3분"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.google.android.youtube"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] C4b YouTube 1080p 3분",
+    "description": "[C4b · P2] C1 과 같은 영상을 화질 1080p 로 고정해 3분 재생. 화질별 버퍼(캐시) write 차이를 본다.",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "settings put secure selected_input_method_subtype -1097284911; ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME >/dev/null; settings get secure selected_input_method_subtype",
+          "label": "키보드 영문(Alphabet)으로"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "clear_mode": "force_stop",
+          "wait_seconds": "6",
+          "label": "YouTube 실행"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_content_desc": "검색",
+          "label": "검색 열기"
+        }
+      },
+      {
+        "type": "text",
+        "params": {
+          "input_text": "nasa 4k",
+          "submit": "true",
+          "label": "검색어 입력"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "4",
+          "label": "결과 로딩"
+        }
+      },
+      {
+        "type": "youtube",
+        "params": {
+          "action": "select_video",
+          "label": "일반 영상 선택"
+        }
+      },
+      {
+        "type": "youtube",
+        "params": {
+          "action": "watch",
+          "seconds": "0",
+          "label": "재생 준비 확인"
+        }
+      },
+      {
+        "type": "youtube",
+        "params": {
+          "action": "quality",
+          "quality": "1080p",
+          "label": "화질 1080p 고정"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "youtube",
+        "params": {
+          "action": "watch",
+          "seconds": "180",
+          "ad_timeout": "180",
+          "label": "1080p 재생 3분"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.google.android.youtube"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] C5 YouTube 구간 이동 ×10",
+    "description": "[C5 · P2] 재생 중 플레이어 오른쪽 연속 탭(+40초)과 왼쪽(-20초)을 번갈아 10번. 버퍼 밖으로 건너뛸 때 다시 받는 캐시 write 를 본다. dry-run 확인: 플레이어 좌표·연속 탭 이동량, 영상 길이 4분 이상",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "settings put secure selected_input_method_subtype -1097284911; ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME >/dev/null; settings get secure selected_input_method_subtype",
+          "label": "키보드 영문(Alphabet)으로"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "clear_mode": "force_stop",
+          "wait_seconds": "6",
+          "label": "YouTube 실행"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_content_desc": "검색",
+          "label": "검색 열기"
+        }
+      },
+      {
+        "type": "text",
+        "params": {
+          "input_text": "nasa 4k",
+          "submit": "true",
+          "label": "검색어 입력"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "4",
+          "label": "결과 로딩"
+        }
+      },
+      {
+        "type": "youtube",
+        "params": {
+          "action": "select_video",
+          "label": "일반 영상 선택"
+        }
+      },
+      {
+        "type": "youtube",
+        "params": {
+          "action": "watch",
+          "seconds": "0",
+          "label": "재생 준비 확인"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "20",
+          "label": "앞부분 버퍼링"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input tap 1000 420 & sleep 0.12; input tap 1000 420 & sleep 0.12; input tap 1000 420 & sleep 0.12; input tap 1000 420 & sleep 0.12; input tap 1000 420; wait",
+          "label": "앞으로 40초"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "6",
+          "label": "재생"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input tap 272 420 & sleep 0.12; input tap 272 420 & sleep 0.12; input tap 272 420; wait",
+          "label": "뒤로 20초"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "6",
+          "label": "재생"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [
+      {
+        "startStep": 9,
+        "endStep": 12,
+        "count": 5
+      }
+    ],
+    "requirements": {
+      "packages": [
+        "com.google.android.youtube"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] C6 YouTube Music 3분",
+    "description": "[C6 · P2] 링크로 곡 하나(3분 33초)를 열어 3분 재생 (화면 켜짐). 오디오 캐시 write 를 C1(영상)과 비교. 재생 기록은 C1 처럼 남는다. dry-run 확인: 링크로 바로 재생되는지(PlaybackState state=3)",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.apps.youtube.music",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "am start -a android.intent.action.VIEW -d 'https://music.youtube.com/watch?v=dQw4w9WgXcQ' -p com.google.android.apps.youtube.music",
+          "label": "곡 열기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "180",
+          "label": "음악 재생 3분"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys media_session | grep -m3 -E 'package=|state=PlaybackState'",
+          "label": "재생 상태 확인"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.apps.youtube.music",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.google.android.apps.youtube.music"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] C7 로컬 동영상 이동 ×10",
+    "description": "[C7 · P2] C3 의 2분 영상을 캐시를 비우고 열어, 화면을 눌러 진행 막대를 띄운 뒤 10곳으로 건너뛴다. 비순차 read 를 C3(순차)와 비교. 준비: setup.sh 의 fixture 영상 / dry-run 확인: 진행 막대 y 좌표",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "id=$(content query --uri content://media/external/video/media --projection _id --where \"_data='/storage/emulated/0/Movies/uxtest_fixture.mp4'\" | sed -n 's/.*_id=\\([0-9]*\\).*/\\1/p' | head -1); am start -a android.intent.action.VIEW -t video/mp4 -d content://media/external/video/media/$id -p com.coloros.video",
+          "label": "로컬 영상 열기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "재생 시작"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "for x in 880 300 760 260 620 840 420 900 340 700; do input tap 636 1386; sleep 0.5; input tap $x 2393; sleep 4; done; echo seek10",
+          "label": "진행 막대 10곳 이동"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "3",
+          "label": "홈"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.coloros.video",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.coloros.video"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] D4 동영상 2분 1080p",
+    "description": "[D4 · P2] D3 와 같은 조건으로 2분 녹화. 장시간 지속 write 의 대역·주기를 본다. 측정 후 지운다.",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "touch /data/local/tmp/ux_mark",
+          "label": "새 파일 기준 시각 기록"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "am start -W -a android.media.action.VIDEO_CAMERA",
+          "label": "카메라(동영상) 실행"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "카메라 준비"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input tap 635 2420",
+          "label": "녹화 시작"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "120",
+          "label": "녹화 2분"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input tap 635 2420",
+          "label": "녹화 종료"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "5",
+          "label": "저장 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "echo CAPTURED files=$(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark | wc -l) kb=$(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark -exec du -k {} + | awk '{s+=$1} END {print s+0}'); for f in $(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark); do content delete --uri content://media/external/file --where \"_data='$f'\"; rm -f \"$f\"; done; find /storage/emulated/0/DCIM/Camera/Cshot -mindepth 1 -type d -empty -delete 2>/dev/null; echo cleaned",
+          "label": "촬영 파일 정리"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oplus.camera",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.oplus.camera"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] D5 동영상 30초 4K",
+    "description": "[D5 · P2] 해상도 메뉴에서 4K 를 골라 30초 녹화하고, 측정 뒤 1080p 로 되돌린다. D3(1080p)와 대역 비교. 측정 후 지운다.",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "touch /data/local/tmp/ux_mark",
+          "label": "새 파일 기준 시각 기록"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "am start -W -a android.media.action.VIDEO_CAMERA",
+          "label": "카메라(동영상) 실행"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "카메라 준비"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "com.oplus.camera:id/video_size_and_fps",
+          "label": "해상도 메뉴"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_text": "4K",
+          "label": "4K 선택"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "4",
+          "label": "메뉴 닫기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "2",
+          "label": "대기 2초"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input tap 635 2420",
+          "label": "녹화 시작"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "30",
+          "label": "녹화 30초"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input tap 635 2420",
+          "label": "녹화 종료"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "8",
+          "label": "저장 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "com.oplus.camera:id/video_size_and_fps",
+          "label": "해상도 메뉴"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_text": "1080p",
+          "label": "1080p 로 되돌리기"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "4",
+          "label": "메뉴 닫기"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "echo CAPTURED files=$(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark | wc -l) kb=$(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark -exec du -k {} + | awk '{s+=$1} END {print s+0}'); for f in $(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark); do content delete --uri content://media/external/file --where \"_data='$f'\"; rm -f \"$f\"; done; find /storage/emulated/0/DCIM/Camera/Cshot -mindepth 1 -type d -empty -delete 2>/dev/null; echo cleaned",
+          "label": "촬영 파일 정리"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oplus.camera",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.oplus.camera"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] D6 사진 5장 → 바로 갤러리",
+    "description": "[D6 · P2] 사진 5장을 찍자마자 카메라의 최근 사진 버튼으로 뷰어에 들어가 5장을 넘겨 본다. 저장 write 직후의 read·썸네일 생성을 본다. 측정 후 지운다. dry-run 확인: 최근 사진 버튼이 여는 앱·넘김 방향",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "touch /data/local/tmp/ux_mark",
+          "label": "새 파일 기준 시각 기록"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "am start -W -a android.media.action.STILL_IMAGE_CAMERA",
+          "label": "카메라(사진) 실행"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "카메라 준비"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input tap 635 2420",
+          "label": "워밍업 1장"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "4",
+          "label": "대기 4초"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "for i in $(seq 5); do input tap 635 2420; sleep 2; done; echo 5",
+          "label": "사진 5장 촬영"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "com.oplus.camera:id/thumbnail",
+          "label": "최근 사진 열기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "뷰어 로딩"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "for i in 1 2 3 4 5; do input swipe 170 1386 1100 1386 150; sleep 1.5; done; echo 5",
+          "label": "이전 사진 5장 넘기기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "echo CAPTURED files=$(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark | wc -l) kb=$(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark -exec du -k {} + | awk '{s+=$1} END {print s+0}'); for f in $(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark); do content delete --uri content://media/external/file --where \"_data='$f'\"; rm -f \"$f\"; done; find /storage/emulated/0/DCIM/Camera/Cshot -mindepth 1 -type d -empty -delete 2>/dev/null; echo cleaned",
+          "label": "촬영 파일 정리"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oplus.camera",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oneplus.gallery",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.oplus.camera",
+        "com.oneplus.gallery"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] D7 전면 카메라 사진 5장",
+    "description": "[D7 · P2] 전면 카메라로 바꿔 2초 간격 5장. D1(후면) 대비 장당 write 양을 본다. 측정 뒤 후면으로 되돌리고 지운다. dry-run 확인: 전환 뒤 버튼 설명이 'Rear Camera' 인지",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "touch /data/local/tmp/ux_mark",
+          "label": "새 파일 기준 시각 기록"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "am start -W -a android.media.action.STILL_IMAGE_CAMERA",
+          "label": "카메라(사진) 실행"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "카메라 준비"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "com.oplus.camera:id/switch_camera_button",
+          "label": "카메라 전환"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "전면 전환"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input tap 635 2420",
+          "label": "워밍업 1장"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "4",
+          "label": "대기 4초"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "for i in $(seq 5); do input tap 635 2420; sleep 2; done; echo 5",
+          "label": "사진 5장 촬영"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "5",
+          "label": "저장 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_content_desc": "Rear Camera",
+          "label": "후면으로 되돌리기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "2",
+          "label": "대기 2초"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "echo CAPTURED files=$(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark | wc -l) kb=$(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark -exec du -k {} + | awk '{s+=$1} END {print s+0}'); for f in $(find /storage/emulated/0/DCIM/Camera -type f -newer /data/local/tmp/ux_mark); do content delete --uri content://media/external/file --where \"_data='$f'\"; rm -f \"$f\"; done; find /storage/emulated/0/DCIM/Camera/Cshot -mindepth 1 -type d -empty -delete 2>/dev/null; echo cleaned",
+          "label": "촬영 파일 정리"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oplus.camera",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.oplus.camera"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] D8 사진↔동영상 모드 전환 ×5",
+    "description": "[D8 · P2] 촬영 없이 사진·동영상 모드만 5번 오간다. 카메라 앱 자체의 I/O(설정·모델 파일 read) 기준선. D1~D3 에서 이 값을 빼고 볼 수 있다.",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oplus.camera",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "am start -W -a android.media.action.STILL_IMAGE_CAMERA",
+          "label": "카메라(사진) 실행"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "카메라 준비"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "am start -W -a android.media.action.VIDEO_CAMERA",
+          "label": "동영상 모드"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "대기 3초"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "am start -W -a android.media.action.STILL_IMAGE_CAMERA",
+          "label": "카메라(사진) 실행"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "대기 3초"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oplus.camera",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [
+      {
+        "startStep": 4,
+        "endStep": 7,
+        "count": 5
+      }
+    ],
+    "requirements": {
+      "packages": [
+        "com.oplus.camera"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] D9 화면 녹화 1분",
+    "description": "[D9 · P2] screenrecord 로 1분 녹화하면서 설정 화면을 스크롤해 화면을 계속 바꾼다. 카메라 외 영상 생성 write 를 D3 와 비교. 측정 후 지운다.",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.android.settings",
+          "clear_mode": "force_stop",
+          "wait_seconds": "3",
+          "label": "녹화할 화면: 설정"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "screenrecord --time-limit 60 /sdcard/Movies/ux_screenrec.mp4 & sleep 2; for i in $(seq 18); do input swipe 636 2000 636 900 300; sleep 3; done; wait; ls -l /sdcard/Movies/ux_screenrec.mp4",
+          "label": "화면 녹화 1분 (설정 스크롤하며)"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "for f in /sdcard/Movies/ux_screenrec.mp4; do [ -e \"$f\" ] || continue; content delete --uri content://media/external/file --where \"_data='$f'\"; rm -rf \"$f\"; done; echo removed",
+          "label": "녹화 파일 정리"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.settings",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.android.settings"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] E1 갤러리 가벼운 사용",
+    "description": "[E1 · P2] 그리드를 20번만 스크롤하고 사진 5장을 본다 (썸네일이 이미 있는 warm 상태). G1·G2(1000장 전체)와 비교할 일상 사용 기준선. 기기에 다른 사진이 없어 NASA 세트 위에서 잰다. 준비: NASA 세트 1000장",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.oneplus.gallery",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "갤러리 실행"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "20",
+          "pause": "1",
+          "duration": "300",
+          "label": "그리드 20번 스크롤"
+        }
+      },
+      {
+        "type": "tap",
+        "params": {
+          "x": "636",
+          "y": "1300",
+          "label": "사진 열기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "2",
+          "label": "뷰어 로딩"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "for i in 1 2 3 4; do input swipe 1100 1386 170 1386 150; sleep 2; done; echo 4",
+          "label": "다음 사진 4장"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oneplus.gallery",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.oneplus.gallery"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] E5 작은 파일 1000개 생성·삭제",
+    "description": "[E5 · P2] /sdcard(FUSE)에 4KB 파일 1000개를 만들고 지운다. 데이터보다 메타데이터(노드·checkpoint) write 가 얼마나 되는지 본다.",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "rm -rf /sdcard/ux_small; mkdir -p /sdcard/ux_small; sync",
+          "label": "폴더 준비"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "cd /sdcard/ux_small && for i in $(seq 1000); do head -c 4096 /dev/urandom > f$i; done; sync; ls | wc -l",
+          "label": "4KB 파일 1000개 만들기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "대기 3초"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "rm -rf /sdcard/ux_small; sync; echo removed",
+          "label": "1000개 지우기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] E6 1GB 파일 삭제",
+    "description": "[E6 · P2] 1GB 파일을 측정 밖에서 만들고 지우는 것만 잰다. UNMAP(discard)이 바로 나가는지, E4 처럼 안 나가는지 확인.",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dd if=/dev/urandom of=/sdcard/ux_big.bin bs=1M count=1024 2>&1 | tail -1; sync",
+          "label": "1GB 파일 만들기"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "rm -f /sdcard/ux_big.bin; sync; echo removed",
+          "label": "1GB 파일 지우기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "10",
+          "label": "discard 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] E7 파일 관리자로 256MB 복사",
+    "description": "[E7 · P2] 파일 관리자 앱에서 다운로드의 256MB 파일을 Documents 로 복사. E2(셸 cp)와 같은 일을 앱으로 했을 때 차이를 본다. dry-run 확인: 다운로드 목록 첫 파일 위치",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "mkdir -p /sdcard/Download && dd if=/dev/urandom of=/sdcard/Download/ux_e7.bin bs=1M count=256 2>&1 | tail -1; am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///sdcard/Download/ux_e7.bin >/dev/null; sync",
+          "label": "원본 256MB 만들기"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "for f in /sdcard/Documents/ux_e7*.bin; do [ -e \"$f\" ] || continue; content delete --uri content://media/external/file --where \"_data='$f'\"; rm -rf \"$f\"; done; echo removed",
+          "label": "이전 복사본 정리"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.oneplus.filemanager",
+          "clear_mode": "force_stop",
+          "wait_seconds": "4",
+          "label": "파일 관리자 실행"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_text": "다운로드",
+          "label": "다운로드 열기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "2",
+          "label": "대기 2초"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input swipe 238 850 238 850 800",
+          "label": "파일 길게 눌러 선택"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_content_desc": "더 보기",
+          "label": "더 보기"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_text": "복사",
+          "label": "복사"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_text": "Documents",
+          "label": "Documents 폴더"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_text": "여기에 붙여넣기",
+          "label": "여기에 붙여넣기"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "for i in $(seq 60); do [ \"$(stat -c %s /sdcard/Documents/ux_e7.bin 2>/dev/null)\" = 268435456 ] && break; sleep 1; done; sleep 2; sync; ls -l /sdcard/Documents/ux_e7.bin",
+          "label": "복사 끝날 때까지 대기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oneplus.filemanager",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "for f in /sdcard/Download/ux_e7.bin /sdcard/Documents/ux_e7.bin; do [ -e \"$f\" ] || continue; content delete --uri content://media/external/file --where \"_data='$f'\"; rm -rf \"$f\"; done; echo removed",
+          "label": "파일 정리"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.oneplus.filemanager"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] E8 Chrome 100MB 다운로드",
+    "description": "[E8 · P2] 공개 속도 시험 파일(OVH 100MB)을 Chrome 으로 받는다 (Hetzner 는 이 망에서 빈 응답, thinkbroadband 는 http 라 Chrome 이 막음). 네트워크 속도에 묶인 순차 write. Chrome 다운로드 목록에는 기록이 남는다. 준비: Chrome 처음 실행 화면 완료 / dry-run 확인: 다운로드 확인 창 여부, 저장 파일 이름",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "for f in /sdcard/Download/100Mb*.dat /sdcard/Download/.pending-*100Mb*; do [ -e \"$f\" ] || continue; content delete --uri content://media/external/file --where \"_data='$f'\"; rm -rf \"$f\"; done; echo removed",
+          "label": "이전 다운로드 정리"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "am start -a android.intent.action.VIEW -d https://proof.ovh.net/files/100Mb.dat -p com.android.chrome",
+          "label": "100MB 파일 다운로드"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "mkdir -p /dev/ux; r=no-prompt; for i in $(seq 10); do sleep 2; ls /sdcard/Download/ | grep -q '100Mb' && break; uiautomator dump /dev/ux/ux_ui.xml >/dev/null 2>&1; if grep -q '다시 다운로드' /dev/ux/ux_ui.xml; then input tap 1015 1782; r=redownload; break; fi; done; rm -f /dev/ux/ux_ui.xml; echo $r",
+          "label": "다시 다운로드 확인 창 누르기"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "for i in $(seq 300); do [ \"$(stat -c %s /sdcard/Download/100Mb*.dat 2>/dev/null | head -1)\" = 104857600 ] && break; sleep 1; done; echo waited ${i}s; ls -l /sdcard/Download/ | grep 100Mb",
+          "label": "다운로드 완료 대기 (최대 5분)"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "for f in /sdcard/Download/100Mb*.dat /sdcard/Download/.pending-*100Mb*; do [ -e \"$f\" ] || continue; content delete --uri content://media/external/file --where \"_data='$f'\"; rm -rf \"$f\"; done; echo removed",
+          "label": "다운로드 파일 정리"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.android.chrome"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] F1 메모 작성·저장",
+    "description": "[F1 · P2] 새 메모에 긴 글(약 500자)을 입력하고 저장. 작은 SQLite write 와 fsync 를 본다. 측정 후 그 메모를 지운다. 준비: 메모 첫 실행 동의 화면 완료 / dry-run 확인: 저장 뒤 목록에서 메모 찾기",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "settings put secure selected_input_method_subtype -1097284911; ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME >/dev/null; settings get secure selected_input_method_subtype",
+          "label": "키보드 영문(Alphabet)으로"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oneplus.note",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.oneplus.note",
+          "clear_mode": "force_stop",
+          "wait_seconds": "4",
+          "label": "메모 실행"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_content_desc": "새 메모",
+          "element_match_mode": "contains",
+          "label": "새 메모"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "2",
+          "label": "대기 2초"
+        }
+      },
+      {
+        "type": "text",
+        "params": {
+          "input_text": "UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note UFS fsio trace note ",
+          "submit": "false",
+          "label": "긴 글 입력"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "2",
+          "label": "대기 2초"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "4",
+          "label": "키보드 닫기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "1",
+          "label": "대기 1초"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "com.oneplus.note:id/coui_toolbar_back_view",
+          "element_content_desc": "뒤로",
+          "label": "저장하고 목록으로"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "저장 대기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "1",
+          "label": "목록 표시 대기"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input swipe 636 1428 636 1428 800",
+          "label": "방금 쓴 메모 길게 눌러 선택"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "1",
+          "label": "대기 1초"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "com.oneplus.note:id/note_delete",
+          "label": "삭제"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "1",
+          "label": "확인 창 대기"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "android:id/button3",
+          "label": "삭제 확인"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "2",
+          "label": "삭제 반영 대기"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oneplus.note",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.oneplus.note"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] F2 녹음 1분",
+    "description": "[F2 · P2] 녹음기로 1분 녹음. 낮은 대역의 지속 write 를 D3(동영상)와 비교. 측정 후 녹음 파일을 지운다. 준비: 녹음기 첫 실행 동의 화면 완료, 마이크 권한 / dry-run 확인: 녹음 파일 정리",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "touch /data/local/tmp/ux_mark",
+          "label": "새 파일 기준 시각 기록"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oneplus.soundrecorder",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.oneplus.soundrecorder",
+          "clear_mode": "force_stop",
+          "wait_seconds": "4",
+          "label": "녹음기 실행"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "com.oneplus.soundrecorder:id/middle_control",
+          "label": "녹음 시작"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "60",
+          "label": "녹음 1분"
+        }
+      },
+      {
+        "type": "tap",
+        "params": {
+          "x": "635",
+          "y": "2478",
+          "label": "녹음 종료(자동 저장)"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "4",
+          "label": "저장 대기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oneplus.soundrecorder",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "find /storage/emulated/0/Music /storage/emulated/0/Recordings -type f -newer /data/local/tmp/ux_mark -exec sh -c 'for f; do content delete --uri content://media/external/file --where \"_data='\"'\"'$f'\"'\"'\"; rm -f \"$f\"; echo \"rm $f\"; done' _ {} + 2>/dev/null; echo done",
+          "label": "녹음 파일 정리"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.oneplus.soundrecorder"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] F4 연락처 스크롤·검색",
+    "description": "[F4 · P2] 연락처 목록 스크롤과 검색. 작은 read 위주. 연락처가 적으면 I/O 가 거의 없을 수 있다. 준비: 연락처 권한 허용 / dry-run 확인: 검색창 요소",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "settings put secure selected_input_method_subtype -1097284911; ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME >/dev/null; settings get secure selected_input_method_subtype",
+          "label": "키보드 영문(Alphabet)으로"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.contacts",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.contacts",
+          "clear_mode": "force_stop",
+          "wait_seconds": "4",
+          "label": "연락처 실행"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "com.google.android.contacts:id/open_search_bar",
+          "label": "검색"
+        }
+      },
+      {
+        "type": "text",
+        "params": {
+          "input_text": "010",
+          "submit": "false",
+          "label": "검색어 입력"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "대기 3초"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "4",
+          "label": "키보드 닫기"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "4",
+          "label": "검색 닫기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "1",
+          "label": "대기 1초"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "10",
+          "pause": "1",
+          "duration": "300",
+          "label": "목록 스크롤"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.contacts",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.google.android.contacts"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] F5 캘린더 월 이동 ×12",
+    "description": "[F5 · P2] 월 보기에서 왼쪽 스와이프로 12달을 넘긴다. 일정 DB read 와 작은 write. dry-run 확인: 기본 보기가 월 보기인지",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.calendar",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.calendar",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "캘린더 실행"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "for i in $(seq 12); do input swipe 1100 1600 200 1600 200; sleep 2; done; echo 12",
+          "label": "다음 달로 12번"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.calendar",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.google.android.calendar"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] G3 그리드 빠른 fling",
+    "description": "[G3 · P2] G1 과 같은 그리드를 짧고 빠른 fling 으로 끝까지. 썸네일 read 가 몰릴 때 QD·jank 를 본다. 1회차 cold, 2·3회차 warm. 준비: NASA 1000장 푸시 (dataset/nasa/push.py), 갤러리 처음 실행 화면 완료, 1회차 cold 는 push.py --repush 직후 / dry-run 확인: 40번이면 끝에 닿는지",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.oneplus.gallery",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "갤러리 실행"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys gfxinfo com.oneplus.gallery reset >/dev/null; echo reset",
+          "label": "프레임 통계 초기화"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "mkdir -p /dev/ux; cat /data/local/tmp/ux_perfetto.cfg | perfetto --txt -c - --background -o /dev/ux/ux_G3_$(date +%Y%m%d_%H%M%S).pftrace",
+          "label": "Perfetto(FrameTimeline) 시작"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "40",
+          "pause": "0.3",
+          "duration": "80",
+          "label": "그리드 빠른 fling"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "kill -TERM $(pidof perfetto) 2>/dev/null; while pidof perfetto >/dev/null; do sleep 1; done; ls -l /dev/ux/*.pftrace | tail -1",
+          "label": "Perfetto 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys gfxinfo com.oneplus.gallery framestats > /dev/ux/ux_gfx_G3_$(date +%Y%m%d_%H%M%S).txt; grep -E 'Total frames|Janky frames|90th|99th' /dev/ux/ux_gfx_G3_*.txt | tail -4",
+          "label": "프레임 통계 저장"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oneplus.gallery",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.oneplus.gallery"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] G4 뷰어 빠른 넘기기 300장",
+    "description": "[G4 · P2] G2 보다 빠르게(0.15초 간격) 앞 300장을 넘긴다. 원본 read 가 화면을 못 따라갈 때 jank 와 겹치는지 본다. 준비: NASA 1000장 푸시 (dataset/nasa/push.py), 갤러리 처음 실행 화면 완료, 1회차 cold 는 push.py --repush 직후",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.oneplus.gallery",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "갤러리 실행"
+        }
+      },
+      {
+        "type": "tap",
+        "params": {
+          "x": "126",
+          "y": "550",
+          "label": "첫 사진 열기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "2",
+          "label": "뷰어 로딩"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys gfxinfo com.oneplus.gallery reset >/dev/null; echo reset",
+          "label": "프레임 통계 초기화"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "mkdir -p /dev/ux; cat /data/local/tmp/ux_perfetto.cfg | perfetto --txt -c - --background -o /dev/ux/ux_G4_$(date +%Y%m%d_%H%M%S).pftrace",
+          "label": "Perfetto(FrameTimeline) 시작"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "for i in $(seq 300); do input swipe 1100 1386 170 1386 100; sleep 0.15; done; echo 300",
+          "label": "다음 사진 300장 빠르게"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "kill -TERM $(pidof perfetto) 2>/dev/null; while pidof perfetto >/dev/null; do sleep 1; done; ls -l /dev/ux/*.pftrace | tail -1",
+          "label": "Perfetto 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys gfxinfo com.oneplus.gallery framestats > /dev/ux/ux_gfx_G4_$(date +%Y%m%d_%H%M%S).txt; grep -E 'Total frames|Janky frames|90th|99th' /dev/ux/ux_gfx_G4_*.txt | tail -4",
+          "label": "프레임 통계 저장"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oneplus.gallery",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.oneplus.gallery"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] G5 사진 20장 확대",
+    "description": "[G5 · P2] 사진마다 두 번 탭으로 확대해 이리저리 옮겨 본 뒤 다음 사진으로 (20장). 원본 부분(타일) read 를 본다. input 으로는 두 손가락 확대가 안 돼 두 번 탭으로 대신한다. 준비: NASA 1000장 푸시 (dataset/nasa/push.py), 갤러리 처음 실행 화면 완료, 1회차 cold 는 push.py --repush 직후",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+          "label": "페이지 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.oneplus.gallery",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "갤러리 실행"
+        }
+      },
+      {
+        "type": "tap",
+        "params": {
+          "x": "126",
+          "y": "550",
+          "label": "첫 사진 열기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "2",
+          "label": "뷰어 로딩"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys gfxinfo com.oneplus.gallery reset >/dev/null; echo reset",
+          "label": "프레임 통계 초기화"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "mkdir -p /dev/ux; cat /data/local/tmp/ux_perfetto.cfg | perfetto --txt -c - --background -o /dev/ux/ux_G5_$(date +%Y%m%d_%H%M%S).pftrace",
+          "label": "Perfetto(FrameTimeline) 시작"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input tap 636 1386 & sleep 0.12; input tap 636 1386; wait",
+          "label": "두 번 탭 확대"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "1.5",
+          "label": "원본 타일 로딩"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input swipe 900 1386 400 1386 300; sleep 1; input swipe 636 1800 636 1000 300",
+          "label": "확대한 채 이동"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "1",
+          "label": "대기 1초"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input tap 636 1386 & sleep 0.12; input tap 636 1386; wait",
+          "label": "원래 크기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "0.5",
+          "label": "대기 0.5초"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input swipe 1100 1386 170 1386 150",
+          "label": "다음 사진"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "1",
+          "label": "대기 1초"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "kill -TERM $(pidof perfetto) 2>/dev/null; while pidof perfetto >/dev/null; do sleep 1; done; ls -l /dev/ux/*.pftrace | tail -1",
+          "label": "Perfetto 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys gfxinfo com.oneplus.gallery framestats > /dev/ux/ux_gfx_G5_$(date +%Y%m%d_%H%M%S).txt; grep -E 'Total frames|Janky frames|90th|99th' /dev/ux/ux_gfx_G5_*.txt | tail -4",
+          "label": "프레임 통계 저장"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oneplus.gallery",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [
+      {
+        "startStep": 7,
+        "endStep": 14,
+        "count": 20
+      }
+    ],
+    "requirements": {
+      "packages": [
+        "com.oneplus.gallery"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] G6 20장 삭제 → 휴지통 비우기",
+    "description": "[G6 · P2] 사진 탭 맨 앞 20장(모두 NASA 세트)을 골라 지우고 최근 삭제된 항목을 비운다. 회차마다 20장씩 줄어 3회 뒤 940장이 남고, measure_p2.sh 가 끝난 뒤 push.py 로 빠진 60장만 다시 넣는다. 준비: NASA 세트 1000장 (기기에 다른 사진 없음) / dry-run 확인: 모두 삭제 버튼 이름, 영구 삭제 확인 버튼 id",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.oneplus.gallery",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "갤러리 실행"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input swipe 126 550 126 550 800",
+          "label": "첫 사진 길게 눌러 선택"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input tap 381 550; input tap 636 550; input tap 891 550; input tap 1146 550; input tap 126 805; input tap 381 805; input tap 636 805; input tap 891 805; input tap 1146 805; input tap 126 1060; input tap 381 1060; input tap 636 1060; input tap 891 1060; input tap 1146 1060; input tap 126 1315; input tap 381 1315; input tap 636 1315; input tap 891 1315; input tap 1146 1315; echo 19",
+          "label": "19장 더 선택"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "com.oneplus.gallery:id/action_recycle",
+          "label": "삭제"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "android:id/button3",
+          "label": "삭제 확인"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "5",
+          "label": "휴지통 이동 대기"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_text": "앨범",
+          "label": "앨범 탭"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "2",
+          "label": "대기 2초"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "2",
+          "pause": "1",
+          "duration": "300",
+          "label": "기타 앨범까지"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_text": "최근 삭제된 항목",
+          "label": "최근 삭제된 항목"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "2",
+          "label": "대기 2초"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_text": "모두 삭제",
+          "element_match_mode": "contains",
+          "label": "모두 삭제"
+        }
+      },
+      {
+        "type": "tap_element",
+        "params": {
+          "element_resource_id": "android:id/button3",
+          "label": "영구 삭제 확인"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "5",
+          "label": "삭제 대기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.oneplus.gallery",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "echo NASA_LEFT=$(ls /storage/emulated/0/Pictures/NASA | wc -l)",
+          "label": "남은 장수 기록"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.oneplus.gallery"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] S1 화면 꺼짐 대기 30분",
+    "description": "[S1 · P3] 앱 4개(YouTube·Chrome·Gmail·지도)를 띄워 둔 뒤 화면을 끄고 30분 그대로 둔다. 기기가 스스로 light/deep doze 로 들어가는 동안의 배경 I/O. 준비: 무선 adb 연결 (USB 분리, 충전 없음), UX_DEVICE=<ip:port> UX_SERIAL=<ip:port>",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input keyevent KEYCODE_WAKEUP; sleep 1; wm dismiss-keyguard; sleep 1; dumpsys window | grep -c isKeyguardShowing=true || true",
+          "label": "화면 켜기·잠금 해제"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "YouTube 띄워 두기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "Chrome 띄워 두기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.gm",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "Gmail 띄워 두기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.apps.maps",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "지도 띄워 두기"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "3",
+          "label": "홈"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "5",
+          "label": "대기 5초"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input keyevent KEYCODE_SLEEP; sleep 1; dumpsys power | grep -m1 mWakefulness=",
+          "label": "화면 끄기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "10",
+          "label": "화면 꺼짐 안정"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
+          "label": "대기 상태·배터리 기록"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "1800",
+          "label": "화면 꺼짐 대기 30분"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
+          "label": "대기 상태·배터리 기록"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input keyevent KEYCODE_WAKEUP; sleep 1; wm dismiss-keyguard; sleep 1; dumpsys window | grep -c isKeyguardShowing=true || true",
+          "label": "화면 켜기·잠금 해제"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.gm",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.apps.maps",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.google.android.youtube",
+        "com.android.chrome",
+        "com.google.android.gm",
+        "com.google.android.apps.maps"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] S2 강제 deep doze 30분",
+    "description": "[S2 · P3] S1 과 같은 상태에서 화면을 끄자마자 deep doze 로 강제 진입(dumpsys deviceidle force-idle deep)시키고 30분. doze 중 정비 구간(maintenance window) I/O 만 남는지 본다. 끝나면 강제 상태를 푼다. 준비: 무선 adb 연결 (USB 분리, 충전 없음), UX_DEVICE=<ip:port> UX_SERIAL=<ip:port>",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input keyevent KEYCODE_WAKEUP; sleep 1; wm dismiss-keyguard; sleep 1; dumpsys window | grep -c isKeyguardShowing=true || true",
+          "label": "화면 켜기·잠금 해제"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "YouTube 띄워 두기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "Chrome 띄워 두기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.gm",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "Gmail 띄워 두기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.apps.maps",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "지도 띄워 두기"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "3",
+          "label": "홈"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "5",
+          "label": "대기 5초"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input keyevent KEYCODE_SLEEP; sleep 1; dumpsys power | grep -m1 mWakefulness=",
+          "label": "화면 끄기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "10",
+          "label": "화면 꺼짐 안정"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys deviceidle force-idle deep",
+          "label": "deep doze 강제 진입"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
+          "label": "대기 상태·배터리 기록"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "1800",
+          "label": "deep doze 대기 30분"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
+          "label": "대기 상태·배터리 기록"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys deviceidle unforce; echo unforced",
+          "label": "강제 doze 해제"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input keyevent KEYCODE_WAKEUP; sleep 1; wm dismiss-keyguard; sleep 1; dumpsys window | grep -c isKeyguardShowing=true || true",
+          "label": "화면 켜기·잠금 해제"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.gm",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.apps.maps",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.google.android.youtube",
+        "com.android.chrome",
+        "com.google.android.gm",
+        "com.google.android.apps.maps"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] S3 화면 끈 직후 5분",
+    "description": "[S3 · P3] 앱 4개를 띄워 둔 상태에서 측정을 켜고 화면을 끈 뒤 5분. 화면을 끄는 순간 앱·시스템이 상태를 저장하는 쓰기와 초반 배경 I/O. 준비: 무선 adb 연결 (USB 분리, 충전 없음), UX_DEVICE=<ip:port> UX_SERIAL=<ip:port>",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input keyevent KEYCODE_WAKEUP; sleep 1; wm dismiss-keyguard; sleep 1; dumpsys window | grep -c isKeyguardShowing=true || true",
+          "label": "화면 켜기·잠금 해제"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "YouTube 띄워 두기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "Chrome 띄워 두기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.gm",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "Gmail 띄워 두기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.apps.maps",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "지도 띄워 두기"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "3",
+          "label": "홈"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "5",
+          "label": "대기 5초"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
+          "label": "대기 상태·배터리 기록"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input keyevent KEYCODE_SLEEP; sleep 1; dumpsys power | grep -m1 mWakefulness=",
+          "label": "화면 끄기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "300",
+          "label": "화면 끈 뒤 5분"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
+          "label": "대기 상태·배터리 기록"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input keyevent KEYCODE_WAKEUP; sleep 1; wm dismiss-keyguard; sleep 1; dumpsys window | grep -c isKeyguardShowing=true || true",
+          "label": "화면 켜기·잠금 해제"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.gm",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.apps.maps",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.google.android.youtube",
+        "com.android.chrome",
+        "com.google.android.gm",
+        "com.google.android.apps.maps"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] S4 화면 켜진 홈 대기 10분",
+    "description": "[S4 · P3] 앱 4개를 띄워 둔 뒤 홈 화면을 켜 둔 채(svc power stayon true) 아무 입력 없이 10분. S1 과 비교할 화면 켜짐 기준선. 끝나면 stayon 을 끈다. 준비: 무선 adb 연결 (USB 분리, 충전 없음), UX_DEVICE=<ip:port> UX_SERIAL=<ip:port>",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input keyevent KEYCODE_WAKEUP; sleep 1; wm dismiss-keyguard; sleep 1; dumpsys window | grep -c isKeyguardShowing=true || true",
+          "label": "화면 켜기·잠금 해제"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "YouTube 띄워 두기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "Chrome 띄워 두기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.gm",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "Gmail 띄워 두기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.google.android.apps.maps",
+          "clear_mode": "force_stop",
+          "wait_seconds": "5",
+          "label": "지도 띄워 두기"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "3",
+          "label": "홈"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "5",
+          "label": "대기 5초"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "svc power stayon true; echo stayon",
+          "label": "화면 켜짐 유지"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
+          "label": "대기 상태·배터리 기록"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "600",
+          "label": "홈 화면 대기 10분"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
+          "label": "대기 상태·배터리 기록"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "svc power stayon false; echo stayoff",
+          "label": "화면 켜짐 유지 해제"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.android.chrome",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.gm",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.apps.maps",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.google.android.youtube",
+        "com.android.chrome",
+        "com.google.android.gm",
+        "com.google.android.apps.maps"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] S5 아무것도 안 하는 대기 3시간",
+    "description": "[S5 · P3] 앱을 따로 띄우지 않고(앞 측정에서 남은 상태 그대로) 홈에서 화면을 끄고 3시간 둔다. 오래 둘 때의 배경 I/O(동기화·로그·유지보수 작업)와 doze 정비 구간 주기를 본다. 시간이 길어 1회만 잰다 (밤새 돌리기용). 준비: 무선 adb 연결 (USB 분리, 충전 없음), UX_DEVICE=<ip:port> UX_SERIAL=<ip:port>",
+    "repeatCount": 1,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input keyevent KEYCODE_WAKEUP; sleep 1; wm dismiss-keyguard; sleep 1; dumpsys window | grep -c isKeyguardShowing=true || true",
+          "label": "화면 켜기·잠금 해제"
+        }
+      },
+      {
+        "type": "key",
+        "params": {
+          "keycode": "3",
+          "label": "홈"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "5",
+          "label": "대기 5초"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input keyevent KEYCODE_SLEEP; sleep 1; dumpsys power | grep -m1 mWakefulness=",
+          "label": "화면 끄기"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "10",
+          "label": "화면 꺼짐 안정"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
+          "label": "대기 상태·배터리 기록"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "10800",
+          "label": "아무것도 안 하고 3시간"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
+          "label": "대기 상태·배터리 기록"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input keyevent KEYCODE_WAKEUP; sleep 1; wm dismiss-keyguard; sleep 1; dumpsys window | grep -c isKeyguardShowing=true || true",
+          "label": "화면 켜기·잠금 해제"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  }
+]

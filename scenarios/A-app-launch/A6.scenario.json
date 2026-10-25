@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] A6 데이터 초기화 후 첫 실행 (날씨)",
+  "description": "[A6 · P2] pm clear 직후 첫 실행 — 앱 데이터(DB·설정·캐시) 초기 생성 write. A1(같은 앱 재실행)과 비교용. Chrome 은 초기화하면 로그인·탭이 사라져 계정 앱이 아닌 날씨 앱으로 바꿨다. 첫 실행 동의 화면이 나오면 그 화면까지가 측정 범위다. dry-run 확인: 첫 실행 화면에서 멈추는지",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "net.oneplus.weather",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "pm clear net.oneplus.weather",
+        "label": "날씨 앱 데이터 초기화"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "sync; echo 3 > /proc/sys/vm/drop_caches",
+        "label": "페이지 캐시 비우기"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "net.oneplus.weather",
+        "clear_mode": "none",
+        "wait_seconds": "15",
+        "label": "초기화 후 첫 실행"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "net.oneplus.weather",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "net.oneplus.weather"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "clock offset 검증 (fsio UFS)",
+  "description": "스텝 사이에 dd 로 64MB write 를 1회 일으켜, 그 IO 가 Behavior 탭에서 **dd 스텝 행에만** 잡히는지 확인한다. clock offset 이 틀리면 옆 구간(sleep)으로 새거나 통째로 밀린다. ⚠ 판단 기준은 sleep 구간이 '0' 이냐가 아니다 — 백그라운드 앱이나 f2fs GC 가 IO 를 낼 수 있다. 64MB write 가 dd 행에 잡히느냐를 본다. 메인 검증판. fsio 는 root 가 필요하다.",
+  "repeatCount": 1,
+  "steps": [
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "5"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dd if=/dev/zero of=/data/local/tmp/_clockprobe.bin bs=1M count=64 conv=fsync"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "5"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "rm -f /data/local/tmp/_clockprobe.bin"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "traceType": "fsio_ufs"
+  }
+}
