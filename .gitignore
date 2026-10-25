@@ -22,6 +22,7 @@
 !/report/extract.py
 !/report/export_web.py
 !/report/perstep.py
+!/report/terms.py
 
 !/web/
 /web/node_modules/
