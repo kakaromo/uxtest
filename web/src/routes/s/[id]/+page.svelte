@@ -8,7 +8,7 @@
 	import Chart from '#lib/components/Chart.svelte';
 	import CopyTable from '#lib/components/CopyTable.svelte';
 	import { app, TYPE_ORDER } from '#lib/state.svelte.js';
-	import { load } from '#lib/crypto.js';
+	import { load } from '#lib/data.js';
 	import { explorerSpec, overlaySpec, runsSpec, latSpec, lbaSpec, stackSpec, rwBarSpec, jankSpec, PROV_TRACE } from '#lib/charts/build.js';
 	import { rowsOf, nameOf, label } from '#lib/view.js';
 	import { mb, f, n0, x, sec } from '#lib/fmt.js';

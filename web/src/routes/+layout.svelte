@@ -5,7 +5,6 @@
 	import { Toaster } from '#lib/components/ui/sonner/index.js';
 	import * as Sidebar from '#lib/components/ui/sidebar/index.js';
 	import AppSidebar from '#lib/components/AppSidebar.svelte';
-	import LockScreen from '#lib/components/LockScreen.svelte';
 	import { app, init } from '#lib/state.svelte.js';
 	import type { LayoutProps } from './$types';
 
@@ -31,8 +30,8 @@
 		<main class="mx-auto w-full max-w-[1200px] px-4 pt-8 pb-24 sm:px-8">
 			{#if !app.ready}
 				<p class="py-20 text-center text-ink-3">불러오는 중…</p>
-			{:else if !app.unlocked}
-				<LockScreen />
+			{:else if app.error}
+				<p class="py-20 text-center text-destructive">{app.error}</p>
 			{:else}
 				{@render children()}
 			{/if}

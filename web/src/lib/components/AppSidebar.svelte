@@ -7,9 +7,9 @@
 	import * as Sidebar from '#lib/components/ui/sidebar/index.js';
 	import * as Collapsible from '#lib/components/ui/collapsible/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
-	import { app, TYPE_ORDER, lock } from '#lib/state.svelte.js';
+	import { app, TYPE_ORDER } from '#lib/state.svelte.js';
 	import { toggleMode } from 'mode-watcher';
-	import { ChevronRight, House, Moon, Sun, Lock, HardDrive } from '@lucide/svelte';
+	import { ChevronRight, House, Moon, Sun, HardDrive } from '@lucide/svelte';
 
 	const sidebar = Sidebar.useSidebar();
 	let heads = $state<{ id: string; text: string; level: number }[]>([]);
@@ -39,7 +39,7 @@
 	afterNavigate(scan);
 	// 데이터가 늦게 그려지는 페이지(복호화 뒤)도 다시 읽는다
 	$effect(() => {
-		void app.unlocked;
+		void app.ready;
 		void page.url.pathname;
 		const mo = new MutationObserver(() => {
 			const n = document.querySelectorAll('main h2[id], main h3[id]').length;
@@ -145,9 +145,6 @@
 		<Button variant="quiet" size="sm" onclick={toggleMode} title="밝게·어둡게">
 			<Sun class="dark:hidden" /><Moon class="hidden dark:block" />화면 모드
 		</Button>
-		{#if app.unlocked}
-			<Button variant="quiet" size="sm" onclick={lock} title="이 탭에서 잠그기"><Lock />잠그기</Button>
-		{/if}
 	</Sidebar.Footer>
 	<Sidebar.Rail />
 </Sidebar.Root>

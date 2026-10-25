@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""분석 사이트(web/)용 데이터 → web/.private/data/ (평문, 커밋 안 함. web/scripts/encrypt.mjs 가 암호화)
+"""분석 사이트(web/)용 데이터 → web/.private/data/ (web/scripts/copy-data.mjs 가 static/data 로 복사)
 
   python3 report/extract.py          # 먼저 data.json (시나리오 집계)
   python3 report/export_web.py       # 회차별 상세 → index.json + s-<ID>.json

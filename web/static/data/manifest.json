@@ -1,8 +1,5 @@
 {
- "v": 1,
- "kdf": "PBKDF2-SHA256",
- "iter": 600000,
- "salt": "EbkXrQrnTOldA6jMPGPFpg==",
+ "v": 2,
  "types": {
   "A": [
    "A1",

@@ -1,5 +1,5 @@
 # web/ 의 SvelteKit 정적 사이트를 GitHub Pages 로 배포한다.
-# 데이터는 web/static/data/*.enc (로컬에서 암호화해 커밋한 것)만 쓴다. 비밀번호는 CI 에 두지 않는다.
+# 데이터는 web/static/data/*.json (로컬에서 export_web.py → copy-data.mjs 로 만들어 커밋한 것)을 쓴다.
 name: Pages
 
 on:
@@ -25,7 +25,7 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@v4
-      # 암호화 데이터가 아직 커밋되지 않았으면 빌드를 건너뛰고 준비 중 페이지만 올린다
+      # 데이터가 아직 커밋되지 않았으면 빌드를 건너뛰고 준비 중 페이지만 올린다
       - id: data
         run: |
           if [ -f static/data/manifest.json ]; then echo "ready=true" >> "$GITHUB_OUTPUT"
@@ -51,7 +51,7 @@ jobs:
           <meta name="robots" content="noindex"><title>UX I/O 분석 · 준비 중</title></head>
           <body style="font-family:-apple-system,'Apple SD Gothic Neo',sans-serif;display:grid;place-items:center;min-height:90vh;color:#191F28;background:#F9FAFB">
           <div style="text-align:center"><h1 style="font-size:22px">UX I/O 분석 사이트를 준비하고 있어요</h1>
-          <p style="color:#4E5968">암호화한 데이터가 올라오면 이 주소에서 열려요.</p></div></body></html>
+          <p style="color:#4E5968">데이터가 올라오면 이 주소에서 열려요.</p></div></body></html>
           HTML
       - uses: actions/upload-pages-artifact@v3
         with:
