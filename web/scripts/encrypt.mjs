@@ -15,25 +15,29 @@ const OUT = join(ROOT, 'static/data');
 const ITER = 600_000;
 
 // 비밀번호: 환경변수가 없으면 터미널에서 화면에 보이지 않게 두 번 묻는다
-async function ask(q) {
-	process.stdout.write(q);
-	process.stdin.setRawMode(true);
-	process.stdin.resume();
-	let s = '';
-	for await (const chunk of process.stdin) {
-		for (const ch of chunk.toString('utf8')) {
-			if (ch === '\r' || ch === '\n') {
-				process.stdin.setRawMode(false);
-				process.stdin.pause();
-				process.stdout.write('\n');
-				return s;
+// for await 로 읽으면 첫 질문이 끝날 때 stdin 이 닫혀 두 번째 질문이 빈 값이 된다 → data 이벤트로 읽는다
+function ask(q) {
+	return new Promise((done) => {
+		process.stdout.write(q);
+		process.stdin.setRawMode(true);
+		process.stdin.resume();
+		let s = '';
+		const on = (chunk) => {
+			for (const ch of chunk.toString('utf8')) {
+				if (ch === '\r' || ch === '\n') {
+					process.stdin.off('data', on);
+					process.stdin.setRawMode(false);
+					process.stdin.pause();
+					process.stdout.write('\n');
+					return done(s);
+				}
+				if (ch === '\u0003') process.exit(130);
+				if (ch === '\u007f') s = s.slice(0, -1);
+				else s += ch;
 			}
-			if (ch === '\u0003') process.exit(130);
-			if (ch === '\u007f') s = s.slice(0, -1);
-			else s += ch;
-		}
-	}
-	return s;
+		};
+		process.stdin.on('data', on);
+	});
 }
 let pw = process.env.UX_SITE_PASSWORD;
 if (!pw && process.stdin.isTTY) {
