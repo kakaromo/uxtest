@@ -25,17 +25,17 @@
 
 	let dist = $state('size');
 	const distSpecs = $derived({
-		sizeR: stackSpec('요청 크기 분포 · 읽기 (건수 %)', cats, B.size, rs.map((r) => r.size.R), PROV_TRACE + ' 회차 평균.'),
-		sizeW: stackSpec('요청 크기 분포 · 쓰기 (건수 %)', cats, B.size, rs.map((r) => r.size.W), PROV_TRACE + ' 회차 평균.'),
-		dtocR: stackSpec('응답 시간 분포 · 읽기 (건수 %)', cats, B.dtoc, rs.map((r) => r.dtoc.R), PROV_TRACE + ' 응답 시간 = 요청을 보내고 완료 응답까지(dtoc).'),
-		dtocW: stackSpec('응답 시간 분포 · 쓰기 (건수 %)', cats, B.dtoc, rs.map((r) => r.dtoc.W), PROV_TRACE + ' 응답 시간 = 요청을 보내고 완료 응답까지(dtoc).'),
-		gap: stackSpec('요청 사이 간격 분포 (건수 %)', cats, B.gap, rs.map((r) => r.gap), PROV_TRACE + ' 16ms·200ms 넘는 간격은 저장장치가 절전이나 유휴 정리에 들어갈 수 있는 틈이에요.', 1),
-		flow: stackSpec('쓰기 경로 (바이트 %)', cats, B.flow, rs.map((r) => r.flow), PROV_TRACE + ' fsiotrace 플래그로 나눴어요. 이름 귀속처럼 일부 플래그는 확인 중이에요.')
+		sizeR: stackSpec('Request size 분포 · Read (건수 %)', cats, B.size, rs.map((r) => r.size.R), PROV_TRACE + ' Run 평균.'),
+		sizeW: stackSpec('Request size 분포 · Write (건수 %)', cats, B.size, rs.map((r) => r.size.W), PROV_TRACE + ' Run 평균.'),
+		dtocR: stackSpec('Latency 분포 · Read (건수 %)', cats, B.dtoc, rs.map((r) => r.dtoc.R), PROV_TRACE + ' Latency = 요청을 보내고 완료 응답까지(dtoc).'),
+		dtocW: stackSpec('Latency 분포 · Write (건수 %)', cats, B.dtoc, rs.map((r) => r.dtoc.W), PROV_TRACE + ' Latency = 요청을 보내고 완료 응답까지(dtoc).'),
+		gap: stackSpec('Inter-arrival 분포 (건수 %)', cats, B.gap, rs.map((r) => r.gap), PROV_TRACE + ' 16ms·200ms 넘는 간격은 UFS가 절전이나 유휴 정리에 들어갈 수 있는 틈이에요.', 1),
+		flow: stackSpec('Write path (바이트 %)', cats, B.flow, rs.map((r) => r.flow), PROV_TRACE + ' fsiotrace 플래그로 나눴어요. 이름 귀속처럼 일부 플래그는 확인 중이에요.')
 	});
 
 	function tlGrid() {
 		return {
-			cols: ['시나리오', '초', '읽기 MB/s', '쓰기 MB/s'],
+			cols: ['시나리오', '초', 'Read MB/s', 'Write MB/s'],
 			rows: rs.flatMap((r) => (r.tl?.readMBs ?? []).map((v, i) => [label(r), i, v, r.tl!.writeMBs[i]]))
 		};
 	}
@@ -58,12 +58,12 @@
 {/if}
 
 <section class="mb-12 space-y-4">
-	<h2 id="signature" class="text-h2 font-bold">워크로드 시그니처</h2>
-	<p class="text-body-2 text-muted-foreground">시나리오마다 양, 모양, 지연을 한 줄로 모았어요. 회색은 회차 최소~최대예요.</p>
-	<CopyTable title="{t} 워크로드 시그니처" note="쓰기 비중 = 쓰기 바이트 ÷ 전체. 이어진 요청 = 직전 요청 끝 LBA 에서 바로 이어진 바이트 비율. CV(회차 차이)가 0.5를 넘으면 회차마다 많이 달랐다는 뜻이에요.">
+	<h2 id="signature" class="text-h2 font-bold">Workload signature</h2>
+	<p class="text-body-2 text-muted-foreground">시나리오마다 양, 모양, Latency을 한 줄로 모았어요. 회색은 Run 최소~최대예요.</p>
+	<CopyTable title="{t} Workload signature" note="Write ratio = Write 바이트 ÷ 전체. Sequential = 직전 요청 끝 LBA 에서 바로 이어진 바이트 비율. CV(Run 차이)가 0.5를 넘으면 Run마다 많이 달랐다는 뜻이에요.">
 		<table>
 			<thead>
-				<tr><th>ID</th><th>시나리오</th><th class="num">읽기 MB</th><th class="num">쓰기 MB</th><th class="num">쓰기 비중</th><th class="num">최고 MB/s</th><th class="num">이어진 R/W %</th><th class="num">지연 p99 R/W ms</th><th class="num">동시 요청 p99</th><th class="num">메타 %</th><th class="num">쉬는 %</th><th class="num">CV</th><th>많은 요청 형태</th></tr>
+				<tr><th>ID</th><th>시나리오</th><th class="num">Read MB</th><th class="num">Write MB</th><th class="num">Write ratio</th><th class="num">Peak MB/s</th><th class="num">이어진 R/W %</th><th class="num">Latency p99 R/W ms</th><th class="num">QD p99</th><th class="num">메타 %</th><th class="num">쉬는 %</th><th class="num">CV</th><th>많은 요청 형태</th></tr>
 			</thead>
 			<tbody>
 				{#each rs as r (r.key)}
@@ -91,10 +91,10 @@
 
 <section class="mb-12 space-y-4">
 	<div class="flex items-end gap-3">
-		<h2 id="timelines" class="flex-1 text-h2 font-bold">시간축 모아 보기</h2>
-		<Button variant="quiet" size="xs" onclick={() => copyGrid(tlGrid(), `${t} 1초 단위 시간축`, '데이터')}><Table2 />데이터 복사</Button>
+		<h2 id="timelines" class="flex-1 text-h2 font-bold">Timelines</h2>
+		<Button variant="quiet" size="xs" onclick={() => copyGrid(tlGrid(), `${t} 1s Timeline`, '데이터')}><Table2 />Copy data</Button>
 	</div>
-	<p class="text-body-2 text-muted-foreground">대표 회차(총량이 가운데인 회차)의 1초 단위 읽기(위, 파랑)·쓰기(아래, 회색)예요. 칸마다 세로 눈금이 달라요. 누르면 시나리오 분석으로 가요.</p>
+	<p class="text-body-2 text-muted-foreground">대표 Run(Volume이 가운데인 Run)의 1초 단위 Read(위, 파랑)·Write(아래, 회색)예요. 칸마다 세로 눈금이 달라요. 누르면 시나리오 분석으로 가요.</p>
 	<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 		{#each rs as r (r.key)}
 			{#if r.tl}
@@ -112,18 +112,18 @@
 </section>
 
 <section class="mb-12 space-y-4">
-	<h2 id="volume" class="text-h2 font-bold">총량</h2>
+	<h2 id="volume" class="text-h2 font-bold">Volume</h2>
 	<Chart spec={volSpec(rs, label)} height={28 * rs.length + 80} />
 </section>
 
 <section class="mb-12 space-y-4">
-	<h2 id="distributions" class="text-h2 font-bold">분포 비교</h2>
+	<h2 id="distributions" class="text-h2 font-bold">Distributions</h2>
 	<Tabs.Root bind:value={dist} class="flex-col">
 		<Tabs.List class="self-start">
-			<Tabs.Trigger value="size">요청 크기</Tabs.Trigger>
-			<Tabs.Trigger value="dtoc">응답 시간</Tabs.Trigger>
-			<Tabs.Trigger value="gap">요청 간격</Tabs.Trigger>
-			<Tabs.Trigger value="flow">쓰기 경로</Tabs.Trigger>
+			<Tabs.Trigger value="size">Request size</Tabs.Trigger>
+			<Tabs.Trigger value="dtoc">Latency</Tabs.Trigger>
+			<Tabs.Trigger value="gap">Inter-arrival</Tabs.Trigger>
+			<Tabs.Trigger value="flow">Write path</Tabs.Trigger>
 		</Tabs.List>
 		<Tabs.Content value="size" class="grid gap-3 lg:grid-cols-2">
 			<Chart spec={distSpecs.sizeR} height={26 * rs.length + 70} />
@@ -139,17 +139,17 @@
 </section>
 
 <section class="mb-12 space-y-4">
-	<h2 id="map" class="text-h2 font-bold">워크로드 지도</h2>
+	<h2 id="map" class="text-h2 font-bold">Workload map</h2>
 	<Chart spec={mapSpec(rs, label, `${t} 유형 지도`)} height={420} />
 </section>
 
 {#if pairs.length}
 	<section class="mb-12 space-y-4">
-		<h2 id="pairs" class="text-h2 font-bold">조건 바꿔 비교</h2>
+		<h2 id="pairs" class="text-h2 font-bold">Paired conditions</h2>
 		<p class="text-body-2 text-muted-foreground">조건 하나만 바꾼 시나리오 쌍이에요. 배수는 오른쪽 ÷ 왼쪽이에요.</p>
 		<CopyTable title="{t} 조건 비교">
 			<table>
-				<thead><tr><th>비교</th><th>왼쪽</th><th class="num">읽기 MB</th><th class="num">쓰기 MB</th><th>오른쪽</th><th class="num">읽기 MB</th><th class="num">쓰기 MB</th><th class="num">읽기 배수</th><th class="num">쓰기 배수</th></tr></thead>
+				<thead><tr><th>비교</th><th>왼쪽</th><th class="num">Read MB</th><th class="num">Write MB</th><th>오른쪽</th><th class="num">Read MB</th><th class="num">Write MB</th><th class="num">Read 배수</th><th class="num">Write 배수</th></tr></thead>
 				<tbody>
 					{#each pairs as p (p.a + p.b)}
 						{@const a = rowOf(p.a)}
@@ -176,10 +176,10 @@
 
 {#if jank.length}
 	<section class="mb-12 space-y-4">
-		<h2 id="jank" class="text-h2 font-bold">화면 끊김과 I/O</h2>
-		<CopyTable title="끊긴 프레임과 읽기" note="끊긴 프레임 = Perfetto FrameTimeline 에서 앱이 늦어 놓친 프레임. 프레임당 읽기 = 프레임 ±100ms 안 갤러리 읽기 건수.">
+		<h2 id="jank" class="text-h2 font-bold">Jank vs I/O</h2>
+		<CopyTable title="Jank frame과 Read" note="Jank frame = Perfetto FrameTimeline 에서 앱이 늦어 놓친 프레임. 프레임당 Read = 프레임 ±100ms 안 갤러리 Read 건수.">
 			<table>
-				<thead><tr><th>시나리오</th><th class="num">회차</th><th>캐시</th><th class="num">프레임</th><th class="num">끊긴 프레임</th><th class="num">프레임 p50/p99 ms</th><th class="num">프레임당 읽기 (끊김/정상)</th><th class="num">읽기 겹침 % (끊김/정상)</th></tr></thead>
+				<thead><tr><th>시나리오</th><th class="num">Run</th><th>캐시</th><th class="num">프레임</th><th class="num">Jank frame</th><th class="num">프레임 p50/p99 ms</th><th class="num">프레임당 Read (끊김/정상)</th><th class="num">Read 겹침 % (끊김/정상)</th></tr></thead>
 				<tbody>
 					{#each jank as j (j.scenario + j.repeat)}
 						<tr>
@@ -200,7 +200,7 @@
 {/if}
 
 <section class="mb-12 space-y-4">
-	<h2 id="scenarios" class="text-h2 font-bold">시나리오</h2>
+	<h2 id="scenarios" class="text-h2 font-bold">Scenarios</h2>
 	<div class="grid gap-3 sm:grid-cols-2">
 		{#each ids as id (id)}
 			{@const r = rowOf(id)!}

@@ -16,6 +16,7 @@ import sys
 from pathlib import Path
 
 import extract as X
+from terms import en, FLOW, KIND
 
 OUT = X.ROOT / "web/.private/data"
 QD_B = ["1", "2–4", "5–8", "9–16", "17–32", ">32"]
@@ -79,17 +80,17 @@ def run_detail(pq, lba_max, steps, names):
              "comm": c, "file": n or ""}
             for t, d, sz, lba, lun, qd, dt, c, n in q("""select time, dir, size, lba, lun, qd, dtoc, comm, name from ev
                  where action='complete_rsp' and dir in ('R','W') order by dtoc desc limit 30""")]
-    kinds = {}
+    kinds = {}  # 이름은 terms.KIND 로 영어
     for n, r, w in q("""select coalesce(nullif(name,''),'(이름 없음)'), coalesce(sum(size) filter (where dir='R'),0),
                                coalesce(sum(size) filter (where dir='W'),0) from rq where dir in ('R','W') group by 1"""):
-        k = X.file_kind(n)
+        k = KIND.get(X.file_kind(n), X.file_kind(n))
         a = kinds.setdefault(k, [0, 0])
         a[0] += r / 1e6
         a[1] += w / 1e6
     for p in m["procs"]:
         p["name"] = names.get(p["pid"]) or X.proc_name(p, None, t0)
     for f in m["files"]:
-        f["kind"] = X.file_kind(f["name"])
+        f["kind"] = KIND.get(X.file_kind(f["name"]), X.file_kind(f["name"]))
 
     keep = ("durSec", "readMB", "writeMB", "discardMB", "flushN", "readN", "writeN", "peakMBs", "qdP99", "metaPct",
             "rereadPct", "idlePct", "wakesPerMin", "maxGapSec", "flushPerSec", "seq", "dtocP50", "dtocP99", "size",
@@ -141,6 +142,8 @@ def content():
         c["types"][t] = {"tag": grab(rf'id="t-{t}">\s*<header><span class="tid">(.*?)</span>'),
                          "title": grab(rf'id="t-{t}">\s*<header>.*?<h3>(.*?)</h3>'),
                          "body": clean(re.sub(r"^\s*<header>.*?</header>", "", art, flags=re.S))}
+    c = {k: (en(v) if isinstance(v, str) else v) for k, v in c.items()}
+    c["types"] = {t: {k: en(v) for k, v in a.items()} for t, a in c["types"].items()}
     return c
 
 
@@ -151,7 +154,7 @@ def main():
     D = json.loads((X.HERE / "data.json").read_text())
     lba_max = int(D["meta"]["lbaMaxGB"] * 2**30 / 4096)
     OUT.mkdir(parents=True, exist_ok=True)
-    meta = D["meta"] | {"qdBuckets": QD_B, "generated": __import__("datetime").datetime.now().isoformat(timespec="minutes")}
+    meta = D["meta"] | {"buckets": D["meta"]["buckets"] | {"flow": FLOW}, "qdBuckets": QD_B, "generated": __import__("datetime").datetime.now().isoformat(timespec="minutes")}
     (OUT / "index.json").write_text(json.dumps(
         {"meta": meta, "types": D["types"], "scenarios": [slim(s) for s in D["scenarios"]],
          "jank": [{k: v for k, v in j.items() if k not in ("series",)} for j in D["jank"]]},

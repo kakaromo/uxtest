@@ -14,7 +14,7 @@
 	<div class="flex flex-wrap items-center gap-x-3 gap-y-1 border-b px-4 py-2.5">
 		<h4 class="min-w-0 flex-1 text-[14px] font-semibold">{title}</h4>
 		<div class="flex gap-1">
-			<Button variant="quiet" size="xs" onclick={() => copyGrid(grid(), title)} title="엑셀·시트·Confluence 에 붙여넣을 수 있게 복사"><Copy />표 복사</Button>
+			<Button variant="quiet" size="xs" onclick={() => copyGrid(grid(), title)} title="엑셀·시트·Confluence 에 붙여넣을 수 있게 복사"><Copy />Copy table</Button>
 			<Button variant="quiet" size="xs" onclick={() => saveCSV(grid(), title)} title="UTF-8 CSV 로 저장"><Download />CSV</Button>
 		</div>
 	</div>

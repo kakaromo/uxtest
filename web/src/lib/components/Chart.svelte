@@ -101,10 +101,10 @@
 	<div class="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
 		<h4 class="min-w-0 flex-1 text-[14px] font-semibold">{spec.title}</h4>
 		<div class="flex flex-wrap gap-1">
-			<Button variant="quiet" size="xs" onclick={copyImage} title="차트를 PNG 이미지로 복사"><ImageIcon />이미지</Button>
-			<Button variant="quiet" size="xs" onclick={copyHTML} title="이 차트만으로 동작하는 HTML 조각(데이터 포함)을 복사"><CodeXml />HTML 소스</Button>
-			<Button variant="quiet" size="xs" onclick={() => copyGrid(spec.data(), spec.title, '데이터')} title="차트 데이터를 표로 복사 (엑셀·시트에 붙여넣기)"><Table2 />데이터</Button>
-			<Button variant="quiet" size="xs" onclick={toggleSrc} aria-pressed={showSrc} title="출처·데이터·설정 보기"><FileCode />소스</Button>
+			<Button variant="quiet" size="xs" onclick={copyImage} title="차트를 PNG 이미지로 복사"><ImageIcon />Image</Button>
+			<Button variant="quiet" size="xs" onclick={copyHTML} title="이 차트만으로 동작하는 HTML 조각(데이터 포함)을 복사"><CodeXml />HTML</Button>
+			<Button variant="quiet" size="xs" onclick={() => copyGrid(spec.data(), spec.title, '데이터')} title="차트 데이터를 표로 복사 (엑셀·시트에 붙여넣기)"><Table2 />Data</Button>
+			<Button variant="quiet" size="xs" onclick={toggleSrc} aria-pressed={showSrc} title="출처·데이터·설정 보기"><FileCode />Source</Button>
 		</div>
 	</div>
 	<div bind:this={el} style="height:{height}px" class="w-full"></div>
@@ -116,7 +116,7 @@
 				<b>데이터</b><span class="text-ink-3">{src.grid.rows.length}줄 × {src.grid.cols.length}열{src.grid.rows.length > 200 ? ' · 앞 200줄만 표시 (복사·CSV는 전체)' : ''}</span>
 				<span class="flex-1"></span>
 				<Button variant="secondary" size="xs" onclick={() => saveCSV(src!.grid, spec.title)}><Download />CSV</Button>
-				<Button variant="secondary" size="xs" onclick={copyHTML}><CodeXml />HTML 소스 복사</Button>
+				<Button variant="secondary" size="xs" onclick={copyHTML}><CodeXml />Copy HTML</Button>
 			</div>
 			<div class="max-h-72 overflow-auto rounded-md border bg-card">
 				<table class="w-full text-[12px]">
