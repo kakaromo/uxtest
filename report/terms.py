@@ -4,9 +4,10 @@ export_web.py 가 해설 본문·버킷 이름에 적용하고, web/ 소스에�
 import re
 
 TERMS = [
+    (r"지운 블록 반납\(discard\)은", "Discard는"),
+    (r"지운 블록은", "Discard는"),
     (r"블록 반납\(discard\)", "Discard"),
     (r"블록 반납", "Discard"),
-    (r"지운 블록 반납", "Discard"),
     (r"저장장치 위치 접근 지도", "LBA heatmap"),
     (r"저장장치 위치\(LBA\)", "LBA"),
     (r"저장장치 위치", "LBA"),
@@ -49,6 +50,7 @@ TERMS = [
     (r"읽기", "Read"),
     (r"쓰기", "Write"),
     (r"지연", "Latency"),
+    (r"저장장치\(UFS\)", "UFS"),
     (r"저장장치", "UFS"),
 ]
 
