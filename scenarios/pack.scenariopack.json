@@ -3683,6 +3683,119 @@
   {
     "schemaVersion": 1,
     "kind": "scenario",
+    "name": "[UX-fsio] B7t TikTok 추천 영상 20개",
+    "description": "[B7t · P2] 회차마다 영상·이미지 캐시를 비우고 추천 피드에서 5초씩 보며 20개를 넘긴다. 화면은 탭하지 않는다. Instagram 릴스(B7r)와 같은 동작으로 영상 캐시 write 비교. 준비: TikTok 첫 실행 동의 창 처리",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input keyevent KEYCODE_WAKEUP; sleep 1; wm dismiss-keyguard; sleep 1; dumpsys window | grep -c isKeyguardShowing=true || true",
+          "label": "화면 켜기·잠금 해제"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.ss.android.ugc.trill",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "rm -rf /data/data/com.ss.android.ugc.trill/cache/cachev2 /sdcard/Android/data/com.ss.android.ugc.trill/cache/video /sdcard/Android/data/com.ss.android.ugc.trill/cache/picture; echo ok",
+          "label": "TikTok 영상·이미지 캐시 비우기"
+        }
+      },
+      {
+        "type": "launch_app",
+        "params": {
+          "package_name": "com.ss.android.ugc.trill",
+          "clear_mode": "force_stop",
+          "wait_seconds": "10",
+          "label": "TikTok 실행 (추천 피드)"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sleep 1; dumpsys window | grep mCurrentFocus | grep -q GrantPermissionsActivity && { input keyevent 4; echo perm-closed; } || echo no-perm",
+          "label": "권한 창 있으면 닫기 (선택 안 함)"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "20",
+          "pause": "5",
+          "duration": "300",
+          "label": "영상 20개 넘기기 (5초씩 보기)"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.ss.android.ugc.trill",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.ss.android.ugc.trill"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
     "name": "[UX-fsio] B8 Gmail 받은편지함 스크롤",
     "description": "[B8 · P2] 받은편지함을 30번 내리고 다시 올린다. 메일을 열면 읽음 표시가 계정에 남으므로 열지 않는다. SQLite 위주 작은 I/O 를 본다. 준비: Gmail 첫 실행 안내 화면 완료",
     "repeatCount": 3,

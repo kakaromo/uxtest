@@ -496,6 +496,19 @@ scenario("B7r", "B", 2, "Instagram 릴스 20개",
          "회차마다 이미지·영상 캐시를 비우고 릴스 탭에서 5초씩 보며 20개를 넘긴다. 좋아요가 남지 않도록 영상은 탭하지 않는다. 피드(B7)·YouTube 스트리밍(C1)과 영상 캐시 write 비교.",
          st, [INSTA], needs=["Instagram 로그인"])
 
+# B7t -----------------------------------------------------------------
+# 2026-10-27 사용자 요청: Facebook 대신 TikTok. 첫 실행의 광고성 정보 수신 동의 창은 사용자가 직접 처리했다.
+# 좋아요(두 번 탭)·"관심 없음/흥미로움" 버튼이 계정 추천에 남지 않도록 화면은 탭하지 않고 스와이프만 한다
+TIKTOK = "com.ss.android.ugc.trill"
+st = [st[0], stop(TIKTOK),
+      sh(f"rm -rf /data/data/{TIKTOK}/cache/cachev2 /sdcard/Android/data/{TIKTOK}/cache/video /sdcard/Android/data/{TIKTOK}/cache/picture; echo ok",
+         "TikTok 영상·이미지 캐시 비우기"),
+      launch(TIKTOK, "TikTok 실행 (추천 피드)", wait=10), CLOSE_PERM, FOCUS,
+      trace_start(), scroll(20, "영상 20개 넘기기 (5초씩 보기)", pause=5), SETTLE, trace_stop(), FOCUS, stop(TIKTOK)]
+scenario("B7t", "B", 2, "TikTok 추천 영상 20개",
+         "회차마다 영상·이미지 캐시를 비우고 추천 피드에서 5초씩 보며 20개를 넘긴다. 화면은 탭하지 않는다. Instagram 릴스(B7r)와 같은 동작으로 영상 캐시 write 비교.",
+         st, [TIKTOK], needs=["TikTok 첫 실행 동의 창 처리"])
+
 # B8 ------------------------------------------------------------------
 st = [stop(GMAIL), launch(GMAIL, "Gmail 실행", wait=6),
       trace_start(), scroll(30, "받은편지함 스크롤", pause=1.5), scroll(30, "위로 스크롤", pause=0.8, direction="up"),
