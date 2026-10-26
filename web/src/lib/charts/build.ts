@@ -1,7 +1,7 @@
 // 차트 option 만들기. 규칙: option 안 함수는 인자만 쓰는 순수 함수 (HTML 소스 복사 때 그대로 옮겨짐).
 // 색·이름·툴팁 문자열은 미리 계산해 데이터 항목에 넣는다.
 import type { ChartSpec } from '#lib/components/Chart.svelte';
-import type { Row, Run, Jank } from '#lib/types.js';
+import type { Row, Run, Jank, Points } from '#lib/types.js';
 import { ends, type Theme } from './theme.js';
 import { mb } from '#lib/fmt.js';
 
@@ -394,5 +394,117 @@ export function miniOption(t: Theme, r: number[], w: number[]) {
 			{ type: 'line', name: 'Read', data: r, symbol: 'none', lineStyle: { width: 1.2, color: t.read }, itemStyle: { color: t.read }, areaStyle: { color: t.read, opacity: 0.25 } },
 			{ type: 'line', name: 'Write', data: w.map((v) => -v), symbol: 'none', lineStyle: { width: 1.2, color: t.write }, itemStyle: { color: t.write }, areaStyle: { color: t.write, opacity: 0.25 } }
 		]
+	};
+}
+
+/** agent Trace 의 LBA 패턴처럼: 요청 하나 = 점. 위 LBA, 가운데 QD, 아래 Latency(로그), 같은 시간축 */
+export const PT_DIRS = [
+	{ k: 'R', name: 'Read', color: '' },
+	{ k: 'W', name: 'Write', color: '#f97316' },
+	{ k: 'D', name: 'Discard', color: '#a855f7' },
+	{ k: 'F', name: 'Flush', color: '#22c55e' }
+] as const;
+
+export function ptRows(p: Points) {
+	// [초, LBA GB, LBA, KB, QD, Latency ms, LUN]
+	const by: Record<string, number[][]> = { R: [], W: [], D: [], F: [] };
+	let ms = 0;
+	for (let i = 0; i < p.n; i++) {
+		ms += p.t[i];
+		by[p.d[i]]?.push([ms / 1000, +((p.lba[i] * 4096) / 2 ** 30).toFixed(4), p.lba[i], p.kb[i], p.qd[i], p.lat[i] / 1000, p.lun?.[i] ?? 0]);
+	}
+	return by;
+}
+
+export function lbaPatternSpec(p: Points, run: Run, title: string): ChartSpec {
+	const by = ptRows(p);
+	const dirs = PT_DIRS.filter((d) => by[d.k].length);
+	const steps = run.steps.filter((s) => s.e > 0 && s.s < run.durSec && s.type !== 'trace_start' && s.type !== 'trace_stop');
+	return {
+		title,
+		prov:
+			PROV_TRACE +
+			` 요청 하나가 점 하나예요 (이 Run ${p.n.toLocaleString()}건 전부, 샘플링 없음). 가로는 요청을 보낸 시각(완료 시각 − dtoc), 세로는 LUN 안 LBA를 GB로 바꾼 값이에요. QD는 완료 시점 queue depth, Latency는 dtoc예요. 띠는 시나리오 Step 구간이에요.`,
+		data: () => ({
+			cols: ['초', '방향', 'LBA GB', 'LBA (4KB)', 'KB', 'QD', 'Latency ms', 'LUN'],
+			rows: dirs.flatMap((d) => by[d.k].map((r) => [r[0], d.name, r[1], r[2], r[3], r[4], r[5], r[6]])).sort((a, b) => (a[0] as number) - (b[0] as number))
+		}),
+		option: (t) => {
+			const col = (c: string) => c || t.read;
+			const bands = steps.map((s, i) => [
+				{ xAxis: Math.max(0, s.s), name: s.label, itemStyle: { color: i % 2 ? 'rgba(49,130,246,0.05)' : 'rgba(49,130,246,0.1)' } },
+				{ xAxis: Math.min(run.durSec, s.e) }
+			]);
+			const x = (gi: number, show: boolean) => ({
+				type: 'value',
+				gridIndex: gi,
+				min: 0,
+				max: Math.ceil(run.durSec),
+				axisLabel: { ...t.axisLabel, show, formatter: '{value}s' },
+				axisTick: { show: false },
+				axisLine: { show: false },
+				splitLine: { show: false }
+			});
+			const y = (gi: number, name: string, extra = {}) => ({
+				type: 'value',
+				gridIndex: gi,
+				name,
+				nameLocation: 'middle',
+				nameRotate: 90,
+				nameGap: 42,
+				nameTextStyle: { color: t.mute, fontSize: 11 },
+				axisLabel: t.axisLabel,
+				splitLine: t.split,
+				...extra
+			});
+			const sc = (di: number, color: string, name: string, gi: number, yDim: number) => ({
+				type: 'scatter',
+				name,
+				datasetIndex: di,
+				xAxisIndex: gi,
+				yAxisIndex: gi,
+				encode: { x: 0, y: yDim },
+				symbolSize: gi === 0 ? 3 : 2.5,
+				large: true,
+				largeThreshold: 4000,
+				itemStyle: { color, opacity: 0.75 },
+				emphasis: { disabled: true }
+			});
+			return {
+				animation: false,
+				dataset: dirs.map((d) => ({ source: by[d.k] })),
+				axisPointer: { link: [{ xAxisIndex: 'all' }] },
+				tooltip: {
+					...t.tip,
+					trigger: 'item',
+					formatter: (q: any) => {
+						const v = q.value;
+						if (!Array.isArray(v)) return q.seriesName || '';
+						return q.seriesName + ' · ' + v[0].toFixed(3) + 's<br>LBA ' + v[2].toLocaleString() + ' (' + v[1].toFixed(2) + ' GB)' + (v[6] ? ' · LUN ' + v[6] : '') + '<br>' + v[3] + ' KB · QD ' + v[4] + ' · ' + v[5].toFixed(3) + ' ms';
+					}
+				},
+				legend: { ...t.legend, top: 0, left: 0, icon: 'circle', data: dirs.map((d) => d.name) },
+				grid: [
+					{ left: 64, right: 56, top: 36, height: '52%' },
+					{ left: 64, right: 56, top: '64%', height: '11%' },
+					{ left: 64, right: 56, top: '79%', height: '11%' }
+				],
+				dataZoom: [
+					{ type: 'inside', xAxisIndex: [0, 1, 2], filterMode: 'none' },
+					{ type: 'slider', xAxisIndex: [0, 1, 2], height: 16, bottom: 4, filterMode: 'none', borderColor: 'transparent', fillerColor: 'rgba(49,130,246,0.15)', handleStyle: { color: t.primary }, textStyle: { color: t.mute, fontSize: 10 }, labelFormatter: (v: number) => Math.round(v) + 's' },
+					{ type: 'slider', yAxisIndex: [0], width: 14, right: 8, top: 36, bottom: '48%', filterMode: 'none', borderColor: 'transparent', fillerColor: 'rgba(49,130,246,0.15)', handleStyle: { color: t.primary }, textStyle: { color: t.mute, fontSize: 10 }, labelFormatter: (v: number) => v.toFixed(1) + 'G' }
+				],
+				xAxis: [x(0, false), x(1, false), x(2, true)],
+				yAxis: [
+					y(0, 'LBA GB', { min: 0, scale: false }),
+					y(1, 'QD', { minInterval: 1, splitNumber: 2 }),
+					y(2, 'Latency ms', { type: 'log', splitNumber: 2, axisLabel: { ...t.axisLabel, formatter: (v: number) => (v >= 1 ? v.toFixed(0) : v.toString()) } })
+				],
+				series: [
+					{ type: 'line', name: '__steps__', data: [], silent: true, tooltip: { show: false }, markArea: { silent: true, label: { show: false }, data: bands } },
+					...dirs.flatMap((d, di) => [sc(di, col(d.color), d.name, 0, 1), sc(di, col(d.color), d.name, 1, 4), sc(di, col(d.color), d.name, 2, 5)])
+				]
+			};
+		}
 	};
 }

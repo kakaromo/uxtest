@@ -9,12 +9,12 @@
 	import CopyTable from '#lib/components/CopyTable.svelte';
 	import { app, TYPE_ORDER } from '#lib/state.svelte.js';
 	import { load } from '#lib/data.js';
-	import { explorerSpec, overlaySpec, runsSpec, latSpec, lbaSpec, stackSpec, rwBarSpec, jankSpec, PROV_TRACE } from '#lib/charts/build.js';
+	import { lbaPatternSpec, explorerSpec, overlaySpec, runsSpec, latSpec, lbaSpec, stackSpec, rwBarSpec, jankSpec, PROV_TRACE } from '#lib/charts/build.js';
 	import { rows, rowsOf, nameOf, label } from '#lib/view.js';
 	import { findings, rank } from '#lib/insight.js';
 	import RankStrip from '#lib/components/RankStrip.svelte';
 	import { mb, f, n0, x, sec } from '#lib/fmt.js';
-	import type { ScenarioDoc, Run } from '#lib/types.js';
+	import type { ScenarioDoc, Run, Points } from '#lib/types.js';
 	import { ChevronLeft, ChevronRight } from '@lucide/svelte';
 
 	const id = $derived(page.params.id!);
@@ -99,6 +99,21 @@
 		void res;
 		zoom = null;
 	});
+	// LBA pattern: 고른 Run 의 요청 하나하나 (따로 받는 파일)
+	let pts = $state<Points | null>(null);
+	let ptsErr = $state(false);
+	$effect(() => {
+		const key = `p-${id}-${repSel}`;
+		pts = null;
+		ptsErr = false;
+		if (!repSel) return;
+		load<Points>(key)
+			.then((p) => {
+				if (key === `p-${id}-${repSel}`) pts = p;
+			})
+			.catch(() => (ptsErr = true));
+	});
+	const ptSpec = $derived(pts && run ? lbaPatternSpec(pts, run, `${id} · Run ${run.repeat} LBA pattern (요청 ${pts.n.toLocaleString()}건)`) : null);
 	const exSpec = $derived(run ? explorerSpec(run, res, `${id} · Run ${run.repeat} Timeline (${res === '1s' ? '1초' : '100ms'} 단위 MB/s, 위 Read · 아래 Write)`) : null);
 </script>
 
@@ -278,6 +293,18 @@
 					</table>
 				</CopyTable>
 			</div>
+		</section>
+
+		<section class="mb-12 space-y-4">
+			<h2 id="lba-pattern" class="text-h2 font-bold">LBA pattern</h2>
+			<p class="text-body-2 text-muted-foreground">요청 하나가 점 하나예요 (Run {run.repeat}, 위의 Run 선택을 따라가요). 위는 LBA, 가운데는 QD, 아래는 Latency예요. 차트 위에서 스크롤하거나 아래 막대를 끌면 시간을, 오른쪽 막대를 끌면 LBA 범위를 확대해요. 범례를 누르면 Read·Write 등을 끄고 켤 수 있어요.</p>
+			{#if ptSpec}
+				<Chart spec={ptSpec} height={560} renderer="canvas" />
+			{:else if ptsErr}
+				<p class="text-body-3 text-destructive">이 Run의 요청 데이터를 불러오지 못했어요.</p>
+			{:else}
+				<Skeleton class="h-[560px] w-full rounded-xl" />
+			{/if}
 		</section>
 
 		<section class="mb-12 space-y-4">

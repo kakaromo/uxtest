@@ -130,3 +130,6 @@ export type ScenarioDoc = {
 	runs: Run[];
 	jank: Jank[];
 };
+
+/** p-<ID>-<회차>.json: 요청 하나하나 (t 는 앞 점과의 차이 ms, lat 은 µs) */
+export type Points = { n: number; t: number[]; lba: number[]; d: string; kb: number[]; qd: number[]; lat: number[]; lun?: number[] };
