@@ -6,6 +6,7 @@
 	import { volSpec, mapSpec } from '#lib/charts/build.js';
 	import { label, rows, rowsOf, nameOf } from '#lib/view.js';
 	import { mb, f } from '#lib/fmt.js';
+	import { emph } from '#lib/insight.js';
 	import { ArrowRight } from '@lucide/svelte';
 
 	const c = $derived(app.content!);
@@ -25,7 +26,7 @@
 <section class="mb-12">
 	<h2 id="summary" class="mb-2 text-h2 font-bold">핵심 결론</h2>
 	<p class="text-body-2 text-muted-foreground">누르면 해당 유형 페이지로 가요.</p>
-	<div class="prose-ux"><ol class="takes">{@html c.takes}</ol></div>
+	<div class="prose-ux"><ol class="takes">{@html emph(c.takes)}</ol></div>
 </section>
 
 <section class="mb-12">
@@ -40,7 +41,7 @@
 					<b class="text-title-1">{app.index!.types[t]}</b>
 					<span class="ml-auto text-body-3 text-ink-3">시나리오 {ids.length}개</span>
 				</div>
-				<p class="text-body-2">{@html c.types[t]?.title ?? ''}</p>
+				<p class="text-body-2">{@html emph(c.types[t]?.title ?? '')}</p>
 				<p class="text-body-3 text-ink-3">
 					Read {mb(Math.min(...rs.map((r) => r.readMB.med)))}~{mb(Math.max(...rs.map((r) => r.readMB.med)))} · Write
 					{mb(Math.min(...rs.map((r) => r.writeMB.med)))}~{mb(Math.max(...rs.map((r) => r.writeMB.med)))}
