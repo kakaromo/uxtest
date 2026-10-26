@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] B7r Instagram 릴스 20개",
+  "description": "[B7r · P2] 회차마다 이미지·영상 캐시를 비우고 릴스 탭에서 5초씩 보며 20개를 넘긴다. 좋아요가 남지 않도록 영상은 탭하지 않는다. 피드(B7)·YouTube 스트리밍(C1)과 영상 캐시 write 비교. 준비: Instagram 로그인",
+  "repeatCount": 3,
+  "steps": [
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input keyevent KEYCODE_WAKEUP; sleep 1; wm dismiss-keyguard; sleep 1; dumpsys window | grep -c isKeyguardShowing=true || true",
+        "label": "화면 켜기·잠금 해제"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.instagram.android",
+        "label": "앱 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "rm -rf /data/data/com.instagram.android/cache/images.stash /data/data/com.instagram.android/cache/ExoPlayerCacheDir; echo ok",
+        "label": "Instagram 이미지·영상 캐시 비우기"
+      }
+    },
+    {
+      "type": "launch_app",
+      "params": {
+        "package_name": "com.instagram.android",
+        "clear_mode": "force_stop",
+        "wait_seconds": "8",
+        "label": "Instagram 실행"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "sleep 1; dumpsys window | grep mCurrentFocus | grep -q GrantPermissionsActivity && { input keyevent 4; echo perm-closed; } || echo no-perm",
+        "label": "권한 창 있으면 닫기 (선택 안 함)"
+      }
+    },
+    {
+      "type": "tap_element",
+      "params": {
+        "element_content_desc": "릴스",
+        "x": "381",
+        "y": "2632",
+        "label": "릴스 탭"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "첫 릴스 로딩"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "scroll",
+      "params": {
+        "direction": "down",
+        "count": "20",
+        "pause": "5",
+        "duration": "300",
+        "label": "릴스 20개 넘기기 (5초씩 보기)"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "3",
+        "label": "writeback 배수 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys window | grep mCurrentFocus",
+        "label": "화면 확인"
+      }
+    },
+    {
+      "type": "stop_app",
+      "params": {
+        "package_name": "com.instagram.android",
+        "label": "앱 종료"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [
+      "com.instagram.android"
+    ],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}

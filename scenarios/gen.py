@@ -486,6 +486,16 @@ scenario("B7", "B", 2, "Instagram 홈 피드 40회",
          "회차마다 이미지·영상 캐시를 비우고 홈 피드를 1.5초 간격으로 40번 스크롤. 좋아요·팔로우가 계정에 남지 않도록 탭은 하지 않는다. YouTube 홈피드(B3)와 캐시 write 비교.",
          st, [INSTA], needs=["Instagram 로그인"])
 
+# B7r -----------------------------------------------------------------
+# 릴스는 두 번 탭하면 좋아요가 되므로 영상은 탭하지 않고 탭 바의 릴스 버튼만 누른다
+st = [st[0], stop(INSTA), clear_app_cache(INSTA, ["images.stash", "ExoPlayerCacheDir"], "Instagram 이미지·영상 캐시 비우기"),
+      launch(INSTA, "Instagram 실행", wait=8), CLOSE_PERM,
+      tap_el("릴스 탭", element_content_desc="릴스", x=381, y=2632), sleep(3, "첫 릴스 로딩"), FOCUS,
+      trace_start(), scroll(20, "릴스 20개 넘기기 (5초씩 보기)", pause=5), SETTLE, trace_stop(), FOCUS, stop(INSTA)]
+scenario("B7r", "B", 2, "Instagram 릴스 20개",
+         "회차마다 이미지·영상 캐시를 비우고 릴스 탭에서 5초씩 보며 20개를 넘긴다. 좋아요가 남지 않도록 영상은 탭하지 않는다. 피드(B7)·YouTube 스트리밍(C1)과 영상 캐시 write 비교.",
+         st, [INSTA], needs=["Instagram 로그인"])
+
 # B8 ------------------------------------------------------------------
 st = [stop(GMAIL), launch(GMAIL, "Gmail 실행", wait=6),
       trace_start(), scroll(30, "받은편지함 스크롤", pause=1.5), scroll(30, "위로 스크롤", pause=0.8, direction="up"),
