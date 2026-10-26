@@ -26,8 +26,9 @@
 		spec,
 		height = 300,
 		caption = '',
+		renderer = 'svg',
 		oninit
-	}: { spec: ChartSpec; height?: number; caption?: string; oninit?: (c: echarts.ECharts) => void } = $props();
+	}: { spec: ChartSpec; height?: number; caption?: string; renderer?: 'svg' | 'canvas'; oninit?: (c: echarts.ECharts) => void } = $props();
 
 	let el: HTMLDivElement;
 	let chart: echarts.ECharts | null = null;
@@ -39,7 +40,7 @@
 		if (!el) return;
 		opt = spec.option(theme());
 		if (!chart) {
-			chart = echarts.init(el, null, { renderer: 'svg' });
+			chart = echarts.init(el, null, { renderer });
 			oninit?.(chart);
 		}
 		chart.setOption(opt, true);
@@ -85,7 +86,7 @@
 	}
 	async function copyHTML() {
 		const t = theme();
-		const html = chartHTML(opt, { title: spec.title, height, bg: t.surface, fg: t.fg, caption });
+		const html = chartHTML(opt, { title: spec.title, height, bg: t.surface, fg: t.fg, caption, renderer });
 		(await copy(html)) ? toast.success('차트 HTML 소스를 복사했어요. HTML 문서에 붙이면 같은 차트가 떠요') : toast.error('복사하지 못했어요');
 	}
 	function fillSrc() {

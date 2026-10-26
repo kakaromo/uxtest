@@ -6,6 +6,8 @@
   python3 report/export_web.py D1 S  # 일부만 (ID·유형 접두사)
 
 index.json = data.json 의 집계 행(시간축·LBA 같은 큰 배열은 뺌) + meta + jank 요약.
+p-<ID>-<회차>.json = 요청 하나하나 (agent Trace 의 LBA 패턴처럼 점으로 그리는 용도, 시나리오 페이지가 그 회차를 고를 때만 읽음).
+  열 단위: t(요청 보낸 시각, ms, 앞 점과의 차이), lba(4KB 칸), d(R/W/D/F 글자열), kb, qd, lat(dtoc, µs), lun(여러 LUN 일 때만).
 s-<ID>.json = 그 시나리오의 집계 행(G 는 cold/warm 둘) + 회차마다 상세:
   1초 시간축(R/W MB/s, QD, 지연 p99, discard·flush 건수), 100ms 시간축(15분 이하만), 측정 구간 안 스텝별 양,
   크기·QD 구간별 지연 백분위, 느린 요청 상위 30, 파일 종류별 양, 프로세스·스레드·파일 상위.
@@ -103,6 +105,23 @@ def run_detail(pq, lba_max, steps, names):
     return d
 
 
+def points(t0):
+    """요청 완료(complete_rsp) 행마다 보낸 시각·LBA·방향·크기·QD·dtoc. trace_metrics 가 만든 ev 뷰를 쓴다."""
+    rows = X.q("""select time - dtoc/1000 - ? t, lba, dir, size, qd, dtoc, lun from ev
+                  where action='complete_rsp' and dir in ('R','W','D','F') order by 1""", t0)
+    t, prev = [], 0
+    for r in rows:
+        ms = max(0, round(r[0] * 1000))
+        t.append(ms - prev)
+        prev = ms
+    d = {"n": len(rows), "t": t, "lba": [r[1] or 0 for r in rows], "d": "".join(r[2] for r in rows),
+         "kb": [(r[3] or 0) // 1024 for r in rows], "qd": [r[4] or 0 for r in rows],
+         "lat": [round((r[5] or 0) * 1000) for r in rows]}
+    if any(r[6] for r in rows):
+        d["lun"] = [r[6] or 0 for r in rows]
+    return d
+
+
 def slim(row):
     r = {k: v for k, v in row.items() if k != "rep"}
     r["rep"] = {k: row["rep"][k] for k in ("repeat", "streams") if k in row["rep"]}
@@ -175,6 +194,8 @@ def main():
             steps = [b for b in res.get("stepBoundaries") or []
                      if b["repeatIndex"] == tj["repeatIndex"] and b.get("startedMono")]
             d = run_detail(pq, lba_max, steps, names)
+            pts = points(X.q("select min(time) from ev")[0][0])   # run_detail 과 같은 0초
+            (OUT / f"p-{sid}-{tj['repeatIndex']}.json").write_text(json.dumps(pts, separators=(",", ":")))
             d |= {"repeat": tj["repeatIndex"], "traceJobId": tj["traceJobId"],
                   "cache": ("cold" if tj["repeatIndex"] == 1 else "warm") if sid in X.COLD_FIRST else rows[0]["cache"]}
             runs.append(d)

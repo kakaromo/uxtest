@@ -16,7 +16,7 @@ export function optionJS(o: unknown, indent = 1) {
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
-export function chartHTML(o: unknown, opt: { title: string; height: number; bg: string; fg: string; caption?: string }) {
+export function chartHTML(o: unknown, opt: { title: string; height: number; bg: string; fg: string; caption?: string; renderer?: 'svg' | 'canvas' }) {
 	const id = 'ux-' + Math.random().toString(36).slice(2, 8);
 	return `<!-- ${opt.title} · UX I/O 분석 사이트에서 복사 -->
 <figure style="margin:0;font-family:'Pretendard Variable',Pretendard,-apple-system,sans-serif;background:${opt.bg};color:${opt.fg};padding:16px;border-radius:16px">
@@ -27,7 +27,7 @@ export function chartHTML(o: unknown, opt: { title: string; height: number; bg: 
 <script>
 (function () {
   var el = document.getElementById('${id}');
-  var chart = echarts.init(el, null, { renderer: 'svg' });
+  var chart = echarts.init(el, null, { renderer: '${opt.renderer ?? 'svg'}' });
   chart.setOption(${optionJS(o, 2)});
   window.addEventListener('resize', function () { chart.resize(); });
 })();
