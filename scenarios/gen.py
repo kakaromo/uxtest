@@ -360,7 +360,7 @@ scenario("G2", "G", 1, "뷰어 1→1000장",
 
 # ================= P2 =================
 # 좌표·요소는 2026-10-25 uiautomator dump 로 확인한 것. "dry-run 확인" 이 붙은 것은 아직 실기 확인 전.
-# 제외: Netflix(사용 안 함), B7 Instagram·Facebook 피드(둘 다 로그아웃 상태 — 로그인은 하지 않는다),
+# 제외: Netflix(사용 안 함), Facebook 피드(로그아웃 상태 — 로그인은 하지 않는다. Instagram 은 사용자가 로그인해 B7 로 잰다),
 #       F3 메시지(계정 연결 화면이 떠서 계정에 흔적이 남는다). A6 은 Chrome 대신 날씨 앱 — Chrome 을 pm clear 하면 로그인·탭이 사라진다.
 FB, WEATHER, GMAIL, PLAY = "com.facebook.katana", "net.oneplus.weather", "com.google.android.gm", "com.android.vending"
 YTM, VIDEO, FILEMGR = "com.google.android.apps.youtube.music", "com.coloros.video", "com.oneplus.filemanager"
@@ -474,6 +474,17 @@ st = [stop(MAPS), clear_app_cache(MAPS, ["*"], "지도 캐시 비우기"),
 scenario("B6", "B", 2, "지도 이동·확대 10회",
          "검색 기록을 남기지 않으려고 좌표 인텐트로 서울시청을 열고, 이동 5번·두 번 탭 확대 5번. 지도 타일 캐시 read/write 를 본다.",
          st, [MAPS], verify=["두 번 탭 확대 동작"])
+
+# B7 ------------------------------------------------------------------
+# 2026-10-27 사용자가 Instagram 에 로그인. 좋아요·팔로우가 남지 않도록 탭 없이 스크롤만 한다 (Facebook 은 여전히 로그아웃이라 뺀다).
+# 화면이 꺼져 있으면 잠금 화면 위에서 스와이프가 알림창을 내리므로 먼저 깨운다 (2026-10-27 dry-run 에서 확인)
+st = [sh("input keyevent KEYCODE_WAKEUP; sleep 1; wm dismiss-keyguard; sleep 1; dumpsys window | grep -c isKeyguardShowing=true || true", "화면 켜기·잠금 해제"),
+      stop(INSTA), clear_app_cache(INSTA, ["images.stash", "ExoPlayerCacheDir"], "Instagram 이미지·영상 캐시 비우기"),
+      launch(INSTA, "Instagram 실행", wait=8), CLOSE_PERM, FOCUS,
+      trace_start(), scroll(40, "홈 피드 스크롤 40회", pause=1.5), SETTLE, trace_stop(), FOCUS, stop(INSTA)]
+scenario("B7", "B", 2, "Instagram 홈 피드 40회",
+         "회차마다 이미지·영상 캐시를 비우고 홈 피드를 1.5초 간격으로 40번 스크롤. 좋아요·팔로우가 계정에 남지 않도록 탭은 하지 않는다. YouTube 홈피드(B3)와 캐시 write 비교.",
+         st, [INSTA], needs=["Instagram 로그인"])
 
 # B8 ------------------------------------------------------------------
 st = [stop(GMAIL), launch(GMAIL, "Gmail 실행", wait=6),
