@@ -12,6 +12,7 @@
 	import { label, rowsOf, nameOf, rowOf, PAIRS } from '#lib/view.js';
 	import { copyGrid } from '#lib/clipboard.js';
 	import { mb, f, x } from '#lib/fmt.js';
+	import { emph, headlines, tint } from '#lib/insight.js';
 	import { Table2 } from '@lucide/svelte';
 
 	const t = $derived(page.params.t!);
@@ -22,6 +23,17 @@
 	const pairs = $derived(PAIRS.filter((p) => ids.includes(p.a) || ids.includes(p.b)));
 	const jank = $derived((app.index?.jank ?? []).filter((j) => ids.includes(j.scenario) && j.jank));
 	const cats = $derived(rs.map(label));
+	// 표 칸 농도: 같은 열 안에서 상대 크기
+	const col = (get: (r: (typeof rs)[number]) => number, log = false) => {
+		const vals = rs.map(get);
+		return (r: (typeof rs)[number]) => tint(get(r), vals, log);
+	};
+	const tR = $derived(col((r) => r.readMB.med, true));
+	const tW = $derived(col((r) => r.writeMB.med, true));
+	const tP = $derived(col((r) => r.peakMBs.med, true));
+	const tL = $derived(col((r) => Math.max(r.dtocP99.R.med, r.dtocP99.W.med)));
+	const tQ = $derived(col((r) => r.qdP99.med));
+	const tI = $derived(col((r) => r.idlePct.med));
 
 	let dist = $state('size');
 	const distSpecs = $derived({
@@ -52,14 +64,20 @@
 
 {#if art}
 	<section class="mb-12">
-		<h2 id="analysis" class="mb-2 text-h2 font-bold">해설</h2>
-		<div class="prose-ux">{@html art.body}</div>
+		<h2 id="analysis" class="mb-2 text-h2 font-bold">Summary</h2>
+		<div class="prose-ux summary">{@html emph(headlines(art.body))}</div>
 	</section>
 {/if}
 
 <section class="mb-12 space-y-4">
+	<h2 id="volume" class="text-h2 font-bold">Volume</h2>
+	<p class="text-body-2 text-muted-foreground">시나리오마다 Read·Write 양이에요. 막대가 길수록 많이 썼어요 (로그 눈금).</p>
+	<Chart spec={volSpec(rs, label)} height={28 * rs.length + 80} />
+</section>
+
+<section class="mb-12 space-y-4">
 	<h2 id="signature" class="text-h2 font-bold">Workload signature</h2>
-	<p class="text-body-2 text-muted-foreground">시나리오마다 양, 모양, Latency을 한 줄로 모았어요. 회색은 Run 최소~최대예요.</p>
+	<p class="text-body-2 text-muted-foreground">시나리오마다 양, 모양, Latency를 한 줄로 모았어요. 칸이 진할수록 이 유형 안에서 큰 값이에요. 회색은 Run 최소~최대예요.</p>
 	<CopyTable title="{t} Workload signature" note="Write ratio = Write 바이트 ÷ 전체. Sequential = 직전 요청 끝 LBA 에서 바로 이어진 바이트 비율. CV(Run 차이)가 0.5를 넘으면 Run마다 많이 달랐다는 뜻이에요.">
 		<table>
 			<thead>
@@ -71,15 +89,15 @@
 					<tr>
 						<td><a href={resolve('/s/[id]', { id: r.id })}>{label(r)}</a></td>
 						<td>{nameOf(r)}</td>
-						<td class="num" data-v={r.readMB.med}>{f(r.readMB.med)}<span class="rg">{f(r.readMB.min, 0)}~{f(r.readMB.max, 0)}</span></td>
-						<td class="num" data-v={r.writeMB.med}>{f(r.writeMB.med)}<span class="rg">{f(r.writeMB.min, 0)}~{f(r.writeMB.max, 0)}</span></td>
+						<td class="num" style={tR(r)} data-v={r.readMB.med}>{f(r.readMB.med)}<span class="rg">{f(r.readMB.min, 0)}~{f(r.readMB.max, 0)}</span></td>
+						<td class="num" style={tW(r)} data-v={r.writeMB.med}>{f(r.writeMB.med)}<span class="rg">{f(r.writeMB.min, 0)}~{f(r.writeMB.max, 0)}</span></td>
 						<td class="num" data-v={tot ? (100 * r.writeMB.med) / tot : 0}>{tot ? f((100 * r.writeMB.med) / tot, 0) : 0}%</td>
-						<td class="num" data-v={r.peakMBs.med}>{f(r.peakMBs.med, 0)}</td>
+						<td class="num" style={tP(r)} data-v={r.peakMBs.med}>{f(r.peakMBs.med, 0)}</td>
 						<td class="num">{f(r.seq.R.med, 0)} / {f(r.seq.W.med, 0)}</td>
-						<td class="num">{f(r.dtocP99.R.med, 2)} / {f(r.dtocP99.W.med, 2)}</td>
-						<td class="num" data-v={r.qdP99.med}>{f(r.qdP99.med, 0)}</td>
+						<td class="num" style={tL(r)}>{f(r.dtocP99.R.med, 2)} / {f(r.dtocP99.W.med, 2)}</td>
+						<td class="num" style={tQ(r)} data-v={r.qdP99.med}>{f(r.qdP99.med, 0)}</td>
 						<td class="num" data-v={r.metaPct.med}>{f(r.metaPct.med, 0)}</td>
-						<td class="num" data-v={r.idlePct.med}>{f(r.idlePct.med, 0)}</td>
+						<td class="num" style={tI(r)} data-v={r.idlePct.med}>{f(r.idlePct.med, 0)}</td>
 						<td class="num {r.cv > 0.5 ? 'text-destructive' : ''}" data-v={r.cv}>{f(r.cv, 2)}</td>
 						<td class="whitespace-nowrap">{(r.rep.streams ?? []).slice(0, 2).map((s) => `${s.seq} ${s.size} ${s.dir} ${s.pct.toFixed(0)}%`).join(' · ')}</td>
 					</tr>
@@ -109,11 +127,6 @@
 			{/if}
 		{/each}
 	</div>
-</section>
-
-<section class="mb-12 space-y-4">
-	<h2 id="volume" class="text-h2 font-bold">Volume</h2>
-	<Chart spec={volSpec(rs, label)} height={28 * rs.length + 80} />
 </section>
 
 <section class="mb-12 space-y-4">

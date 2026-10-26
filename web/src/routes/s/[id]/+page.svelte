@@ -10,7 +10,9 @@
 	import { app, TYPE_ORDER } from '#lib/state.svelte.js';
 	import { load } from '#lib/data.js';
 	import { explorerSpec, overlaySpec, runsSpec, latSpec, lbaSpec, stackSpec, rwBarSpec, jankSpec, PROV_TRACE } from '#lib/charts/build.js';
-	import { rowsOf, nameOf, label } from '#lib/view.js';
+	import { rows, rowsOf, nameOf, label } from '#lib/view.js';
+	import { findings, rank } from '#lib/insight.js';
+	import RankStrip from '#lib/components/RankStrip.svelte';
 	import { mb, f, n0, x, sec } from '#lib/fmt.js';
 	import type { ScenarioDoc, Run } from '#lib/types.js';
 	import { ChevronLeft, ChevronRight } from '@lucide/svelte';
@@ -46,6 +48,20 @@
 	const idx = $derived(typeIds.indexOf(id));
 	const desc = $derived((row?.description ?? '').replace(/^\[[^\]]*\]\s*/, ''));
 	const peers = $derived(doc ? rowsOf(doc.rows[0].type) : []);
+	const all = $derived(rows());
+	const repRun = $derived(doc?.runs.find((r) => r.repeat === row?.rep.repeat) ?? doc?.runs[0]);
+	const facts = $derived(row ? findings(row, repRun, all) : []);
+	const pos = $derived(
+		row
+			? [
+					{ k: 'Write', get: (r: typeof row) => r.writeMB.med, log: true, fmt: mb },
+					{ k: 'Read', get: (r: typeof row) => r.readMB.med, log: true, fmt: mb },
+					{ k: 'Peak throughput', get: (r: typeof row) => r.peakMBs.med, log: true, fmt: (z: number) => `${f(z, 0)} MB/s` },
+					{ k: 'Write Latency p99', get: (r: typeof row) => r.dtocP99.W.med, log: false, fmt: (z: number) => `${f(z, 2)} ms` },
+					{ k: 'Idle', get: (r: typeof row) => r.idlePct.med, log: false, fmt: (z: number) => `${f(z, 0)}%` }
+				].map((m) => ({ ...m, v: m.get(row), vals: all.map(m.get), r: rank(all, m.get, row) }))
+			: []
+	);
 	const jank = $derived(doc?.jank.find((j) => String(j.repeat) === repSel && j.sec?.length));
 
 	// Timeline 탐색기에서 고른 구간의 통계
@@ -122,6 +138,31 @@
 			</div>
 		{/if}
 	</header>
+
+	<section class="mb-12">
+		<h2 id="summary" class="mb-4 text-h2 font-bold">Summary</h2>
+		<ol class="grid gap-3 sm:grid-cols-2">
+			{#each facts as fc, i (i)}
+				<li class="flex items-start gap-4 rounded-2xl bg-card px-5 py-4 ring-1 {fc.tone === 'warn' ? 'ring-warning/60' : 'ring-border'}">
+					<b class="min-w-[92px] text-h3 leading-tight font-bold tabular-nums {fc.tone === 'warn' ? 'text-foreground' : 'text-primary'}">{fc.stat}</b>
+					<span class="pt-1 text-body-2">{#if fc.tone === 'warn'}<Badge variant="outline" class="mr-1 border-warning">주의</Badge>{/if}{fc.text}</span>
+				</li>
+			{/each}
+		</ol>
+		<div class="mt-4 rounded-2xl bg-card px-5 py-4 ring-1 ring-border">
+			<h3 id="position" class="text-title-1 font-semibold" data-toc="전체 중 위치">전체 {all.length}개 중 위치</h3>
+			<p class="text-body-3 text-ink-3">회색 점이 다른 시나리오, 파란 점이 {label(row)}예요. 오른쪽일수록 커요{pos.some((m) => m.log) ? ' (MB·MB/s는 로그 눈금)' : ''}.</p>
+			<div class="mt-3 space-y-3">
+				{#each pos as m (m.k)}
+					<div class="grid grid-cols-[120px_1fr_110px] items-center gap-4 max-sm:grid-cols-[90px_1fr_90px]">
+						<span class="text-body-3 font-semibold text-muted-foreground">{m.k}</span>
+						<div><RankStrip vals={m.vals} v={m.v} log={m.log} fmt={m.fmt} /></div>
+						<span class="text-right tabular-nums"><b class="text-body-2">{m.fmt(m.v)}</b><br /><span class="text-caption text-ink-3">{m.r.k}위 / {m.r.n}</span></span>
+					</div>
+				{/each}
+			</div>
+		</div>
+	</section>
 
 	<section class="mb-12">
 		<h2 id="numbers" class="mb-4 text-h2 font-bold">Key metrics</h2>
