@@ -1,0 +1,65 @@
+{
+  "_doc": "패키지 → 카테고리. packages 가 먼저, 없으면 rules(정규식, 위에서부터), 둘 다 없으면 other. ignore 는 사용 시간에서 뺀다(측정 앱, 잠금화면 광고 앱).",
+  "ignore": ["kaist.iclab.abc", "com.cashwalk.cashwalk", "com.buzzvil.adhours", "com.lpoint.moalock", "kr.co.cjone.app.lockscreen"],
+  "packages": {
+    "com.kakao.talk": "messaging", "com.samsung.android.messaging": "messaging", "com.android.mms": "messaging",
+    "org.telegram.messenger": "messaging", "com.tencent.mm": "messaging", "com.facebook.orca": "messaging",
+    "jp.naver.line.android": "messaging", "com.Slack": "messaging", "com.skype.raider": "messaging",
+    "kr.co.vcnc.android.couple": "messaging", "com.nhn.android.band": "messaging",
+
+    "com.twitter.android": "sns", "com.instagram.android": "sns", "com.facebook.katana": "sns",
+    "com.kakao.story": "sns", "com.nhn.android.navercafe": "sns", "net.daum.android.cafe": "sns",
+    "com.dcinside.app": "sns", "com.ppomppu.android": "sns", "sixclk.newpiki": "sns", "com.tinder": "sns",
+    "com.zhiliaoapp.musically": "sns", "com.ss.android.ugc.trill": "sns",
+
+    "com.google.android.youtube": "video", "com.netflix.mediaclient": "video", "kr.co.nowcom.mobile.afreeca": "video",
+    "kr.co.captv.pooqV2": "video", "com.nhn.android.naverplayer": "video", "com.frograms.wplay": "video",
+    "com.mxtech.videoplayer.pro": "video", "com.kt.otv": "video", "video.player.videoplayer": "video",
+    "com.skb.btvmobile": "video", "laftel.net.laftel": "video", "tv.twitch.android.app": "video",
+    "com.samsung.android.video": "video", "com.naver.vapp": "video", "kr.co.spotvnow.app": "video",
+    "com.uplus.baseballhdtv": "video", "com.appgate.gorealra": "video",
+
+    "com.iloen.melon": "music", "com.google.android.apps.youtube.music": "music", "com.sec.android.app.music": "music",
+    "com.lge.music": "music", "com.ktmusic.geniemusic": "music",
+
+    "com.android.chrome": "browser", "com.sec.android.app.sbrowser": "browser", "com.nhn.android.search": "browser",
+    "net.daum.android.daum": "browser", "com.google.android.googlequicksearchbox": "browser",
+    "com.nate.android.portalmini": "browser", "com.nhn.android.webtoon": "browser", "net.daum.android.webtoon": "browser",
+    "com.kakao.page": "browser", "com.nhn.android.naverdic": "browser", "com.initialcoms.ridi": "browser",
+
+    "com.skt.skaf.l001mtm091": "maps", "com.skt.tmap.ku": "maps", "com.nhn.android.nmap": "maps",
+    "net.daum.android.map": "maps", "com.google.android.apps.maps": "maps", "com.locnall.KimGiSa": "maps",
+    "com.nianticlabs.pokemongo": "game",
+
+    "com.sec.android.app.camera": "camera", "com.linecorp.foodcam.android": "camera", "com.campmobile.snow": "camera",
+    "com.sec.android.gallery3d": "gallery", "com.android.gallery3d": "gallery",
+
+    "com.google.android.gm": "mail_store", "com.android.vending": "mail_store", "com.samsung.android.email.provider": "mail_store",
+    "com.google.android.apps.inbox": "mail_store", "com.sec.android.app.samsungapps": "mail_store",
+
+    "com.samsung.android.contacts": "productivity", "com.android.contacts": "productivity",
+    "com.samsung.android.calendar": "productivity", "com.samsung.android.app.notes": "productivity",
+    "com.sec.android.app.voicenote": "productivity", "com.sec.android.app.popupcalculator": "productivity",
+    "com.google.android.apps.docs": "productivity", "com.microsoft.office.powerpoint": "productivity",
+    "com.dropbox.android": "productivity", "com.barebonesdev.powerplanner": "productivity",
+
+    "com.samsung.android.incallui": "call", "com.android.incallui": "call", "com.skt.prod.dialer": "call",
+    "com.skt.prod.tphonelite": "call", "com.sonymobile.android.dialer": "call",
+
+    "com.sec.android.app.launcher": "home", "com.lge.launcher3": "home", "com.lge.launcher2": "home",
+    "com.kakao.home": "home", "com.sonymobile.home": "home", "com.android.systemui": "home",
+    "com.samsung.android.app.spage": "home"
+  },
+  "rules": [
+    ["launcher|\\.home$", "home"],
+    ["dialer|incallui", "call"],
+    ["camera", "camera"],
+    ["gallery", "gallery"],
+    ["music|melon|genie", "music"],
+    ["video|player|tv\\b|\\.tv\\.", "video"],
+    ["bank|card|pay|stock|exchange|toss|kbstar|shcard|hyundaicard|smartpay|txsmart|liivmate", "commerce"],
+    ["coupang|gmarket|tmon|wemakeprice|ssg|shop|dutyfree|starbucks|twosome|hpapp|cjone|lpoint|lottemembers|sampleapp|baemin|cgv|cinema|korail|bus|taxi|encar|kbc\\.cha|hogang", "commerce"],
+    ["game|kakaogames|nexon|netmarble|supercell|txwy|pearlabyss|sundaytoz|tinyco|easybrain|xdg|blhx|snqx|skypeople|maplem", "game"],
+    ["clock|alarm", "productivity"]
+  ]
+}

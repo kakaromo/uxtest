@@ -24,6 +24,10 @@
 !/report/perstep.py
 !/report/terms.py
 
+!/wl/
+/wl/.private/
+# 데이터셋에서 뽑은 값·trace 조각·TC·결과는 wl/.private 에만 둔다 (공개 금지)
+
 !/web/
 /web/node_modules/
 /web/build/
