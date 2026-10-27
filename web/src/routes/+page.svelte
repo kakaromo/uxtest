@@ -4,7 +4,7 @@
 	import CopyTable from '#lib/components/CopyTable.svelte';
 	import { app, TYPE_ORDER } from '#lib/state.svelte.js';
 	import { volSpec, mapSpec } from '#lib/charts/build.js';
-	import { label, rows, rowsOf, nameOf } from '#lib/view.js';
+	import { label, rows, rowsOf, nameOf, cname } from '#lib/view.js';
 	import { mb, f } from '#lib/fmt.js';
 	import { emph } from '#lib/insight.js';
 	import { ArrowRight } from '@lucide/svelte';
@@ -56,9 +56,9 @@
 	<h2 id="glance" class="text-h2 font-bold">유형별 한눈에</h2>
 	<CopyTable title="유형별 한눈에"><table>{@html c.glance}</table></CopyTable>
 	<h3 id="volume" class="pt-4 text-h4 font-bold" data-toc="Volume 비교">Volume by scenario</h3>
-	<Chart spec={volSpec(all, label)} height={22 * all.length + 70} caption="카메라·갤러리는 GB 단위, 웹·피드는 MB 단위라 가로축을 로그 눈금으로 그렸어요." />
+	<Chart spec={volSpec(all, cname)} height={22 * all.length + 70} caption="카메라·갤러리는 GB 단위, 웹·피드는 MB 단위라 가로축을 로그 눈금으로 그렸어요." />
 	<h3 id="map" class="pt-4 text-h4 font-bold" data-toc="Workload map">Workload map</h3>
-	<Chart spec={mapSpec(all, label)} height={460} caption="오른쪽일수록 순차, 위쪽일수록 Write 위주예요." />
+	<Chart spec={mapSpec(all, cname)} height={460} caption="오른쪽일수록 순차, 위쪽일수록 Write 위주예요." />
 </section>
 
 <section class="mb-12 space-y-4">
@@ -88,10 +88,10 @@
 
 {#if c.mgmt}
 	<section class="mb-12 space-y-4">
-		<h2 id="mgmt" class="mb-3 text-h2 font-bold">UFS 관리 명령 (mgmt)</h2>
+		<h2 id="mgmt" class="mb-3 text-h2 font-bold">UFS mgmt command</h2>
 		<div class="prose-ux">{@html c.mgmt}</div>
-		{#if c.mgmtTable}<CopyTable title="유형별 UFS 관리 명령"><table>{@html c.mgmtTable}</table></CopyTable>{/if}
-		<CopyTable title="시나리오별 UFS 관리 명령" note="/분 값과 H8 exit는 Run들의 median, suspend(fBackgroundOpsEn clear)와 qTimestamp 쓰기는 Run 합이에요.">
+		{#if c.mgmtTable}<CopyTable title="유형별 UFS mgmt command"><table>{@html c.mgmtTable}</table></CopyTable>{/if}
+		<CopyTable title="시나리오별 UFS mgmt command" note="/분 값과 H8 exit는 Run들의 median, suspend(fBackgroundOpsEn clear)와 qTimestamp 쓰기는 Run 합이에요.">
 			<table>
 				<thead><tr><th>ID</th><th class="num">Hibern8 /분</th><th class="num">Hibern8 시간 %</th><th class="num">H8 exit ms</th><th class="num">Query /분</th><th class="num">bBackgroundOpStatus /분</th><th class="num">WB 조회 /분</th><th class="num">suspend</th><th class="num">qTimestamp</th></tr></thead>
 				<tbody>

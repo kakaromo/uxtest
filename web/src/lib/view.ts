@@ -7,6 +7,8 @@ export const rows = () => app.index?.scenarios ?? [];
 export const rowsOf = (t: string) => rows().filter((r) => r.type === t);
 export const rowOf = (id: string) => rows().find((r) => r.id === id);
 export const nameOf = (r: Row) => r.name.replace(/^\[UX-fsio\]\s*\S+\s*/, '');
+/** 차트 축·점 라벨: ID 대신 시나리오 이름 (갤러리 cold·warm 은 뒤에 붙임) */
+export const cname = (r: Row) => nameOf(r) + (r.cache && (r.id === 'G1' || r.id === 'G2' || r.id === 'G3') ? ` ${r.cache}` : '');
 
 /** 같은 조건만 바꾼 비교 쌍 (유형 페이지·시나리오 페이지에서 씀) */
 export const PAIRS: { a: string; b: string; what: string }[] = [

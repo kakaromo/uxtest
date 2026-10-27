@@ -113,8 +113,8 @@
 			})
 			.catch(() => (ptsErr = true));
 	});
-	const ptSpec = $derived(pts && run ? lbaPatternSpec(pts, run, `${id} · Run ${run.repeat} LBA pattern (요청 ${pts.n.toLocaleString()}건)`) : null);
-	const exSpec = $derived(run ? explorerSpec(run, res, `${id} · Run ${run.repeat} Timeline (${res === '1s' ? '1초' : '100ms'} 단위 MB/s, 위 Read · 아래 Write)`) : null);
+	const ptSpec = $derived(pts && run ? lbaPatternSpec(pts, run, `${row ? nameOf(row) : id} · Run ${run.repeat} LBA pattern (요청 ${pts.n.toLocaleString()}건)`) : null);
+	const exSpec = $derived(run ? explorerSpec(run, res, `${row ? nameOf(row) : id} · Run ${run.repeat} Timeline (${res === '1s' ? '1초' : '100ms'} 단위 MB/s, 위 Read · 아래 Write)`) : null);
 </script>
 
 <svelte:head><title>UX I/O 분석 · {id} {app.names[id] ?? ''}</title></svelte:head>
@@ -297,7 +297,7 @@
 
 		<section class="mb-12 space-y-4">
 			<h2 id="lba-pattern" class="text-h2 font-bold">LBA pattern</h2>
-			<p class="text-body-2 text-muted-foreground">요청 하나가 점 하나예요 (Run {run.repeat}, 위의 Run 선택을 따라가요). 위는 LBA, 가운데는 QD와 Latency, 맨 아래는 UFS 관리 명령(Hibern8 구간, Query)이에요. 차트 위에서 스크롤하거나 아래 막대를 끌면 시간을, 오른쪽 막대를 끌면 LBA 범위를 확대해요. 범례를 누르면 Read·Write 등을 끄고 켤 수 있어요.</p>
+			<p class="text-body-2 text-muted-foreground">요청 하나가 점 하나예요 (Run {run.repeat}, 위의 Run 선택을 따라가요). 위는 LBA, 가운데는 QD와 Latency, 맨 아래는 UFS mgmt command(Hibern8 구간, Query)이에요. 차트 위에서 스크롤하거나 아래 막대를 끌면 시간을, 오른쪽 막대를 끌면 LBA 범위를 확대해요. 범례를 누르면 Read·Write 등을 끄고 켤 수 있어요.</p>
 			{#if ptSpec}
 				<Chart spec={ptSpec} height={pts?.mg ? 660 : 560} renderer="canvas" />
 			{:else if ptsErr}
@@ -317,17 +317,17 @@
 
 		{#if run.h8PerMin !== undefined}
 			<section class="mb-12 space-y-4">
-				<h2 id="mgmt" class="text-h2 font-bold">UFS 관리 명령 (mgmt)</h2>
-				<p class="text-body-2 text-muted-foreground">Run {run.repeat} 동안 UFS 링크가 Hibern8에 드나든 횟수와 Query 요청이에요. 다른 지표(Volume·Idle·QD)는 이 명령을 빼고 셌어요. 시나리오 median은 Hibern8 {f(row?.h8PerMin?.med, 0)}번/분, Hibern8 시간 {f(row?.h8Pct?.med, 0)}%, Query {f(row?.queryPerMin?.med, 0)}번/분이에요.</p>
+				<h2 id="mgmt" class="text-h2 font-bold">UFS mgmt command</h2>
+				<p class="text-body-2 text-muted-foreground">Run {run.repeat} 동안 UFS 링크가 Hibern8에 드나든 횟수와 Query request예요. 다른 지표(Volume·Idle·QD)는 이 command를 빼고 셌어요. 시나리오 median은 Hibern8 {f(row?.h8PerMin?.med, 0)}번/분, Hibern8 시간 {f(row?.h8Pct?.med, 0)}%, Query {f(row?.queryPerMin?.med, 0)}번/분이에요.</p>
 				<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
 					{#each [['Hibern8', `${f(run.h8PerMin, 0)}번/분`, `시간의 ${f(run.h8Pct, 0)}%가 Hibern8`], ['Hibern8 exit', `${f(run.h8ExitMs, 2)} ms`, `enter ${f(run.h8EnterMs, 2)} ms`], ['Query', `${f(run.queryPerMin, 0)}번/분`, `응답 median ${f(run.queryMsP50, 2)} · p99 ${f(run.queryMsP99, 2)} ms`], ['WB buffer 조회', `${f(run.wbCheckPerMin, 0)}번/분`, `suspend ${run.suspendN ?? 0}번 · exception ${run.exceptionN ?? 0}건`]] as k (k[0])}
 						<div class="rounded-xl bg-muted px-4 py-3"><div class="text-body-3 text-muted-foreground">{k[0]}</div><div class="text-h4 font-bold tabular-nums">{k[1]}</div><div class="text-caption text-muted-foreground">{k[2]}</div></div>
 					{/each}
 				</div>
 				{#if run.mgmtN}
-					<CopyTable title="{id} Run {run.repeat} mgmt 명령" note="Query 요청·UIC 명령(보낸 쪽)·exception event 건수예요.">
+					<CopyTable title="{id} Run {run.repeat} mgmt command" note="Query request·UIC command(보낸 쪽)·exception event 건수예요.">
 						<table>
-							<thead><tr><th>명령</th><th class="num">건수</th><th class="num">분당</th></tr></thead>
+							<thead><tr><th>Command</th><th class="num">Count</th><th class="num">/min</th></tr></thead>
 							<tbody>{#each Object.entries(run.mgmtN).sort((a, b) => b[1] - a[1]) as [k, v] (k)}<tr><td class="font-mono text-[12px]">{k}</td><td class="num" data-v={v}>{n0(v)}</td><td class="num">{f((v / run.durSec) * 60, 1)}</td></tr>{/each}</tbody>
 						</table>
 					</CopyTable>
@@ -340,12 +340,12 @@
 			{#if row?.toolFixed}
 				<div class="flex items-start gap-2 rounded-xl border bg-muted px-4 py-3 text-body-3">
 					<Badge variant="outline">고친 도구</Badge>
-					<span>10월 28일 수집 도구의 이름 귀속을 고친 뒤에 잰 값이에요. 앱·파일 이름과 Metadata(node·checkpoint) 표시를 믿을 수 있어요.</span>
+					<span>10월 28일 수집 도구의 name attribution을 고친 뒤에 잰 값이에요. 앱·파일 이름과 Metadata(node·checkpoint) flag를 믿을 수 있어요.</span>
 				</div>
 			{:else}
 				<div class="flex items-start gap-2 rounded-xl border bg-muted px-4 py-3 text-body-3">
 					<Badge variant="outline">다시 재는 중</Badge>
-					<span>이전 수집 도구로 잰 값이에요. Volume·속도·Latency는 맞지만, 앱·파일 이름과 Metadata 표시는 다른 파일 것으로 붙은 경우가 많아요(최대 38%). 고친 도구로 다시 재고 있어요.</span>
+					<span>이전 수집 도구로 잰 값이에요. Volume·속도·Latency는 맞지만, 앱·파일 이름과 Metadata flag는 다른 파일 것으로 붙은 경우가 많아요(최대 38%). 고친 도구로 다시 재고 있어요.</span>
 				</div>
 			{/if}
 			<div class="grid gap-3 lg:grid-cols-2">
