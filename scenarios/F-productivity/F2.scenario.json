@@ -4,6 +4,7 @@
   "name": "[UX-fsio] F2 녹음 1분",
   "description": "[F2 · P2] 녹음기로 1분 녹음. 낮은 대역의 지속 write 를 D3(동영상)와 비교. 측정 후 녹음 파일을 지운다. 준비: 녹음기 첫 실행 동의 화면 완료, 마이크 권한 / dry-run 확인: 녹음 파일 정리",
   "repeatCount": 3,
+  "keepAwake": true,
   "steps": [
     {
       "type": "shell",

@@ -80,6 +80,13 @@ def run(sid, dry):
         return False
     job = r["jobId"]
     print(f"[{sid}] job {job} 시작 (repeat {repeat}, 스텝 {len(sc['steps'])})", flush=True)
+    # keepAwake: 화면을 보며 기다리는 시나리오(녹음, 다운로드 대기). 배터리 상태에선 입력 없이 30초면 화면이 꺼져
+    # 다음 tap 이 잠금 화면에 눌린다. 설정은 바꾸지 않고 10초마다 WAKEUP 키와 잠금 해제(보안 잠금 아님)로 켜 둔다
+    awake = None
+    if sc.get("keepAwake"):
+        serial = os.environ.get("UX_SERIAL", "3C1677001HN00000")
+        awake = subprocess.Popen(["adb", "-s", serial, "shell", "while true; do input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard; sleep 10; done"],
+                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     t0, last = time.time(), None
     while True:
         st = call("GET", f"/api/agent/benchmark/status?jobId={job}")
@@ -91,6 +98,8 @@ def run(sid, dry):
         if st.get("state") in ("completed", "failed", "cancelled"):
             break
         time.sleep(5)
+    if awake:
+        awake.kill()
     res = call("GET", f"/api/agent/benchmark/result?jobId={job}&deviceId={DEVICE}")
     results = res.get("results") or [{}]
     out = {"scenario": sid, "file": os.path.relpath(path, HERE), "jobId": job, "dry": dry,

@@ -4,6 +4,7 @@
   "name": "[UX-fsio] E8 Chrome 100MB 다운로드",
   "description": "[E8 · P2] 공개 속도 시험 파일(OVH 100MB)을 Chrome 으로 받는다 (Hetzner 는 이 망에서 빈 응답, thinkbroadband 는 http 라 Chrome 이 막음). 네트워크 속도에 묶인 순차 write. Chrome 다운로드 목록에는 기록이 남는다. 준비: Chrome 처음 실행 화면 완료 / dry-run 확인: 다운로드 확인 창 여부, 저장 파일 이름",
   "repeatCount": 3,
+  "keepAwake": true,
   "steps": [
     {
       "type": "shell",
