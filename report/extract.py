@@ -57,6 +57,11 @@ def q(sql, *a):
     return con.execute(sql, a).fetchall()
 
 
+# 수집 도구(fsiotrace) 이름·flag 귀속 수정이 들어간 시각 (bpftrace 920fafa, agent/tools 교체 2026-10-28 05:09).
+# 이 시각 이후 실행 파일(runs/<ID>/<시각>.json)이면 파일·프로세스 이름과 NODE/META/Checkpoint 표시를 믿을 수 있다
+FIX_AT = "20261028-051000"
+
+
 def parquet_of(tid):
     hits = glob.glob(str(ARCHIVE / "*" / "trace" / tid / "result_fsio_ufs.parquet"))
     return hits[0] if hits else None
@@ -414,6 +419,7 @@ def main():
                                                 for s in sc["steps"]],
                 "repeats": len(ms), "elapsedSec": run.get("elapsedSec"), "runFile": os.path.relpath(runpath, ROOT),
                 "success": all(x.get("success") for x in run["results"]), "checks": ck,
+                "toolFixed": Path(runpath).stem >= FIX_AT,
                 "perRun": [{k: m[k] for k in ("repeat", "readMB", "writeMB", "discardMB", "durSec", "traceJobId")}
                            for m in ms]}
         groups = [("cold", [m for m in ms if m["repeat"] == 1]), ("warm", [m for m in ms if m["repeat"] > 1])] \

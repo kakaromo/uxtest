@@ -420,11 +420,19 @@ export function lbaPatternSpec(p: Points, run: Run, title: string): ChartSpec {
 	const by = ptRows(p);
 	const dirs = PT_DIRS.filter((d) => by[d.k].length);
 	const steps = run.steps.filter((s) => s.e > 0 && s.s < run.durSec && s.type !== 'trace_start' && s.type !== 'trace_stop');
+	// UFS 관리 명령 줄: Hibern8 구간과 Query·예외 이벤트
+	const mg = p.mg;
+	const MG_ROWS = ['Hibern8', 'BKOPS status', 'WB buffer', '기타 mgmt'];
+	const mgRow = (n: string) => (n.includes('bBackgroundOpStatus') ? 1 : n.includes('WBBuf') ? 2 : 3);
+	const h8 = mg ? mg.h8.map(([a, b]) => [a, b ?? run.durSec, 0]) : [];
+	const mev = mg ? mg.ev.map(([tt, k]) => [tt, mgRow(mg.names[k]), mg.names[k]]) : [];
+	const lanes = mg ? 4 : 3;
 	return {
 		title,
 		prov:
 			PROV_TRACE +
-			` 요청 하나가 점 하나예요 (이 Run ${p.n.toLocaleString()}건 전부, 샘플링 없음). 가로는 요청을 보낸 시각(완료 시각 − dtoc), 세로는 LUN 안 LBA를 GB로 바꾼 값이에요. QD는 완료 시점 queue depth, Latency는 dtoc예요. 띠는 시나리오 Step 구간이에요.`,
+			` 요청 하나가 점 하나예요 (이 Run ${p.n.toLocaleString()}건 전부, 샘플링 없음). 가로는 요청을 보낸 시각(완료 시각 − dtoc), 세로는 LUN 안 LBA를 GB로 바꾼 값이에요. QD는 완료 시점 queue depth, Latency는 dtoc예요. 띠는 시나리오 Step 구간이에요.` +
+			(mg ? ` 맨 아래 mgmt 줄은 UFS 관리 명령이에요. Hibern8 막대는 enter 완료부터 다음 exit 요청까지, 점은 Query 요청(bBackgroundOpStatus, Write Booster 버퍼 조회, 그 밖의 attribute·flag·descriptor)과 exception event예요.` : ''),
 		data: () => ({
 			cols: ['초', '방향', 'LBA GB', 'LBA (4KB)', 'KB', 'QD', 'Latency ms', 'LUN'],
 			rows: dirs.flatMap((d) => by[d.k].map((r) => [r[0], d.name, r[1], r[2], r[3], r[4], r[5], r[6]])).sort((a, b) => (a[0] as number) - (b[0] as number))
@@ -484,25 +492,65 @@ export function lbaPatternSpec(p: Points, run: Run, title: string): ChartSpec {
 					}
 				},
 				legend: { ...t.legend, top: 0, left: 0, icon: 'circle', data: dirs.map((d) => d.name) },
-				grid: [
-					{ left: 64, right: 56, top: 36, height: '52%' },
-					{ left: 64, right: 56, top: '64%', height: '11%' },
-					{ left: 64, right: 56, top: '79%', height: '11%' }
-				],
+				grid: mg
+					? [
+							{ left: 64, right: 56, top: 36, height: '44%' },
+							{ left: 64, right: 56, top: '56%', height: '9%' },
+							{ left: 64, right: 56, top: '68%', height: '9%' },
+							{ left: 92, right: 56, top: '80%', height: '10%' }
+						]
+					: [
+							{ left: 64, right: 56, top: 36, height: '52%' },
+							{ left: 64, right: 56, top: '64%', height: '11%' },
+							{ left: 64, right: 56, top: '79%', height: '11%' }
+						],
 				dataZoom: [
-					{ type: 'inside', xAxisIndex: [0, 1, 2], filterMode: 'none' },
-					{ type: 'slider', xAxisIndex: [0, 1, 2], height: 16, bottom: 4, filterMode: 'none', borderColor: 'transparent', fillerColor: 'rgba(49,130,246,0.15)', handleStyle: { color: t.primary }, textStyle: { color: t.mute, fontSize: 10 }, labelFormatter: (v: number) => Math.round(v) + 's' },
+					{ type: 'inside', xAxisIndex: [...Array(lanes).keys()], filterMode: 'none' },
+					{ type: 'slider', xAxisIndex: [...Array(lanes).keys()], height: 16, bottom: 4, filterMode: 'none', borderColor: 'transparent', fillerColor: 'rgba(49,130,246,0.15)', handleStyle: { color: t.primary }, textStyle: { color: t.mute, fontSize: 10 }, labelFormatter: (v: number) => Math.round(v) + 's' },
 					{ type: 'slider', yAxisIndex: [0], width: 14, right: 8, top: 36, bottom: '48%', filterMode: 'none', borderColor: 'transparent', fillerColor: 'rgba(49,130,246,0.15)', handleStyle: { color: t.primary }, textStyle: { color: t.mute, fontSize: 10 }, labelFormatter: (v: number) => v.toFixed(1) + 'G' }
 				],
-				xAxis: [x(0, false), x(1, false), x(2, true)],
+				xAxis: mg ? [x(0, false), x(1, false), x(2, false), x(3, true)] : [x(0, false), x(1, false), x(2, true)],
 				yAxis: [
 					y(0, 'LBA GB', { min: 0, scale: false }),
 					y(1, 'QD', { minInterval: 1, splitNumber: 2 }),
-					y(2, 'Latency ms', { type: 'log', splitNumber: 2, axisLabel: { ...t.axisLabel, formatter: (v: number) => (v >= 1 ? v.toFixed(0) : v.toString()) } })
+					y(2, 'Latency ms', { type: 'log', splitNumber: 2, axisLabel: { ...t.axisLabel, formatter: (v: number) => (v >= 1 ? v.toFixed(0) : v.toString()) } }),
+					...(mg ? [{ type: 'category', gridIndex: 3, data: MG_ROWS, inverse: true, axisLabel: { ...t.axisLabel, fontSize: 10 }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { show: false } }] : [])
 				],
 				series: [
 					{ type: 'line', name: '__steps__', data: [], silent: true, tooltip: { show: false }, markArea: { silent: true, label: { show: false }, data: bands } },
-					...dirs.flatMap((d, di) => [sc(di, col(d.color), d.name, 0, 1), sc(di, col(d.color), d.name, 1, 4), sc(di, col(d.color), d.name, 2, 5)])
+					...dirs.flatMap((d, di) => [sc(di, col(d.color), d.name, 0, 1), sc(di, col(d.color), d.name, 1, 4), sc(di, col(d.color), d.name, 2, 5)]),
+					...(mg
+						? [
+								{
+									type: 'custom',
+									name: 'Hibern8',
+									xAxisIndex: 3,
+									yAxisIndex: 3,
+									data: h8,
+									encode: { x: [0, 1], y: 2 },
+									renderItem: (_: any, api: any) => {
+										const a = api.coord([api.value(0), 0]);
+										const b = api.coord([api.value(1), 0]);
+										const h = api.size([0, 1])[1] * 0.6;
+										return { type: 'rect', shape: { x: a[0], y: a[1] - h / 2, width: Math.max(b[0] - a[0], 0.5), height: h }, style: { fill: t.primary, opacity: 0.35 } };
+									},
+									tooltip: { formatter: (q: any) => `Hibern8 ${q.value[0].toFixed(3)}~${q.value[1].toFixed(3)}s (${((q.value[1] - q.value[0]) * 1000).toFixed(1)} ms)` }
+								},
+								{
+									type: 'scatter',
+									name: 'mgmt',
+									xAxisIndex: 3,
+									yAxisIndex: 3,
+									data: mev,
+									symbolSize: 4,
+									large: true,
+									largeThreshold: 4000,
+									itemStyle: { color: t.mute, opacity: 0.8 },
+									tooltip: { formatter: (q: any) => `${q.value[2]} · ${q.value[0].toFixed(3)}s` },
+									emphasis: { disabled: true }
+								}
+							]
+						: [])
 				]
 			};
 		}
