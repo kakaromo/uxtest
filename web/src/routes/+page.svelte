@@ -65,7 +65,7 @@
 	<h2 id="scenarios" class="text-h2 font-bold">All scenarios</h2>
 	<CopyTable title="All scenarios" note="값은 Run들의 median, 회색은 최소~최대예요. ID를 누르면 시나리오 분석 페이지로 가요.">
 		<table>
-			<thead><tr><th>ID</th><th>유형</th><th>시나리오</th><th>P</th><th class="num">Duration s</th><th class="num">Read MB</th><th class="num">Write MB</th><th class="num">Peak MB/s</th><th class="num">Idle %</th><th class="num">Run</th></tr></thead>
+			<thead><tr><th>ID</th><th>Type</th><th>Scenario</th><th>P</th><th class="num">Duration s</th><th class="num">Read MB</th><th class="num">Write MB</th><th class="num">Peak MB/s</th><th class="num">Idle %</th><th class="num">Run</th></tr></thead>
 			<tbody>
 				{#each all as r (r.key)}
 					<tr>
@@ -93,7 +93,7 @@
 		{#if c.mgmtTable}<CopyTable title="유형별 UFS mgmt command"><table>{@html c.mgmtTable}</table></CopyTable>{/if}
 		<CopyTable title="시나리오별 UFS mgmt command" note="/분 값과 H8 exit는 Run들의 median, suspend(fBackgroundOpsEn clear)와 qTimestamp 쓰기는 Run 합이에요.">
 			<table>
-				<thead><tr><th>ID</th><th class="num">Hibern8 /분</th><th class="num">Hibern8 시간 %</th><th class="num">H8 exit ms</th><th class="num">Query /분</th><th class="num">bBackgroundOpStatus /분</th><th class="num">WB 조회 /분</th><th class="num">suspend</th><th class="num">qTimestamp</th></tr></thead>
+				<thead><tr><th>ID</th><th class="num">Hibern8 /min</th><th class="num">Hibern8 time %</th><th class="num">H8 exit ms</th><th class="num">Query /min</th><th class="num">bBackgroundOpStatus /min</th><th class="num">WB check /min</th><th class="num">suspend</th><th class="num">qTimestamp</th></tr></thead>
 				<tbody>
 					{#each all.filter((r) => r.h8PerMin) as r (r.key)}
 						<tr>

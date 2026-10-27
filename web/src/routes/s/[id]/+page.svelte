@@ -231,7 +231,7 @@
 			<p class="text-body-2 text-muted-foreground">trace window 안 Step마다 쓴 양이에요 (Run {run.repeat}). Step 시각은 agent 가 기록한 boot clock 이라 UFS 기록과 같은 시계예요.</p>
 			<CopyTable title="{id} Run {run.repeat} Step별 I/O">
 				<table>
-					<thead><tr><th class="num">#</th><th>Step</th><th>종류</th><th class="num">시작 s</th><th class="num">끝 s</th><th class="num">Read MB</th><th class="num">Write MB</th><th class="num">요청</th><th class="num">Latency p99 ms</th></tr></thead>
+					<thead><tr><th class="num">#</th><th>Step</th><th>Kind</th><th class="num">Start s</th><th class="num">End s</th><th class="num">Read MB</th><th class="num">Write MB</th><th class="num">Requests</th><th class="num">Latency p99 ms</th></tr></thead>
 					<tbody>
 						{#each run.steps as s, i (i)}
 							<tr>
@@ -260,7 +260,7 @@
 			</div>
 			<CopyTable title="{id} Run별 지표" note="CV = Run Volume의 표준편차 ÷ 평균.">
 				<table>
-					<thead><tr><th class="num">Run</th><th>캐시</th><th class="num">측정 s</th><th class="num">Read MB</th><th class="num">Write MB</th><th class="num">discard MB</th><th class="num">Peak MB/s</th><th class="num">Latency p99 R/W</th><th class="num">QD p99</th><th class="num">쉬는 %</th><th>trace job</th></tr></thead>
+					<thead><tr><th class="num">Run</th><th>Cache</th><th class="num">Duration s</th><th class="num">Read MB</th><th class="num">Write MB</th><th class="num">discard MB</th><th class="num">Peak MB/s</th><th class="num">Latency p99 R/W</th><th class="num">QD p99</th><th class="num">Idle %</th><th>trace job</th></tr></thead>
 					<tbody>
 						{#each doc.runs as r (r.repeat)}
 							<tr>
@@ -290,7 +290,7 @@
 				<CopyTable title="Top streams (Bytes %)">
 					<table>
 						<thead><tr><th>Direction</th><th>Size</th><th>Sequential/Random</th><th class="num">Bytes %</th></tr></thead>
-						<tbody>{#each run.streams as s, i (i)}<tr><td>{s.dir === 'R' ? 'Read' : 'Write'}</td><td>{s.size}</td><td>{s.seq === 'SEQ' ? '이어짐' : '랜덤'}</td><td class="num" data-v={s.pct}>{f(s.pct)}</td></tr>{/each}</tbody>
+						<tbody>{#each run.streams as s, i (i)}<tr><td>{s.dir === 'R' ? 'Read' : 'Write'}</td><td>{s.size}</td><td>{s.seq === 'SEQ' ? 'Sequential' : 'Random'}</td><td class="num" data-v={s.pct}>{f(s.pct)}</td></tr>{/each}</tbody>
 					</table>
 				</CopyTable>
 			</div>
@@ -361,7 +361,7 @@
 			</CopyTable>
 			<CopyTable title="{id} Run {run.repeat} 파일 상위">
 				<table>
-					<thead><tr><th>파일</th><th>종류</th><th class="num">Read MB</th><th class="num">Write MB</th><th class="num">요청</th></tr></thead>
+					<thead><tr><th>파일</th><th>Kind</th><th class="num">Read MB</th><th class="num">Write MB</th><th class="num">Requests</th></tr></thead>
 					<tbody>{#each run.files as fl, i (i)}<tr><td class="max-w-[480px] font-mono text-[11px] break-all">{fl.name}</td><td>{fl.kind}</td><td class="num" data-v={fl.readMB}>{f(fl.readMB)}</td><td class="num" data-v={fl.writeMB}>{f(fl.writeMB)}</td><td class="num" data-v={fl.n}>{n0(fl.n)}</td></tr>{/each}</tbody>
 				</table>
 			</CopyTable>
@@ -371,7 +371,7 @@
 			<h2 id="slow" class="text-h2 font-bold">Slowest 30 requests</h2>
 			<CopyTable title="{id} Run {run.repeat} Slow requests" note="Latency = 요청을 보내고 완료 응답까지(dtoc). QD은 완료 시점의 queue depth예요.">
 				<table>
-					<thead><tr><th class="num">시각 s</th><th>방향</th><th class="num">크기 KB</th><th class="num">LUN</th><th class="num">LBA</th><th class="num">QD</th><th class="num">Latency ms</th><th>Thread</th><th>파일</th></tr></thead>
+					<thead><tr><th class="num">시각 s</th><th>방향</th><th class="num">Size KB</th><th class="num">LUN</th><th class="num">LBA</th><th class="num">QD</th><th class="num">Latency ms</th><th>Thread</th><th>파일</th></tr></thead>
 					<tbody>
 						{#each run.slow as s, i (i)}
 							<tr>
@@ -397,7 +397,7 @@
 		<h2 id="compare" class="text-h2 font-bold">Same-type comparison</h2>
 		<CopyTable title="{row.typeName} 안에서 {label(row)} 대비" note="배수 = 그 시나리오 ÷ 이 시나리오 (median).">
 			<table>
-				<thead><tr><th>시나리오</th><th>이름</th><th class="num">Read MB</th><th class="num">Write MB</th><th class="num">Read 배수</th><th class="num">Write 배수</th><th class="num">Peak MB/s</th><th class="num">Latency p99 Write ms</th></tr></thead>
+				<thead><tr><th>Scenario</th><th>이름</th><th class="num">Read MB</th><th class="num">Write MB</th><th class="num">Read ×</th><th class="num">Write ×</th><th class="num">Peak MB/s</th><th class="num">Latency p99 Write ms</th></tr></thead>
 				<tbody>
 					{#each peers as p, i (i)}
 						<tr class={p.key === row.key ? 'font-semibold' : ''}>
