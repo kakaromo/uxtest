@@ -96,7 +96,7 @@ def run_detail(pq, lba_max, steps, names):
 
     keep = ("durSec", "readMB", "writeMB", "discardMB", "flushN", "readN", "writeN", "peakMBs", "qdP99", "metaPct",
             "rereadPct", "idlePct", "wakesPerMin", "maxGapSec", "flushPerSec", "seq", "dtocP50", "dtocP99", "size",
-            "dtoc", "gap", "flow", "streams", "procs", "comms", "files", "lba",
+            "dtoc", "gap", "ctod", "flow", "streams", "procs", "comms", "files", "lba",
             "h8PerMin", "h8Pct", "h8ExitMs", "h8EnterMs", "queryPerMin", "bkopsPerMin", "wbCheckPerMin", "suspendN",
             "exceptionN", "queryMsP50", "queryMsP99", "mgmtN")
     d = {k: m[k] for k in keep}

@@ -285,10 +285,11 @@
 				<Chart spec={stackSpec('Latency 분포 (건수 %)', ['Read', 'Write'], B.dtoc, [run.dtoc.R, run.dtoc.W], PROV_TRACE)} height={170} />
 				<Chart spec={latSpec('Request size별 Latency (p50 막대, p99 선)', B.size, run.latSize, PROV_TRACE + ' 완료 응답(complete_rsp)의 dtoc 를 Request size 구간마다 백분위로.')} height={280} />
 				<Chart spec={latSpec('QD별 Latency (p50 막대, p99 선)', QB, run.latQd, PROV_TRACE + ' 완료 시점의 queue depth 구간마다 dtoc 백분위.')} height={280} />
-				<Chart spec={stackSpec('Inter-arrival (건수 %)', ['전체'], B.gap, [run.gap], PROV_TRACE + ' 16ms·200ms 넘는 간격은 UFS가 절전·유휴 정리에 들어갈 수 있는 틈이에요.', 1)} height={130} />
-				<CopyTable title="많은 요청 형태 (바이트 %)">
+				<Chart spec={stackSpec('DtoD · dispatch-to-dispatch (건수 %)', ['전체'], B.gap, [run.gap], PROV_TRACE + ' 앞 request를 보낸 시각부터 다음 request를 보낸 시각까지예요. DtoC(Latency)와는 달라요. 16ms·200ms 넘는 간격은 UFS가 절전·유휴 정리에 들어갈 수 있는 틈이에요.', 1)} height={130} />
+				{#if run.ctod}<Chart spec={stackSpec('CtoD · complete-to-dispatch (건수 %)', ['전체'], B.ctod ?? ['0 (overlap)', '<1ms', '1–16ms', '16–200ms', '≥200ms'], [run.ctod], PROV_TRACE + ' 직전 request가 완료된 시각부터 이번 request를 보낼 때까지예요(parquet ctod). 0은 앞 request가 아직 처리 중일 때 보낸 것이에요. 길수록 UFS가 실제로 쉰 틈이에요.', 1)} height={130} />{/if}
+				<CopyTable title="Top streams (Bytes %)">
 					<table>
-						<thead><tr><th>방향</th><th>크기</th><th>순차/랜덤</th><th class="num">바이트 %</th></tr></thead>
+						<thead><tr><th>Direction</th><th>Size</th><th>Sequential/Random</th><th class="num">Bytes %</th></tr></thead>
 						<tbody>{#each run.streams as s, i (i)}<tr><td>{s.dir === 'R' ? 'Read' : 'Write'}</td><td>{s.size}</td><td>{s.seq === 'SEQ' ? '이어짐' : '랜덤'}</td><td class="num" data-v={s.pct}>{f(s.pct)}</td></tr>{/each}</tbody>
 					</table>
 				</CopyTable>

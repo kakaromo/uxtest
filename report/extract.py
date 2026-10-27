@@ -38,7 +38,8 @@ TYPES = {"A": "앱 실행·전환", "B": "웹·피드 탐색", "C": "미디어 �
 COLD_FIRST = {"G1", "G2", "G3"}
 SIZE_B = ["4K", "8–16K", "20–128K", "132–512K", ">512K"]
 DTOC_B = ["<0.1ms", "0.1–0.5", "0.5–1", "1–5", "≥5ms"]
-GAP_B = ["<1ms", "1–16ms", "16–200ms", "≥200ms"]
+GAP_B = ["<1ms", "1–16ms", "16–200ms", "≥200ms"]   # DtoD: request 를 보낸 시각 사이
+CTOD_B = ["0 (overlap)", "<1ms", "1–16ms", "16–200ms", "≥200ms"]   # CtoD: 직전 완료 → 이번 보냄
 FLOW_B = ["앱 직접(buffered)", "커널 writeback", "fsync 유발", "메타데이터·노드", "GC", "기타"]
 LBA_BINS, T_BINS = 48, 60
 
@@ -76,7 +77,7 @@ def trace_metrics(pq, lba_max):
         select time, lun, lba, size, qd, dtoc, pid, tid, comm, name, action, {DIR} as dir,
                is_req_sync, is_fsync_triggered, is_metadata, is_journal, is_checkpoint, is_f2fs_node_write,
                is_f2fs_meta_write, is_gc, is_f2fs_node_gc, is_f2fs_data_gc, is_writeback_kworker,
-               is_mmap_writeback, is_buffered, is_direct_io
+               is_mmap_writeback, is_buffered, is_direct_io, ctod
         from read_parquet('{pq}') where coalesce(is_mgmt,false)=false""")
     con.execute("create or replace temp view rq as select * from ev where action='send_req'")
     t0, t1 = q("select min(time), max(time) from ev")[0]
@@ -115,6 +116,11 @@ def trace_metrics(pq, lba_max):
              count(*) filter (where gap>=0.016 and gap<0.2), count(*) filter (where gap>=0.2), count(gap)
              from (select time - lag(time) over (order by time) gap from rq where dir in ('R','W'))""")[0]
     m["gap"] = [pct(x, g[4]) for x in g[:4]]
+    # CtoD: 직전 request 완료부터 이번 request 를 보낼 때까지(parquet ctod, ms). 0 = 앞 request 가 아직 처리 중
+    g = q("""select count(*) filter (where coalesce(ctod,0)<=0), count(*) filter (where ctod>0 and ctod<1),
+             count(*) filter (where ctod>=1 and ctod<16), count(*) filter (where ctod>=16 and ctod<200),
+             count(*) filter (where ctod>=200), count(*) from rq where dir in ('R','W')""")[0]
+    m["ctod"] = [pct(x, g[5]) for x in g[:5]]
     # 깨어남: 모든 요청(flush·discard 포함) 사이가 1초 이상 비었다가 다시 온 횟수. 대기(S)에서 저장장치가 얼마나 자주 깨는지
     w = q("""select count(*) filter (where gap>=1), coalesce(max(gap),0)
              from (select time - lag(time) over (order by time) gap from rq)""")[0]
@@ -359,6 +365,7 @@ def aggregate(ms):
             have = [m[k][d] for m in ms if sum(m[k][d]) > 0] or [m[k][d] for m in ms]
             out[k][d] = [round(st.mean(h[i] for h in have), 1) for i in range(5)]
     out["gap"] = [round(st.mean(m["gap"][i] for m in ms), 1) for i in range(4)]
+    out["ctod"] = [round(st.mean(m["ctod"][i] for m in ms), 1) for i in range(5)]
     # 관리 명령 이름별 건수: 회차 합
     out["mgmtN"] = {}
     for m in ms:
@@ -444,7 +451,7 @@ def main():
 
     meta = {"device": "OnePlus CPH2749", "serial": SERIAL, "trace": "fsiotrace fsio_ufs (eBPF)",
             "lbaMaxGB": round(lba_max * 4096 / 2**30, 1),
-            "buckets": {"size": SIZE_B, "dtoc": DTOC_B, "gap": GAP_B, "flow": FLOW_B}}
+            "buckets": {"size": SIZE_B, "dtoc": DTOC_B, "gap": GAP_B, "ctod": CTOD_B, "flow": FLOW_B}}
     for m in scen:
         m.pop("pq", None)
     if only:
