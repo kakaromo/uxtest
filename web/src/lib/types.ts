@@ -13,6 +13,8 @@ export type Row = {
 	description: string;
 	repeats: number;
 	success: boolean;
+	/** 수집 도구 귀속 수정(2026-10-28) 뒤에 잰 측정 */
+	toolFixed?: boolean;
 	runFile: string;
 	steps: { type: string; label: string }[];
 	checks: Record<string, { focus: string | null; captured: string | null; launchMs: number[] }>;
@@ -130,6 +132,18 @@ export type Run = {
 	latQd: RW<([number, number, number, number] | null)[]>;
 	slow: { t: number; dir: 'R' | 'W'; kb: number; lba: number; lun: number; qd: number; dtoc: number; comm: string; file: string }[];
 	kinds: { kind: string; readMB: number; writeMB: number }[];
+	h8PerMin?: number;
+	h8Pct?: number;
+	h8ExitMs?: number;
+	h8EnterMs?: number;
+	queryPerMin?: number;
+	bkopsPerMin?: number;
+	wbCheckPerMin?: number;
+	suspendN?: number;
+	exceptionN?: number;
+	queryMsP50?: number;
+	queryMsP99?: number;
+	mgmtN?: Record<string, number>;
 };
 export type ScenarioDoc = {
 	id: string;
@@ -141,4 +155,15 @@ export type ScenarioDoc = {
 };
 
 /** p-<ID>-<회차>.json: 요청 하나하나 (t 는 앞 점과의 차이 ms, lat 은 µs) */
-export type Points = { n: number; t: number[]; lba: number[]; d: string; kb: number[]; qd: number[]; lat: number[]; lun?: number[] };
+export type Points = {
+	n: number;
+	t: number[];
+	lba: number[];
+	d: string;
+	kb: number[];
+	qd: number[];
+	lat: number[];
+	lun?: number[];
+	/** UFS 관리 명령: h8 = Hibern8 구간 [시작 초, 끝 초|null], ev = [초, names 번호] */
+	mg?: { h8: [number, number | null][]; ev: [number, number][]; names: string[] };
+};

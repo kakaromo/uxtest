@@ -23,6 +23,7 @@
 !/report/export_web.py
 !/report/perstep.py
 !/report/terms.py
+!/report/publish.sh
 
 !/wl/
 /wl/.private/

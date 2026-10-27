@@ -96,7 +96,9 @@ def run_detail(pq, lba_max, steps, names):
 
     keep = ("durSec", "readMB", "writeMB", "discardMB", "flushN", "readN", "writeN", "peakMBs", "qdP99", "metaPct",
             "rereadPct", "idlePct", "wakesPerMin", "maxGapSec", "flushPerSec", "seq", "dtocP50", "dtocP99", "size",
-            "dtoc", "gap", "flow", "streams", "procs", "comms", "files", "lba")
+            "dtoc", "gap", "flow", "streams", "procs", "comms", "files", "lba",
+            "h8PerMin", "h8Pct", "h8ExitMs", "h8EnterMs", "queryPerMin", "bkopsPerMin", "wbCheckPerMin", "suspendN",
+            "exceptionN", "queryMsP50", "queryMsP99", "mgmtN")
     d = {k: m[k] for k in keep}
     d |= {"tl1": tl1, "tl100": tl100, "steps": st, "latSize": lat_by(X.size_bucket("size"), 5),
           "latQd": lat_by(qd_bucket("qd"), 6), "slow": slow,
@@ -120,6 +122,28 @@ def points(t0):
     if any(r[6] for r in rows):
         d["lun"] = [r[6] or 0 for r in rows]
     return d
+
+
+def mgmt_points(pq, t0):
+    """UFS 관리 명령을 LBA pattern 아래 줄에 그리려고 뽑는다 (초는 points 와 같은 0초 기준).
+    h8: Hibern8 구간 [enter 완료, 다음 exit 요청], ev: 그 밖의 명령 [초, 이름 번호], names: 이름 목록"""
+    rows = X.q(f"""select time - ? t, action, mgmt_name n from read_parquet('{pq}')
+                   where coalesce(is_mgmt, false) and mgmt_name <> 'upiu_response'
+                     and action in ('uic_send', 'uic_complete', 'upiu_query_req', 'exception') order by time""", t0)
+    h8, start, names, ev = [], None, [], []
+    for t, a, n in rows:
+        if a == "uic_complete" and n == "DME_HIBER_ENTER":
+            start = t
+        elif a == "uic_send" and n == "DME_HIBER_EXIT":
+            h8.append([round(start if start is not None else 0.0, 4), round(t, 4)])
+            start = None
+        elif a in ("upiu_query_req", "exception"):
+            if n not in names:
+                names.append(n)
+            ev.append([round(t, 4), names.index(n)])
+    if start is not None:
+        h8.append([round(start, 4), None])     # 측정 끝까지 Hibern8
+    return {"h8": h8, "ev": ev, "names": names}
 
 
 def slim(row):
@@ -196,7 +220,9 @@ def main():
             steps = [b for b in res.get("stepBoundaries") or []
                      if b["repeatIndex"] == tj["repeatIndex"] and b.get("startedMono")]
             d = run_detail(pq, lba_max, steps, names)
-            pts = points(X.q("select min(time) from ev")[0][0])   # run_detail 과 같은 0초
+            t0p = X.q("select min(time) from ev")[0][0]   # run_detail 과 같은 0초
+            pts = points(t0p)
+            pts["mg"] = mgmt_points(pq, t0p)
             (OUT / f"p-{sid}-{tj['repeatIndex']}.json").write_text(json.dumps(pts, separators=(",", ":")))
             d |= {"repeat": tj["repeatIndex"], "traceJobId": tj["traceJobId"],
                   "cache": ("cold" if tj["repeatIndex"] == 1 else "warm") if sid in X.COLD_FIRST else rows[0]["cache"]}
