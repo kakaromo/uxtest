@@ -148,6 +148,7 @@ def mgmt_points(pq, t0):
 
 def slim(row):
     r = {k: v for k, v in row.items() if k != "rep"}
+    r["name"] = en(r["name"])   # 시나리오 이름 속 용어도 영어로 (예: 버스트샷 → burst shot)
     r["rep"] = {k: row["rep"][k] for k in ("repeat", "streams") if k in row["rep"]}
     r["tl"] = row["rep"]["timeline"]   # 대표 회차 1초 시간축 (유형 페이지 작은 그래프용)
     return r
@@ -227,7 +228,7 @@ def main():
             d |= {"repeat": tj["repeatIndex"], "traceJobId": tj["traceJobId"],
                   "cache": ("cold" if tj["repeatIndex"] == 1 else "warm") if sid in X.COLD_FIRST else rows[0]["cache"]}
             runs.append(d)
-        doc = {"id": sid, "rows": [{k: v for k, v in r.items() if k != "rep"} | {"rep": {"repeat": r["rep"]["repeat"]}}
+        doc = {"id": sid, "rows": [{k: v for k, v in r.items() if k != "rep"} | {"name": en(r["name"]), "rep": {"repeat": r["rep"]["repeat"]}}
                                    for r in rows],
                "steps": [{"type": s["type"], "label": (s.get("params") or {}).get("label", "")} for s in sc["steps"]],
                "runFile": rows[0]["runFile"], "runs": runs,
