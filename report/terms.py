@@ -4,6 +4,44 @@ export_web.py 가 해설 본문·버킷 이름에 적용하고, web/ 소스에�
 import re
 
 TERMS = [
+    # 2026-10-28 추가 (Discard·mgmt·attribution·request 등). 구체적인 표현부터
+    (r"지운 파일의 블록을 바로 반납해요", "지운 파일의 Discard를 바로 보내요"),
+    (r"곧바로 블록을 반납해요", "곧바로 Discard를 보내요"),
+    (r"반납이 0이었어요", "Discard가 0이었어요"),
+    (r"반납을 보내는", "Discard를 보내는"),
+    (r"대기 중에 반납해요", "대기 중에 나가요"),
+    (r"MB를 반납했어요", "MB의 Discard가 나갔어요"),
+    (r"반납이 나가요", "Discard가 나가요"),
+    (r"블록 계층", "block layer"),
+    (r"블록마다", "block마다"),
+    (r"이름 귀속", "name attribution"),
+    (r"귀속", "attribution"),
+    (r"관리 명령을", "mgmt command를"),
+    (r"관리 명령이", "mgmt command가"),
+    (r"관리 명령은", "mgmt command는"),
+    (r"관리 명령", "mgmt command"),
+    (r"일반 명령의 응답", "일반 command의 response"),
+    (r"Query 응답은", "Query response는"),
+    (r"절전", "low-power"),
+    (r"링크는", "Link는"),
+    (r"링크가", "Link가"),
+    (r"버퍼", "buffer"),
+    (r"파일시스템", "file system"),
+    (r"Volume·속도·크기", "Volume·throughput·Request size"),
+    (r"Volume, 속도, 크기", "Volume, throughput, Request size"),
+    (r"(Read|Write) 속도", r"\1 throughput"),
+    (r"최대 속도", "최대 throughput"),
+    (r"요청이 없는 시간", "Idle 시간"),
+    (r"요청 없는 시간", "Idle 시간"),
+    (r"(?<!권한 )요청을", "request를"),
+    (r"(?<!권한 )요청이", "request가"),
+    (r"(?<!권한 )요청은", "request는"),
+    (r"(?<!권한 )요청과", "request와"),
+    (r"(?<!권한 )요청으로", "request로"),
+    (r"(?<!권한 )요청(?![ 창])", "request"),
+    (r"(?<!권한 )요청 (?!창)", "request "),
+    (r"표시(?!해)", "flag"),
+    (r"캐시", "cache"),
     (r"지운 블록 반납\(discard\)은", "Discard는"),
     (r"지운 블록은", "Discard는"),
     (r"블록 반납\(discard\)", "Discard"),
@@ -55,6 +93,11 @@ TERMS = [
     (r"지연", "Latency"),
     (r"저장장치\(UFS\)", "UFS"),
     (r"저장장치", "UFS"),
+]
+
+# 영어 용어 뒤 조사 맞추기 (레이턴시·플래그 등 모음으로 끝남)
+TERMS += [
+    (r"Latency은", "Latency는"), (r"Latency과", "Latency와"), (r"Latency이 ", "Latency가 "), (r"Latency을", "Latency를"),
 ]
 
 # 데이터 쪽 버킷·분류 이름

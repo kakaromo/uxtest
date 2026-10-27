@@ -16,7 +16,7 @@ const msFmt = (v: number) => (v == null ? '' : v.toFixed(2) + ' ms');
 const catAxis = (t: Theme, data: string[]) => ({
 	type: 'category',
 	data,
-	axisLabel: { ...t.axisLabel, color: t.ink },
+	axisLabel: { ...t.axisLabel, color: t.ink, width: 190, overflow: 'truncate' },
 	axisTick: { show: false },
 	axisLine: { show: false }
 });
@@ -41,7 +41,7 @@ export function volSpec(rows: Row[], label: (r: Row) => string): ChartSpec {
 			const pts = (d: 'readMB' | 'writeMB') =>
 				rev.map((r, i) => ({
 					value: [lg(r[d].med), i],
-					tip: `<b>${label(r)} ${r.name}</b><br>${d === 'readMB' ? 'Read' : 'Write'} ${mb(r[d].med)} (${mb(r[d].min)}~${mb(r[d].max)})`
+					tip: `<b>${label(r)}</b> (${r.id})<br>${d === 'readMB' ? 'Read' : 'Write'} ${mb(r[d].med)} (${mb(r[d].min)}~${mb(r[d].max)})`
 				}));
 			const renderRange = (_p: any, api: any) => {
 				const a = api.coord([api.value(0), api.value(2)]);
@@ -50,7 +50,7 @@ export function volSpec(rows: Row[], label: (r: Row) => string): ChartSpec {
 				return { type: 'line', shape: { x1: a[0], y1: a[1] + o, x2: z[0], y2: z[1] + o }, style: { stroke: api.visual('color'), lineWidth: 2, opacity: 0.45 } };
 			};
 			return {
-				grid: { left: 64, right: 24, top: 28, bottom: 32 },
+				grid: { left: 8, right: 24, top: 28, bottom: 32, containLabel: true },
 				legend: { ...t.legend, top: 0, left: 0, data: ['Read', 'Write'] },
 				tooltip: { ...t.tip, trigger: 'item', formatter: (p: any) => (p.data && p.data.tip) || '' },
 				xAxis: {
@@ -82,7 +82,7 @@ export function stackSpec(title: string, cats: string[], names: string[], vals: 
 		prov,
 		data: () => ({ cols: ['항목', ...names.map((n) => n + ' %')], rows: cats.map((c, i) => [c, ...vals[i]]) }),
 		option: (t) => ({
-			grid: { left: 72, right: 12, top: 30, bottom: 24 },
+			grid: { left: 8, right: 12, top: 30, bottom: 24, containLabel: true },
 			legend: { ...t.legend, top: 0, left: 0 },
 			tooltip: { ...t.tip, trigger: 'axis', axisPointer: { type: 'shadow' }, valueFormatter: pctFmt },
 			xAxis: { type: 'value', max: 100, axisLabel: { ...t.axisLabel, formatter: '{value}%' }, splitLine: t.split },
@@ -340,11 +340,11 @@ export function mapSpec(rows: Row[], label: (r: Row) => string, title = 'Workloa
 						value: [p.x, p.y],
 						name: label(p.r),
 						symbolSize: Math.min(8 + 4 * Math.sqrt(p.t / 100), 44),
-						tip: `<b>${label(p.r)} ${p.r.name}</b><br>Sequential ${p.x.toFixed(0)}% · Write ratio ${p.y.toFixed(0)}%<br>총 ${mb(p.t)}`
+						tip: `<b>${label(p.r)}</b> (${p.r.id})<br>Sequential ${p.x.toFixed(0)}% · Write ratio ${p.y.toFixed(0)}%<br>총 ${mb(p.t)}`
 					})),
 					itemStyle: { color: t.primary, borderColor: t.surface, borderWidth: 2, opacity: 0.75 },
 					label: { show: true, position: 'right', formatter: '{b}', color: t.ink, fontSize: 11, fontFamily: t.font },
-					labelLayout: { hideOverlap: false, moveOverlap: 'shiftY' }
+					labelLayout: { hideOverlap: true, moveOverlap: 'shiftY' }
 				}
 			]
 		})
@@ -432,7 +432,7 @@ export function lbaPatternSpec(p: Points, run: Run, title: string): ChartSpec {
 		prov:
 			PROV_TRACE +
 			` 요청 하나가 점 하나예요 (이 Run ${p.n.toLocaleString()}건 전부, 샘플링 없음). 가로는 요청을 보낸 시각(완료 시각 − dtoc), 세로는 LUN 안 LBA를 GB로 바꾼 값이에요. QD는 완료 시점 queue depth, Latency는 dtoc예요. 띠는 시나리오 Step 구간이에요.` +
-			(mg ? ` 맨 아래 mgmt 줄은 UFS 관리 명령이에요. Hibern8 막대는 enter 완료부터 다음 exit 요청까지, 점은 Query 요청(bBackgroundOpStatus, Write Booster 버퍼 조회, 그 밖의 attribute·flag·descriptor)과 exception event예요.` : ''),
+			(mg ? ` 맨 아래 mgmt 줄은 UFS mgmt command예요. Hibern8 막대는 enter 완료부터 다음 exit 요청까지, 점은 Query request(bBackgroundOpStatus, Write Booster 버퍼 조회, 그 밖의 attribute·flag·descriptor)과 exception event예요.` : ''),
 		data: () => ({
 			cols: ['초', '방향', 'LBA GB', 'LBA (4KB)', 'KB', 'QD', 'Latency ms', 'LUN'],
 			rows: dirs.flatMap((d) => by[d.k].map((r) => [r[0], d.name, r[1], r[2], r[3], r[4], r[5], r[6]])).sort((a, b) => (a[0] as number) - (b[0] as number))

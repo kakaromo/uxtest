@@ -9,7 +9,7 @@
 	import MiniTimeline from '#lib/components/MiniTimeline.svelte';
 	import { app } from '#lib/state.svelte.js';
 	import { volSpec, mapSpec, stackSpec, PROV_TRACE } from '#lib/charts/build.js';
-	import { label, rowsOf, nameOf, rowOf, PAIRS } from '#lib/view.js';
+	import { label, rowsOf, nameOf, rowOf, PAIRS, cname } from '#lib/view.js';
 	import { copyGrid } from '#lib/clipboard.js';
 	import { mb, f, x } from '#lib/fmt.js';
 	import { emph, headlines, tint } from '#lib/insight.js';
@@ -22,7 +22,7 @@
 	const B = $derived(app.index!.meta.buckets);
 	const pairs = $derived(PAIRS.filter((p) => ids.includes(p.a) || ids.includes(p.b)));
 	const jank = $derived((app.index?.jank ?? []).filter((j) => ids.includes(j.scenario) && j.jank));
-	const cats = $derived(rs.map(label));
+	const cats = $derived(rs.map(cname));
 	// 표 칸 농도: 같은 열 안에서 상대 크기
 	const col = (get: (r: (typeof rs)[number]) => number, log = false) => {
 		const vals = rs.map(get);
@@ -42,7 +42,7 @@
 		dtocR: stackSpec('Latency 분포 · Read (건수 %)', cats, B.dtoc, rs.map((r) => r.dtoc.R), PROV_TRACE + ' Latency = 요청을 보내고 완료 응답까지(dtoc).'),
 		dtocW: stackSpec('Latency 분포 · Write (건수 %)', cats, B.dtoc, rs.map((r) => r.dtoc.W), PROV_TRACE + ' Latency = 요청을 보내고 완료 응답까지(dtoc).'),
 		gap: stackSpec('Inter-arrival 분포 (건수 %)', cats, B.gap, rs.map((r) => r.gap), PROV_TRACE + ' 16ms·200ms 넘는 간격은 UFS가 절전이나 유휴 정리에 들어갈 수 있는 틈이에요.', 1),
-		flow: stackSpec('Write path (바이트 %)', cats, B.flow, rs.map((r) => r.flow), PROV_TRACE + ' fsiotrace 플래그로 나눴어요. 이름 귀속처럼 일부 플래그는 확인 중이에요.')
+		flow: stackSpec('Write path (바이트 %)', cats, B.flow, rs.map((r) => r.flow), PROV_TRACE + ' fsiotrace flag로 나눴어요. 10월 28일 이전 측정은 flag가 다른 파일 것으로 붙은 경우가 있어요.')
 	});
 
 	function tlGrid() {
@@ -72,7 +72,7 @@
 <section class="mb-12 space-y-4">
 	<h2 id="volume" class="text-h2 font-bold">Volume</h2>
 	<p class="text-body-2 text-muted-foreground">시나리오마다 Read·Write 양이에요. 막대가 길수록 많이 썼어요 (로그 눈금).</p>
-	<Chart spec={volSpec(rs, label)} height={28 * rs.length + 80} />
+	<Chart spec={volSpec(rs, cname)} height={28 * rs.length + 80} />
 </section>
 
 <section class="mb-12 space-y-4">
@@ -153,7 +153,7 @@
 
 <section class="mb-12 space-y-4">
 	<h2 id="map" class="text-h2 font-bold">Workload map</h2>
-	<Chart spec={mapSpec(rs, label, `${t} 유형 지도`)} height={420} />
+	<Chart spec={mapSpec(rs, cname, `${t} 유형 지도`)} height={420} />
 </section>
 
 {#if pairs.length}
