@@ -82,7 +82,7 @@
 	<CopyTable title="{t} Workload signature" note="Write ratio = Write 바이트 ÷ 전체. Sequential = 직전 요청 끝 LBA 에서 바로 이어진 바이트 비율. CV(Run 차이)가 0.5를 넘으면 Run마다 많이 달랐다는 뜻이에요.">
 		<table>
 			<thead>
-				<tr><th>ID</th><th>시나리오</th><th class="num">Read MB</th><th class="num">Write MB</th><th class="num">Write ratio</th><th class="num">Peak MB/s</th><th class="num">이어진 R/W %</th><th class="num">Latency p99 R/W ms</th><th class="num">QD p99</th><th class="num">메타 %</th><th class="num">쉬는 %</th><th class="num">CV</th><th>많은 요청 형태</th></tr>
+				<tr><th>ID</th><th>Scenario</th><th class="num">Read MB</th><th class="num">Write MB</th><th class="num">Write ratio</th><th class="num">Peak MB/s</th><th class="num">Sequential R/W %</th><th class="num">Latency p99 R/W ms</th><th class="num">QD p99</th><th class="num">Metadata %</th><th class="num">Idle %</th><th class="num">CV</th><th>Top streams</th></tr>
 			</thead>
 			<tbody>
 				{#each rs as r (r.key)}
@@ -165,7 +165,7 @@
 		<p class="text-body-2 text-muted-foreground">조건 하나만 바꾼 시나리오 쌍이에요. 배수는 오른쪽 ÷ 왼쪽이에요.</p>
 		<CopyTable title="{t} 조건 비교">
 			<table>
-				<thead><tr><th>비교</th><th>왼쪽</th><th class="num">Read MB</th><th class="num">Write MB</th><th>오른쪽</th><th class="num">Read MB</th><th class="num">Write MB</th><th class="num">Read 배수</th><th class="num">Write 배수</th></tr></thead>
+				<thead><tr><th>비교</th><th>왼쪽</th><th class="num">Read MB</th><th class="num">Write MB</th><th>오른쪽</th><th class="num">Read MB</th><th class="num">Write MB</th><th class="num">Read ×</th><th class="num">Write ×</th></tr></thead>
 				<tbody>
 					{#each pairs as p (p.a + p.b)}
 						{@const a = rowOf(p.a)}
@@ -195,7 +195,7 @@
 		<h2 id="jank" class="text-h2 font-bold">Jank vs I/O</h2>
 		<CopyTable title="Jank frame과 Read" note="Jank frame = Perfetto FrameTimeline 에서 앱이 늦어 놓친 프레임. 프레임당 Read = 프레임 ±100ms 안 갤러리 Read 건수.">
 			<table>
-				<thead><tr><th>시나리오</th><th class="num">Run</th><th>캐시</th><th class="num">프레임</th><th class="num">Jank frame</th><th class="num">프레임 p50/p99 ms</th><th class="num">프레임당 Read (끊김/정상)</th><th class="num">Read 겹침 % (끊김/정상)</th></tr></thead>
+				<thead><tr><th>Scenario</th><th class="num">Run</th><th>Cache</th><th class="num">Frames</th><th class="num">Jank frame</th><th class="num">Frame p50/p99 ms</th><th class="num">Read per frame (Jank/OK)</th><th class="num">Read overlap % (Jank/OK)</th></tr></thead>
 				<tbody>
 					{#each jank as j (j.scenario + j.repeat)}
 						<tr>
