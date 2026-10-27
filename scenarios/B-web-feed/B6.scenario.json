@@ -46,8 +46,8 @@
     {
       "type": "shell",
       "params": {
-        "cmd": "sleep 1; dumpsys window | grep mCurrentFocus | grep -q GrantPermissionsActivity && { input keyevent 4; echo perm-closed; } || echo no-perm",
-        "label": "권한 창 있으면 닫기 (선택 안 함)"
+        "cmd": "sleep 1; for i in 1 2 3; do dumpsys window | grep mCurrentFocus | grep -q GrantPermissionsActivity || break; uiautomator dump /sdcard/uxperm.xml >/dev/null 2>&1; b=$(grep -o 'resource-id=\"com.android.permissioncontroller:id/permission_deny[^\"]*\"[^>]*bounds=\"[^\"]*\"' /sdcard/uxperm.xml | head -1 | grep -o 'bounds=\"[^\"]*\"' | tr -c \"0-9\" \" \"); set -- $b; [ -n \"$4\" ] && { input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 )); echo deny-tapped; sleep 1; } || { echo deny-button-not-found; break; }; done; rm -f /sdcard/uxperm.xml; dumpsys window | grep mCurrentFocus",
+        "label": "권한 창(알림 등) 있으면 '허용 안함' 누르기"
       }
     },
     {
