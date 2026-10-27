@@ -5,6 +5,8 @@ Android 기기에서 UX 워크로드(앱 실행, 웹·피드, 미디어, 카메�
 
 분석 사이트는 GitHub Pages 로 배포한다: https://kakaromo.github.io/uxtest/ (공개)
 
+**처음 실행하거나 다른 PC·기기에서 다시 평가하려면 [GUIDE.md](GUIDE.md) 를 보세요** (준비물, fsiotrace 빌드, agent 실행, 시나리오 넣기, 측정, 분석, TC).
+
 ## 구성
 
 | 경로 | 내용 |
