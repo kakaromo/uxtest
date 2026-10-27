@@ -95,8 +95,46 @@ TERMS = [
     (r"저장장치", "UFS"),
 ]
 
+# 2026-10-28 두 번째 추가: 위 변환이 끝난 문장에 적용한다(그래서 뒤에 둔다)
+TERMS += [
+    (r"(?:총량|Volume)·속도·크기", "Volume·throughput·size"),
+    (r"(?:총량|Volume), 속도, 크기", "Volume, throughput, size"),
+    (r"최고 Write 속도", "Peak Write throughput"),
+    (r"최고 Read 속도", "Peak Read throughput"),
+    (r"(Read|Write) 속도", r"\1 throughput"),
+    (r"최대 속도", "최대 throughput"),
+    (r"초당 최대 ([\d.,~]+) ?MB", r"최대 \1MB/s"),
+    (r"초당 (약 )?([\d.,~{}]+)번", r"\1\2번/s"),
+    (r"분당 (약 )?([\d.,~{}]+)번", r"\1\2번/min"),
+    (r"랜덤", "Random"),
+    (r"메모리", "memory"),
+    (r"프레임", "frame"),
+    (r"유휴", "idle"),
+    (r"배경", "background"),
+    (r"동기화", "sync"),
+    (r"커널", "kernel"),
+    (r"명령어로", "command로"),
+    (r"명령을", "command를"), (r"명령이", "command가"), (r"명령은", "command는"),
+    (r"명령과", "command와"), (r"명령으로", "command로"), (r"명령", "command"),
+    (r"드라이버", "driver"),
+    (r"장치", "device"),
+    (r"파티션", "partition"),
+    (r"erofs 압축", "erofs compressed"),
+    (r"압축", "compression"),
+    (r"중간 파일", "intermediate file"),
+    (r"임시 파일", "temp file"),
+    (r"썸네일", "thumbnail"),
+    (r"파일 내용이 아니라", "file data가 아니라"),
+    (r"파일 내용", "file data"),
+    (r"관리 정보", "metadata"),
+    (r"수명", "endurance"),
+    (r"디코딩", "decoding"),
+    (r"파일 크기", "file size"),
+]
+
 # 영어 용어 뒤 조사 맞추기 (레이턴시·플래그 등 모음으로 끝남)
 TERMS += [
+    (r"Jank은", "Jank는"), (r"Jank이 ", "Jank가 "), (r"Jank을", "Jank를"),
     (r"Latency은", "Latency는"), (r"Latency과", "Latency와"), (r"Latency이 ", "Latency가 "), (r"Latency을", "Latency를"),
 ]
 
