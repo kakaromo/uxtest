@@ -102,6 +102,10 @@ UX_SERIAL=<serial> python3 dataset/nasa/push.py          # 기기 /sdcard/Pictur
 UX_SERIAL=<serial> python3 dataset/nasa/push.py --repush # 갤러리 cold 측정 직전: 새 파일명으로 다시 넣기
 ```
 
+- 받는 곳: NASA Image and Video Library(`images-api.nasa.gov`, 이미지는 `images-assets.nasa.gov`). 저작권 표기가 있는 항목은 빼서 퍼블릭 도메인만 받아요.
+- 1000장, 약 1.8GB. 저장소의 `manifest.csv` 목록과 sha256 으로 받아서 **어디서 받아도 같은 사진**이에요. 중간에 끊겨도 다시 실행하면 이어 받아요. 시험용은 `--n 50`.
+- 회사 망에서 위 주소가 막혀 있으면, 받을 수 있는 곳에서 `dataset/nasa/images/` 를 받아 그대로 복사해도 돼요(fetch.py 를 다시 돌리면 sha256 만 확인하고 건너뛰어요).
+
 ### 4.4 사람이 한 번 해 둘 것
 
 - 앱 로그인: Instagram(피드·릴스), YouTube, Gmail. TikTok 은 첫 실행 동의 창만 처리.
