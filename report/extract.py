@@ -57,9 +57,9 @@ def q(sql, *a):
     return con.execute(sql, a).fetchall()
 
 
-# 수집 도구(fsiotrace) 이름·flag 귀속 수정이 들어간 시각 (bpftrace 920fafa, agent/tools 교체 2026-10-28 05:09).
+# 수집 도구(fsiotrace) 이름·flag 귀속 수정이 다 들어간 시각 (bpftrace d4aac83, agent/tools 교체 2026-10-28 07:46).
 # 이 시각 이후 실행 파일(runs/<ID>/<시각>.json)이면 파일·프로세스 이름과 NODE/META/Checkpoint 표시를 믿을 수 있다
-FIX_AT = "20261028-051000"
+FIX_AT = "20261028-074700"
 
 
 def parquet_of(tid):
