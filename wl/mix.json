@@ -1,0 +1,41 @@
+{
+  "_doc": [
+    "하루 TC 가중치. gen_tc.py day 가 읽는다. 사용자가 직접 고치는 파일.",
+    "categories.<c>.weight = 화면 켜진 시간 중 그 카테고리 비중. null 이면 사용 로그 데이터셋 값, 숫자면 그 값. 합은 자동 정규화.",
+    "categories.<c>.scenarios = 카테고리 안에서 고를 측정 시나리오와 비중.",
+    "proxy: true = 그 카테고리를 직접 측정하지 않아 비슷한 시나리오로 대신함 (리포트에 표시).",
+    "launch = 다른 앱으로 바뀔 때 끼우는 앱 실행 조각. n = 그 시나리오 안 실행 횟수 (조각을 n 등분해 하나를 씀).",
+    "db = 측정 조각 대신 SQLite transaction 을 합성 (mode: wal|journal, kb: transaction 크기, perMin: 분당 횟수). wl/gen_tc.py 의 DB 클래스.",
+    "daily = 하루 횟수 (소수면 확률). standby = 화면 꺼진 길이별 조각."
+  ],
+  "categories": {
+    "browser":      {"weight": null, "scenarios": {"B1": 0.3, "B1i": 0.1, "B4": 0.3, "B5": 0.3}},
+    "sns":          {"weight": null, "scenarios": {"B7": 0.4, "B7r": 0.3, "B7t": 0.3}, "_note": "TikTok(B7t) 비중은 데이터셋에 없어 손으로 정함"},
+    "video":        {"weight": null, "scenarios": {"C1": 0.3, "C2": 0.3, "C4a": 0.1, "C4b": 0.2, "C5": 0.1}},
+    "music":        {"weight": null, "scenarios": {"C6": 1}},
+    "maps":         {"weight": null, "scenarios": {"B6": 1}},
+    "camera":       {"weight": null, "scenarios": {"D1": 0.35, "D2": 0.1, "D3": 0.15, "D4": 0.1, "D5": 0.05, "D7": 0.15, "D8": 0.1}},
+    "gallery":      {"weight": null, "scenarios": {"G1": 0.2, "G4": 0.3, "G5": 0.3, "E1": 0.2}},
+    "mail_store":   {"weight": null, "scenarios": {"B8": 0.6, "B9": 0.4}},
+    "productivity": {"weight": null, "scenarios": {"F1": 0.3, "F2": 0.1, "F4": 0.3, "F5": 0.3}},
+    "commerce":     {"weight": null, "proxy": true, "scenarios": {"B9": 0.5, "B1": 0.5}, "_note": "쇼핑·금융·예매 앱. 측정 없음 → 웹·스토어 탐색으로 대리"},
+    "home":         {"weight": null, "scenarios": {"S4": 1}, "_note": "홈 화면·잠깐 켬"},
+    "call":         {"weight": null, "proxy": true, "scenarios": {"S4": 1}, "_note": "통화 중 화면. I/O 는 홈 대기와 비슷하다고 봄"},
+    "messaging":    {"weight": null, "proxy": true, "scenarios": {}, "db": {"mode": "wal", "kb": 12, "perMin": 30},
+                     "_note": "KakaoTalk. 이 폰에서 동작 재현이 어려워 측정 안 함 → SQLite WAL transaction 으로 흉내 (DB 동작 모델). kb = 측정 앱 WAL commit 중앙값, perMin 은 추정값. 빼려면 weight 0"},
+    "game":         {"weight": 0, "scenarios": {}, "_note": "측정 안 함"},
+    "other":        {"weight": 0, "scenarios": {}}
+  },
+  "launch": {
+    "coldRatio": 0.2,
+    "cold": {"A1": {"w": 0.4, "n": 5}, "A2": {"w": 0.4, "n": 6}, "A4": {"w": 0.2, "n": 3}},
+    "warm": {"A3": {"w": 0.4, "n": 6}, "A5": {"w": 0.2, "n": 6}, "A7": {"w": 0.3, "n": 10}, "A8": {"w": 0.1, "n": 1}},
+    "skip": ["home", "call"]
+  },
+  "daily": {"E3": 2, "E8": 1, "E2": 0.3, "E5": 0.5, "E6": 0.5, "E7": 0.3, "E4": 0.2, "D9": 0.2},
+  "standby": [
+    {"maxSec": 300, "scenarios": {"S3": 1}},
+    {"maxSec": 1800, "scenarios": {"S1": 0.5, "S2": 0.5}},
+    {"maxSec": 1e9, "scenarios": {"S5": 1}}
+  ]
+}
