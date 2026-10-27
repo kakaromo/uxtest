@@ -41,7 +41,8 @@
 		sizeW: stackSpec('Request size 분포 · Write (건수 %)', cats, B.size, rs.map((r) => r.size.W), PROV_TRACE + ' Run 평균.'),
 		dtocR: stackSpec('Latency 분포 · Read (건수 %)', cats, B.dtoc, rs.map((r) => r.dtoc.R), PROV_TRACE + ' Latency = 요청을 보내고 완료 응답까지(dtoc).'),
 		dtocW: stackSpec('Latency 분포 · Write (건수 %)', cats, B.dtoc, rs.map((r) => r.dtoc.W), PROV_TRACE + ' Latency = 요청을 보내고 완료 응답까지(dtoc).'),
-		gap: stackSpec('Inter-arrival 분포 (건수 %)', cats, B.gap, rs.map((r) => r.gap), PROV_TRACE + ' 16ms·200ms 넘는 간격은 UFS가 절전이나 유휴 정리에 들어갈 수 있는 틈이에요.', 1),
+		gap: stackSpec('DtoD 분포 · dispatch-to-dispatch (건수 %)', cats, B.gap, rs.map((r) => r.gap), PROV_TRACE + ' 앞 request를 보낸 시각부터 다음 request를 보낸 시각까지예요. 16ms·200ms 넘는 간격은 UFS가 절전이나 유휴 정리에 들어갈 수 있는 틈이에요.', 1),
+		ctod: stackSpec('CtoD 분포 · complete-to-dispatch (건수 %)', cats, B.ctod ?? ['0 (overlap)', '<1ms', '1–16ms', '16–200ms', '≥200ms'], rs.map((r) => r.ctod ?? [0, 0, 0, 0, 0]), PROV_TRACE + ' 직전 request 완료부터 이번 request를 보낼 때까지(parquet ctod). 0은 앞 request가 아직 처리 중일 때예요. Run 평균.', 1),
 		flow: stackSpec('Write path (바이트 %)', cats, B.flow, rs.map((r) => r.flow), PROV_TRACE + ' fsiotrace flag로 나눴어요. 10월 28일 이전 측정은 flag가 다른 파일 것으로 붙은 경우가 있어요.')
 	});
 
@@ -135,7 +136,8 @@
 		<Tabs.List class="self-start">
 			<Tabs.Trigger value="size">Request size</Tabs.Trigger>
 			<Tabs.Trigger value="dtoc">Latency</Tabs.Trigger>
-			<Tabs.Trigger value="gap">Inter-arrival</Tabs.Trigger>
+			<Tabs.Trigger value="gap">DtoD</Tabs.Trigger>
+			<Tabs.Trigger value="ctod">CtoD</Tabs.Trigger>
 			<Tabs.Trigger value="flow">Write path</Tabs.Trigger>
 		</Tabs.List>
 		<Tabs.Content value="size" class="grid gap-3 lg:grid-cols-2">
@@ -147,6 +149,7 @@
 			<Chart spec={distSpecs.dtocW} height={26 * rs.length + 70} />
 		</Tabs.Content>
 		<Tabs.Content value="gap"><Chart spec={distSpecs.gap} height={26 * rs.length + 70} /></Tabs.Content>
+		<Tabs.Content value="ctod"><Chart spec={distSpecs.ctod} height={26 * rs.length + 70} /></Tabs.Content>
 		<Tabs.Content value="flow"><Chart spec={distSpecs.flow} height={26 * rs.length + 70} /></Tabs.Content>
 	</Tabs.Root>
 </section>

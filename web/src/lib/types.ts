@@ -47,6 +47,7 @@ export type Row = {
 	size: RW<number[]>;
 	dtoc: RW<number[]>;
 	gap: number[];
+	ctod?: number[];
 	flow: number[];
 	cv: number;
 	rep: { repeat: number; streams?: Stream[] };
@@ -72,7 +73,7 @@ export type Index = {
 		device: string;
 		trace: string;
 		lbaMaxGB: number;
-		buckets: { size: string[]; dtoc: string[]; gap: string[]; flow: string[] };
+		buckets: { size: string[]; dtoc: string[]; gap: string[]; ctod?: string[]; flow: string[] };
 		qdBuckets: string[];
 		generated: string;
 	};
@@ -119,6 +120,7 @@ export type Run = {
 	size: RW<number[]>;
 	dtoc: RW<number[]>;
 	gap: number[];
+	ctod?: number[];
 	flow: number[];
 	streams: Stream[];
 	procs: { pid: number; name: string; threads: string; readMB: number; writeMB: number }[];
