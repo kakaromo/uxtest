@@ -142,7 +142,8 @@ UX_SERIAL=<serial> python3 dataset/nasa/push.py --repush # 갤러리 cold 측정
 
 ### 5.3 새 시나리오 만들기·고치기
 
-- 지금은 **JSON 파일이 기준**이에요. `scenarios/gen.py` 는 처음 만들 때 쓴 생성기인데, 그 뒤 JSON 만 고친 것(A5·B6·B7·B7r·B7t 의 권한 창 처리, E8·F2 의 keepAwake, B7y 추가)이 있어서 **다시 돌리면 그 수정이 덮어써져요.** 새 시나리오는 비슷한 JSON 을 복사해서 고치는 게 안전해요.
+- 시나리오는 `scenarios/gen.py` 에 정의돼 있고, `python3 scenarios/gen.py` 가 JSON 과 `pack.scenariopack.json` 을 만들면서 agent 스키마로 검사해요. **고칠 때는 gen.py 를 고치고 다시 생성하세요.** JSON 만 직접 고치면 다음 생성 때 덮어써져요. (2026-10-28 기준 gen.py 와 JSON 은 같아요.)
+- 자주 쓰는 Step 도우미가 gen.py 에 있어요: `launch`, `stop`, `scroll`, `tap_el`, `trace_start/stop`, `CLOSE_PERM`(권한 창 '허용 안함'), `FOCUS`(화면 확인), `SETTLE`(writeback 대기). 화면을 보며 오래 기다리는 시나리오는 `scenario(..., keep_awake=True)`.
 - 고친 뒤에는 반드시 `./run.py --dry <ID>` 로 1회 돌려 Step 오류·화면(`mCurrentFocus`)을 확인해요.
 
 지켜야 할 것 (실제로 걸렸던 함정)
@@ -186,13 +187,14 @@ export UX_DEVICE=<IP>:5555                    # agent device id (무선이면 se
 
 ```sh
 python3 report/extract.py            # parquet → report/data.json (시나리오별 집계)
-python3 report/export_web.py         # 회차별 상세 → web/.private/data/
+python3 report/build_report.py       # 해설 본문 → report/site/index.html (수치는 data.json 에서 계산)
+python3 report/export_web.py         # 회차별 상세·해설 → web/.private/data/
 node web/scripts/copy-data.mjs       # → web/static/data/ (사이트가 읽는 데이터)
 cd web && npm run dev                # http://localhost:5173 로 확인
 ```
 
 - `report/publish.sh` 가 위 단계를 한 번에 하고 `web/static/data` 를 커밋·push 해요. `main` 에 `web/**` 가 push 되면 GitHub Actions(`.github/workflows/pages.yml`)가 Pages 로 배포해요. 사내 배포라면 이 workflow 를 사내 저장소에 맞게 바꾸세요.
-- 해설 본문(`report/build_report.py` 가 만드는 `report/site/index.html`)은 저장소에 없어요. 없으면 사이트의 해설 칸은 비고 수치·차트·표만 나와요.
+- 해설 본문은 `report/build_report.py`(하위 페이지 `report/pages.py`, 스타일 `report/web/`)가 만들어요. 수치는 data.json 에서 계산되지만, 문장 속 해석(예: "카메라 쓰기의 대부분은 중간 파일")은 측정을 다시 하면 맞는지 확인하고 고쳐야 해요. 다시 확인하기 전 문장에는 `chk()` 로 '확인 중' 표시를 붙여요.
 - 기술 용어는 `report/terms.py` 표로 영어로 바꿔요(Read/Write, Discard, Latency, QD, request, flag …).
 
 사이트에서 보는 주요 지표
@@ -232,7 +234,7 @@ UX_SERIAL=<IP>:5555 python3 run_tc.py day1   # push → 재생 + trace → compa
 ```
 
 - `mix.json`: 카테고리 가중치 × 시나리오 가중치, 하루 이벤트(파일 삭제·다운로드 등), 화면 꺼짐 구간. `weight: null` 은 사용 로그 데이터셋 값을 쓰라는 뜻이에요.
-- **`gen_tc.py day` 는 `wl/.private/usage.json`(사용 로그 데이터셋에서 뽑은 행동 모델)이 필요해요.** 이 데이터셋은 라이선스가 불명이라 저장소에 없고 공개하면 안 돼요. 사내에서 쓰려면 데이터셋을 따로 받아 `wl/usage.py` 로 만들거나, `mix.json` 의 weight 를 숫자로 채우고 사내 사용 모델로 `usage.json` 을 만들어요.
+- **`gen_tc.py day` 는 `wl/.private/usage.json`(사용 로그 데이터셋에서 뽑은 행동 모델)이 필요해요.** 이 데이터셋은 라이선스가 불명이라 저장소에 없고 공개하면 안 돼요. 회사에서 데이터셋을 따로 받은 뒤 `wl/usage.py` 의 `SRC` 경로를 받은 파일로 바꾸고 `python3 wl/usage.py` 를 돌리면 `wl/.private/usage.json` 이 생겨요(`.private` 는 커밋되지 않아요).
 - 결과: `wl/.private/results/<TC>-<시각>/compare.json`, 추세는 `history.jsonl`. 비교 항목은 `wl/metrics.py` 의 `CHECKS`(Volume, FS 유발 Write, Flush, fsync, Discard, Checkpoint, size·DtoD 분포, Sequential, Idle, Wakeups, QD, Hibern8).
 - TC 도 배터리·무선 상태에서 돌려요. 원본 측정 조건과 같아야 비교가 맞아요.
 

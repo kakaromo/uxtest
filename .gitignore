@@ -25,6 +25,9 @@
 !/report/perstep.py
 !/report/terms.py
 !/report/publish.sh
+!/report/build_report.py
+!/report/pages.py
+!/report/web/
 
 !/wl/
 /wl/.private/

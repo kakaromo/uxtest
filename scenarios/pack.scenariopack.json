@@ -2336,8 +2336,8 @@
       {
         "type": "shell",
         "params": {
-          "cmd": "sleep 1; dumpsys window | grep mCurrentFocus | grep -q GrantPermissionsActivity && { input keyevent 4; echo perm-closed; } || echo no-perm",
-          "label": "권한 창 있으면 닫기 (선택 안 함)"
+          "cmd": "sleep 1; for i in 1 2 3; do dumpsys window | grep mCurrentFocus | grep -q GrantPermissionsActivity || break; uiautomator dump /sdcard/uxperm.xml >/dev/null 2>&1; b=$(grep -o 'resource-id=\"com.android.permissioncontroller:id/permission_deny[^\"]*\"[^>]*bounds=\"[^\"]*\"' /sdcard/uxperm.xml | head -1 | grep -o 'bounds=\"[^\"]*\"' | tr -c \"0-9\" \" \"); set -- $b; [ -n \"$4\" ] && { input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 )); echo deny-tapped; sleep 1; } || { echo deny-button-not-found; break; }; done; rm -f /sdcard/uxperm.xml; dumpsys window | grep mCurrentFocus",
+          "label": "권한 창(알림 등) 있으면 '허용 안함' 누르기"
         }
       },
       {
@@ -3315,8 +3315,8 @@
       {
         "type": "shell",
         "params": {
-          "cmd": "sleep 1; dumpsys window | grep mCurrentFocus | grep -q GrantPermissionsActivity && { input keyevent 4; echo perm-closed; } || echo no-perm",
-          "label": "권한 창 있으면 닫기 (선택 안 함)"
+          "cmd": "sleep 1; for i in 1 2 3; do dumpsys window | grep mCurrentFocus | grep -q GrantPermissionsActivity || break; uiautomator dump /sdcard/uxperm.xml >/dev/null 2>&1; b=$(grep -o 'resource-id=\"com.android.permissioncontroller:id/permission_deny[^\"]*\"[^>]*bounds=\"[^\"]*\"' /sdcard/uxperm.xml | head -1 | grep -o 'bounds=\"[^\"]*\"' | tr -c \"0-9\" \" \"); set -- $b; [ -n \"$4\" ] && { input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 )); echo deny-tapped; sleep 1; } || { echo deny-button-not-found; break; }; done; rm -f /sdcard/uxperm.xml; dumpsys window | grep mCurrentFocus",
+          "label": "권한 창(알림 등) 있으면 '허용 안함' 누르기"
         }
       },
       {
@@ -3478,8 +3478,8 @@
       {
         "type": "shell",
         "params": {
-          "cmd": "sleep 1; dumpsys window | grep mCurrentFocus | grep -q GrantPermissionsActivity && { input keyevent 4; echo perm-closed; } || echo no-perm",
-          "label": "권한 창 있으면 닫기 (선택 안 함)"
+          "cmd": "sleep 1; for i in 1 2 3; do dumpsys window | grep mCurrentFocus | grep -q GrantPermissionsActivity || break; uiautomator dump /sdcard/uxperm.xml >/dev/null 2>&1; b=$(grep -o 'resource-id=\"com.android.permissioncontroller:id/permission_deny[^\"]*\"[^>]*bounds=\"[^\"]*\"' /sdcard/uxperm.xml | head -1 | grep -o 'bounds=\"[^\"]*\"' | tr -c \"0-9\" \" \"); set -- $b; [ -n \"$4\" ] && { input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 )); echo deny-tapped; sleep 1; } || { echo deny-button-not-found; break; }; done; rm -f /sdcard/uxperm.xml; dumpsys window | grep mCurrentFocus",
+          "label": "권한 창(알림 등) 있으면 '허용 안함' 누르기"
         }
       },
       {
@@ -3591,8 +3591,8 @@
       {
         "type": "shell",
         "params": {
-          "cmd": "sleep 1; dumpsys window | grep mCurrentFocus | grep -q GrantPermissionsActivity && { input keyevent 4; echo perm-closed; } || echo no-perm",
-          "label": "권한 창 있으면 닫기 (선택 안 함)"
+          "cmd": "sleep 1; for i in 1 2 3; do dumpsys window | grep mCurrentFocus | grep -q GrantPermissionsActivity || break; uiautomator dump /sdcard/uxperm.xml >/dev/null 2>&1; b=$(grep -o 'resource-id=\"com.android.permissioncontroller:id/permission_deny[^\"]*\"[^>]*bounds=\"[^\"]*\"' /sdcard/uxperm.xml | head -1 | grep -o 'bounds=\"[^\"]*\"' | tr -c \"0-9\" \" \"); set -- $b; [ -n \"$4\" ] && { input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 )); echo deny-tapped; sleep 1; } || { echo deny-button-not-found; break; }; done; rm -f /sdcard/uxperm.xml; dumpsys window | grep mCurrentFocus",
+          "label": "권한 창(알림 등) 있으면 '허용 안함' 누르기"
         }
       },
       {
@@ -3720,8 +3720,8 @@
       {
         "type": "shell",
         "params": {
-          "cmd": "sleep 1; dumpsys window | grep mCurrentFocus | grep -q GrantPermissionsActivity && { input keyevent 4; echo perm-closed; } || echo no-perm",
-          "label": "권한 창 있으면 닫기 (선택 안 함)"
+          "cmd": "sleep 1; for i in 1 2 3; do dumpsys window | grep mCurrentFocus | grep -q GrantPermissionsActivity || break; uiautomator dump /sdcard/uxperm.xml >/dev/null 2>&1; b=$(grep -o 'resource-id=\"com.android.permissioncontroller:id/permission_deny[^\"]*\"[^>]*bounds=\"[^\"]*\"' /sdcard/uxperm.xml | head -1 | grep -o 'bounds=\"[^\"]*\"' | tr -c \"0-9\" \" \"); set -- $b; [ -n \"$4\" ] && { input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 )); echo deny-tapped; sleep 1; } || { echo deny-button-not-found; break; }; done; rm -f /sdcard/uxperm.xml; dumpsys window | grep mCurrentFocus",
+          "label": "권한 창(알림 등) 있으면 '허용 안함' 누르기"
         }
       },
       {
@@ -3784,6 +3784,117 @@
     "requirements": {
       "packages": [
         "com.ss.android.ugc.trill"
+      ],
+      "sourceWidth": 1272,
+      "sourceHeight": 2772,
+      "traceType": "fsio_ufs"
+    },
+    "origin": {
+      "deviceModel": "CPH2749"
+    }
+  },
+  {
+    "schemaVersion": 1,
+    "kind": "scenario",
+    "name": "[UX-fsio] B7y YouTube Shorts 20개",
+    "description": "[B7y · P2] 회차마다 영상 캐시를 비우고 Shorts 피드에서 5초씩 보며 20개를 넘긴다. 좋아요·구독이 남지 않도록 화면은 탭하지 않는다. 릴스(B7r)·TikTok(B7t)과 같은 동작으로 영상 캐시 write 비교",
+    "repeatCount": 3,
+    "steps": [
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "input keyevent KEYCODE_WAKEUP; sleep 1; wm dismiss-keyguard; sleep 1; dumpsys window | grep -c isKeyguardShowing=true || true",
+          "label": "화면 켜기·잠금 해제"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "label": "앱 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "rm -rf /data/data/com.google.android.youtube/cache/glide_disk_cache; echo ok",
+          "label": "YouTube 영상 캐시 비우기"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "am start -W -a android.intent.action.VIEW -d https://www.youtube.com/shorts com.google.android.youtube; sleep 8",
+          "label": "YouTube Shorts 열기"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "sleep 1; for i in 1 2 3; do dumpsys window | grep mCurrentFocus | grep -q GrantPermissionsActivity || break; uiautomator dump /sdcard/uxperm.xml >/dev/null 2>&1; b=$(grep -o 'resource-id=\"com.android.permissioncontroller:id/permission_deny[^\"]*\"[^>]*bounds=\"[^\"]*\"' /sdcard/uxperm.xml | head -1 | grep -o 'bounds=\"[^\"]*\"' | tr -c \"0-9\" \" \"); set -- $b; [ -n \"$4\" ] && { input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 )); echo deny-tapped; sleep 1; } || { echo deny-button-not-found; break; }; done; rm -f /sdcard/uxperm.xml; dumpsys window | grep mCurrentFocus",
+          "label": "권한 창(알림 등) 있으면 '허용 안함' 누르기"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "trace_start",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "window_seconds": "1",
+          "include_vfs": "false",
+          "include_dram": "false",
+          "label": "측정 시작"
+        }
+      },
+      {
+        "type": "scroll",
+        "params": {
+          "direction": "down",
+          "count": "20",
+          "pause": "5",
+          "duration": "300",
+          "label": "Shorts 20개 넘기기 (5초씩 보기)"
+        }
+      },
+      {
+        "type": "sleep",
+        "params": {
+          "seconds": "3",
+          "label": "writeback 배수 대기"
+        }
+      },
+      {
+        "type": "trace_stop",
+        "params": {
+          "trace_type": "fsio_ufs",
+          "label": "측정 종료"
+        }
+      },
+      {
+        "type": "shell",
+        "params": {
+          "cmd": "dumpsys window | grep mCurrentFocus",
+          "label": "화면 확인"
+        }
+      },
+      {
+        "type": "stop_app",
+        "params": {
+          "package_name": "com.google.android.youtube",
+          "label": "앱 종료"
+        }
+      }
+    ],
+    "loops": [],
+    "requirements": {
+      "packages": [
+        "com.google.android.youtube"
       ],
       "sourceWidth": 1272,
       "sourceHeight": 2772,
@@ -5718,6 +5829,7 @@
     "name": "[UX-fsio] E8 Chrome 100MB 다운로드",
     "description": "[E8 · P2] 공개 속도 시험 파일(OVH 100MB)을 Chrome 으로 받는다 (Hetzner 는 이 망에서 빈 응답, thinkbroadband 는 http 라 Chrome 이 막음). 네트워크 속도에 묶인 순차 write. Chrome 다운로드 목록에는 기록이 남는다. 준비: Chrome 처음 실행 화면 완료 / dry-run 확인: 다운로드 확인 창 여부, 저장 파일 이름",
     "repeatCount": 3,
+    "keepAwake": true,
     "steps": [
       {
         "type": "shell",
@@ -6009,6 +6121,7 @@
     "name": "[UX-fsio] F2 녹음 1분",
     "description": "[F2 · P2] 녹음기로 1분 녹음. 낮은 대역의 지속 write 를 D3(동영상)와 비교. 측정 후 녹음 파일을 지운다. 준비: 녹음기 첫 실행 동의 화면 완료, 마이크 권한 / dry-run 확인: 녹음 파일 정리",
     "repeatCount": 3,
+    "keepAwake": true,
     "steps": [
       {
         "type": "shell",
