@@ -146,12 +146,12 @@ def gfx_dump(pkg, tag):
 S = []
 
 
-def scenario(sid, type_, prio, name, desc, steps, packages, loops=(), repeat=3, verify=None, needs=None):
+def scenario(sid, type_, prio, name, desc, steps, packages, loops=(), repeat=3, verify=None, needs=None, keep_awake=False):
     if any(x["type"] == "text" for x in steps):  # 맨 앞에 키보드 영문 전환을 넣고 loop 구간을 한 칸 민다
         steps = [IME_EN] + steps
         loops = [{**lp, "startStep": lp["startStep"] + 1, "endStep": lp["endStep"] + 1} for lp in loops]
     S.append(dict(id=sid, type=type_, prio=prio, name=name, desc=desc, steps=steps, loops=list(loops),
-                  repeat=repeat, packages=packages, verify=verify or [], needs=needs or []))
+                  repeat=repeat, packages=packages, verify=verify or [], needs=needs or [], keep_awake=keep_awake))
 
 
 def loop_over(steps, first, last, count):
@@ -366,9 +366,10 @@ FB, WEATHER, GMAIL, PLAY = "com.facebook.katana", "net.oneplus.weather", "com.go
 YTM, VIDEO, FILEMGR = "com.google.android.apps.youtube.music", "com.coloros.video", "com.oneplus.filemanager"
 NOTE, RECORDER, CONTACTS, CALENDAR = "com.oneplus.note", "com.oneplus.soundrecorder", "com.google.android.contacts", "com.google.android.calendar"
 NASA_DIR = "/storage/emulated/0/Pictures/NASA"
-# 지도는 위치 권한이 정해지지 않아 실행할 때마다 권한 창이 뜬다. 사용자 결정을 대신하지 않도록 뒤로 키로 닫기만 한다 (선택 없음)
-CLOSE_PERM = sh("sleep 1; dumpsys window | grep mCurrentFocus | grep -q GrantPermissionsActivity && { input keyevent 4; echo perm-closed; } || echo no-perm",
-                "권한 창 있으면 닫기 (선택 안 함)")
+# 권한 창(알림·위치 등)이 뜨면 '허용 안함'을 눌러 닫는다 (2026-10-27 사용자 결정. 예전엔 뒤로 키로만 닫았다).
+# uiautomator 로 permission_deny_button 위치를 찾아 tap. 셸 명령에 콤마를 쓰면 agent 가 회차별 값으로 잘라서 콤마 없이 쓴다
+CLOSE_PERM = sh('sleep 1; for i in 1 2 3; do dumpsys window | grep mCurrentFocus | grep -q GrantPermissionsActivity || break; uiautomator dump /sdcard/uxperm.xml >/dev/null 2>&1; b=$(grep -o \'resource-id="com.android.permissioncontroller:id/permission_deny[^"]*"[^>]*bounds="[^"]*"\' /sdcard/uxperm.xml | head -1 | grep -o \'bounds="[^"]*"\' | tr -c "0-9" " "); set -- $b; [ -n "$4" ] && { input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 )); echo deny-tapped; sleep 1; } || { echo deny-button-not-found; break; }; done; rm -f /sdcard/uxperm.xml; dumpsys window | grep mCurrentFocus',
+                "권한 창(알림 등) 있으면 '허용 안함' 누르기")
 
 
 def dtap(x, y, label, n=2):
@@ -508,6 +509,17 @@ st = [st[0], stop(TIKTOK),
 scenario("B7t", "B", 2, "TikTok 추천 영상 20개",
          "회차마다 영상·이미지 캐시를 비우고 추천 피드에서 5초씩 보며 20개를 넘긴다. 화면은 탭하지 않는다. Instagram 릴스(B7r)와 같은 동작으로 영상 캐시 write 비교.",
          st, [TIKTOK], needs=["TikTok 첫 실행 동의 창 처리"])
+
+# B7y -----------------------------------------------------------------
+# 2026-10-27 사용자 요청: 릴스·TikTok 과 같은 동작으로 YouTube Shorts. YouTube 는 큰 영상 캐시 폴더가 없어 썸네일 캐시만 비운다
+st = [st[0], stop(YT),
+      sh(f"rm -rf /data/data/{YT}/cache/glide_disk_cache; echo ok", "YouTube 영상 캐시 비우기"),
+      sh(f"am start -W -a android.intent.action.VIEW -d https://www.youtube.com/shorts {YT}; sleep 8", "YouTube Shorts 열기"),
+      CLOSE_PERM, FOCUS,
+      trace_start(), scroll(20, "Shorts 20개 넘기기 (5초씩 보기)", pause=5), SETTLE, trace_stop(), FOCUS, stop(YT)]
+scenario("B7y", "B", 2, "YouTube Shorts 20개",
+         "회차마다 영상 캐시를 비우고 Shorts 피드에서 5초씩 보며 20개를 넘긴다. 좋아요·구독이 남지 않도록 화면은 탭하지 않는다. 릴스(B7r)·TikTok(B7t)과 같은 동작으로 영상 캐시 write 비교",
+         st, [YT])
 
 # B8 ------------------------------------------------------------------
 st = [stop(GMAIL), launch(GMAIL, "Gmail 실행", wait=6),
@@ -705,7 +717,7 @@ st = [rm_media("/sdcard/Download/100Mb*.dat /sdcard/Download/.pending-*100Mb*", 
       SETTLE, trace_stop(), FOCUS, stop(CHROME), rm_media("/sdcard/Download/100Mb*.dat /sdcard/Download/.pending-*100Mb*", "다운로드 파일 정리")]
 scenario("E8", "E", 2, "Chrome 100MB 다운로드",
          "공개 속도 시험 파일(OVH 100MB)을 Chrome 으로 받는다 (Hetzner 는 이 망에서 빈 응답, thinkbroadband 는 http 라 Chrome 이 막음). 네트워크 속도에 묶인 순차 write. Chrome 다운로드 목록에는 기록이 남는다.",
-         st, [CHROME], verify=["다운로드 확인 창 여부", "저장 파일 이름"], needs=["Chrome 처음 실행 화면 완료"])
+         st, [CHROME], verify=["다운로드 확인 창 여부", "저장 파일 이름"], needs=["Chrome 처음 실행 화면 완료"], keep_awake=True)
 
 # F1 ------------------------------------------------------------------
 NOTE_TEXT = "UFS fsio trace note " * 25
@@ -740,7 +752,7 @@ st = [MARK_NOW, stop(RECORDER), launch(RECORDER, "녹음기 실행", wait=4),
          "녹음 파일 정리")]
 scenario("F2", "F", 2, "녹음 1분",
          "녹음기로 1분 녹음. 낮은 대역의 지속 write 를 D3(동영상)와 비교. 측정 후 녹음 파일을 지운다.",
-         st, [RECORDER], verify=["녹음 파일 정리"], needs=["녹음기 첫 실행 동의 화면 완료", "마이크 권한"])
+         st, [RECORDER], verify=["녹음 파일 정리"], needs=["녹음기 첫 실행 동의 화면 완료", "마이크 권한"], keep_awake=True)
 
 # F4 ------------------------------------------------------------------
 st = [stop(CONTACTS), launch(CONTACTS, "연락처 실행", wait=4),
@@ -876,11 +888,16 @@ def to_doc(s):
     if s["verify"]:
         notes.append("dry-run 확인: " + ", ".join(s["verify"]))
     desc = f"[{s['id']} · P{s['prio']}] {s['desc']}" + ("" if not notes else " " + " / ".join(notes))
-    return {
+    d = {
         "schemaVersion": 1, "kind": "scenario",
         "name": f"[UX-fsio] {s['id']} {s['name']}",
         "description": desc,
         "repeatCount": s["repeat"],
+    }
+    if s["keep_awake"]:
+        # 화면을 보며 오래 기다리는 시나리오: run.py 가 10초마다 화면을 깨운다 (배터리 상태 30초 화면 꺼짐 대응)
+        d["keepAwake"] = True
+    return d | {
         "steps": s["steps"], "loops": s["loops"],
         "requirements": {"packages": s["packages"], "sourceWidth": W, "sourceHeight": H, "traceType": "fsio_ufs"},
         "origin": {"deviceModel": DEVICE},
