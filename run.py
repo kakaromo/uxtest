@@ -71,7 +71,7 @@ def run(sid, dry):
     path = find(sid)
     sc = json.load(open(path))
     repeat = 1 if dry else sc.get("repeatCount", 1)
-    body = {"deviceIds": [DEVICE], "scenarioName": f"ux-{sid}" + ("-dry" if dry else ""),
+    body = {"deviceIds": [DEVICE], "scenarioName": sc["name"] + (" (dry)" if dry else ""),
             "steps": sc["steps"], "loops": sc.get("loops", []), "repeat": repeat,
             "busyPolicy": "wait"}
     r = call("POST", "/api/agent/scenario/run", body)
