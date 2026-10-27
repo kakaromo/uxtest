@@ -30,6 +30,13 @@ export type Row = {
 	readN: Range;
 	writeN: Range;
 	wakesPerMin?: Range;
+	h8PerMin?: Range;
+	h8Pct?: Range;
+	h8ExitMs?: Range;
+	queryPerMin?: Range;
+	bkopsPerMin?: Range;
+	wbCheckPerMin?: Range;
+	mgmtN?: Record<string, number>;
 	maxGapSec?: Range;
 	flushPerSec?: Range;
 	seq: RW<Range>;
@@ -77,6 +84,8 @@ export type Content = {
 	byline: string;
 	takes: string;
 	glance: string;
+	mgmt?: string;
+	mgmtTable?: string;
 	method: string;
 	limits: string;
 	types: Record<string, { tag: string; title: string; body: string }>;

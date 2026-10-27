@@ -168,6 +168,39 @@ def trace_metrics(pq, lba_max):
                   coalesce(sum(size) filter (where dir='W'),0), count(distinct lba), count(*)
            from rq where dir in ('R','W') group by 1 order by sum(size) desc limit 10""")]
     m["t0"], m["t1"] = t0, t1
+    m |= mgmt_metrics(pq, dur)
+    return m
+
+
+def mgmt_metrics(pq, dur):
+    """UFS 관리 명령(is_mgmt): Hibern8 진입·해제(UIC), Query 요청(속성·플래그·디스크립터), 예외 이벤트.
+    upiu_response 는 일반 명령의 응답 UPIU 라 뺀다. dtoc 는 ms"""
+    con.execute(f"""create or replace temp view mg as select time, action, mgmt_name n, dtoc
+        from read_parquet('{pq}') where coalesce(is_mgmt,false) and mgmt_name <> 'upiu_response'""")
+    m = {}
+    # Hibern8 시간: 진입 완료 → 다음 해제 요청
+    h = q("""select count(*) filter (where k='in'),
+                    coalesce(sum(nt - time) filter (where k='in' and nk='out'), 0)
+             from (select time, k, lead(time) over (order by time) nt, lead(k) over (order by time) nk
+                   from (select time, case when n='DME_HIBER_ENTER' then 'in' else 'out' end k from mg
+                         where (action='uic_complete' and n='DME_HIBER_ENTER') or (action='uic_send' and n='DME_HIBER_EXIT')))""")[0]
+    m["h8PerMin"] = round(h[0] / dur * 60, 1)
+    m["h8Pct"] = pct(h[1], dur)
+    lat = dict(q("select n, quantile_cont(dtoc,0.5) from mg where action='uic_complete' group by 1"))
+    m["h8ExitMs"] = round(lat.get("DME_HIBER_EXIT") or 0, 3)
+    m["h8EnterMs"] = round(lat.get("DME_HIBER_ENTER") or 0, 3)
+    qq = q("""select count(*) filter (where action='upiu_query_req'),
+                     count(*) filter (where action='upiu_query_req' and n like '%bBackgroundOpStatus%'),
+                     count(*) filter (where action='upiu_query_req' and n like '%dCurrentWBBufSize%'),
+                     count(*) filter (where action='upiu_query_req' and n like 'Clear Flag(fBackgroundOpsEn)%'),
+                     count(*) filter (where action='exception'),
+                     quantile_cont(dtoc,0.5) filter (where action='upiu_query_rsp'),
+                     quantile_cont(dtoc,0.99) filter (where action='upiu_query_rsp') from mg""")[0]
+    m["queryPerMin"], m["bkopsPerMin"], m["wbCheckPerMin"] = (round(x / dur * 60, 1) for x in qq[:3])
+    m["suspendN"], m["exceptionN"] = qq[3], qq[4]
+    m["queryMsP50"], m["queryMsP99"] = round(qq[5] or 0, 3), round(qq[6] or 0, 3)
+    # 이름별 건수 (요청 쪽만: Query 요청·UIC 보냄·예외)
+    m["mgmtN"] = dict(q("select n, count(*) from mg where action in ('upiu_query_req','uic_send','exception') group by 1"))
     return m
 
 
@@ -308,7 +341,9 @@ def aggregate(ms):
     """여러 회차 지표 → median·범위. 분포는 평균, 시간축·LBA 는 총량 median 회차의 것."""
     out = {}
     for k in ("readMB", "writeMB", "discardMB", "flushN", "durSec", "peakMBs", "qdP99", "syncPct", "fsyncPct",
-              "metaPct", "rereadPct", "idlePct", "readN", "writeN", "wakesPerMin", "maxGapSec", "flushPerSec"):
+              "metaPct", "rereadPct", "idlePct", "readN", "writeN", "wakesPerMin", "maxGapSec", "flushPerSec",
+              "h8PerMin", "h8Pct", "h8ExitMs", "h8EnterMs", "queryPerMin", "bkopsPerMin", "wbCheckPerMin", "suspendN",
+              "exceptionN", "queryMsP50", "queryMsP99"):
         out[k] = med([m[k] for m in ms])
     for k in ("seq", "dtocP50", "dtocP99"):
         out[k] = {d: med([m[k][d] for m in ms]) for d in "RW"}
@@ -319,6 +354,11 @@ def aggregate(ms):
             have = [m[k][d] for m in ms if sum(m[k][d]) > 0] or [m[k][d] for m in ms]
             out[k][d] = [round(st.mean(h[i] for h in have), 1) for i in range(5)]
     out["gap"] = [round(st.mean(m["gap"][i] for m in ms), 1) for i in range(4)]
+    # 관리 명령 이름별 건수: 회차 합
+    out["mgmtN"] = {}
+    for m in ms:
+        for k, v in m["mgmtN"].items():
+            out["mgmtN"][k] = out["mgmtN"].get(k, 0) + v
     out["flow"] = [round(st.mean(m["flow"][i] for m in ms), 1) for i in range(6)]
     rep = sorted(ms, key=lambda m: m["readMB"] + m["writeMB"])[len(ms) // 2]
     out["rep"] = {k: rep[k] for k in ("timeline", "lba", "streams", "procs", "comms", "files", "repeat")}

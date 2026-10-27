@@ -151,6 +151,8 @@ def content():
     c = {"lede": grab(r'<p class="lede">(.*?)</p>'), "byline": grab(r'<p class="byline">(.*?)</p>'),
          "takes": clean(grab(r'<ol class="takes">(.*?)</ol>')),
          "glance": clean(grab(r'<table class="glance">(.*?)</table>')),
+         "mgmt": re.sub(r'<div class="tw".*?</table></div>', "", clean(grab(r'<section id="mgmt".*?<div class="prose">(.*?)</div>\s*</section>')), flags=re.S),
+         "mgmtTable": clean(grab(r'<section id="mgmt".*?<table>(.*?)</table>')),
          "method": clean(grab(r'<section id="method".*?<div class="prose">(.*?)</div>')),
          "limits": clean(grab(r'<section id="limits".*?<h2[^>]*>.*?</h2>(.*?)</section>')),
          "types": {}}

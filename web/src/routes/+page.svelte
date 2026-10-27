@@ -86,6 +86,34 @@
 	</CopyTable>
 </section>
 
+{#if c.mgmt}
+	<section class="mb-12 space-y-4">
+		<h2 id="mgmt" class="mb-3 text-h2 font-bold">UFS 관리 명령 (mgmt)</h2>
+		<div class="prose-ux">{@html c.mgmt}</div>
+		{#if c.mgmtTable}<CopyTable title="유형별 UFS 관리 명령"><table>{@html c.mgmtTable}</table></CopyTable>{/if}
+		<CopyTable title="시나리오별 UFS 관리 명령" note="/분 값과 H8 exit는 Run들의 median, suspend(fBackgroundOpsEn clear)와 qTimestamp 쓰기는 Run 합이에요.">
+			<table>
+				<thead><tr><th>ID</th><th class="num">Hibern8 /분</th><th class="num">Hibern8 시간 %</th><th class="num">H8 exit ms</th><th class="num">Query /분</th><th class="num">bBackgroundOpStatus /분</th><th class="num">WB 조회 /분</th><th class="num">suspend</th><th class="num">qTimestamp</th></tr></thead>
+				<tbody>
+					{#each all.filter((r) => r.h8PerMin) as r (r.key)}
+						<tr>
+							<td><a href={resolve('/s/[id]', { id: r.id })}>{label(r)}</a></td>
+							<td class="num" data-v={r.h8PerMin?.med}>{f(r.h8PerMin?.med, 0)}</td>
+							<td class="num" data-v={r.h8Pct?.med}>{f(r.h8Pct?.med, 0)}</td>
+							<td class="num" data-v={r.h8ExitMs?.med}>{f(r.h8ExitMs?.med, 2)}</td>
+							<td class="num" data-v={r.queryPerMin?.med}>{f(r.queryPerMin?.med, 0)}</td>
+							<td class="num" data-v={r.bkopsPerMin?.med}>{f(r.bkopsPerMin?.med, 0)}</td>
+							<td class="num" data-v={r.wbCheckPerMin?.med}>{f(r.wbCheckPerMin?.med, 0)}</td>
+							<td class="num">{r.mgmtN?.['Clear Flag(fBackgroundOpsEn)'] ?? 0}</td>
+							<td class="num">{r.mgmtN?.['Write Attribute(qTimestamp)'] ?? 0}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</CopyTable>
+	</section>
+{/if}
+
 <section class="mb-12">
 	<h2 id="method" class="mb-3 text-h2 font-bold">측정 방법</h2>
 	<div class="prose-ux">{@html c.method}</div>
