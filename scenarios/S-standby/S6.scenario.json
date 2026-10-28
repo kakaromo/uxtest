@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario",
+  "name": "[UX-fsio] S6 야간 충전 대기 6시간",
+  "description": "[S6 · P3] 밤에 충전기를 꽂아 둔 채 화면을 끄고 6시간 둔다. Android idle maintenance(fstrim → Discard, f2fs gc_urgent → GC)는 기기가 idle 이면서 충전 중일 때 돌아서 배터리 대기에는 거의 안 나온다. 실제 사용자의 밤 I/O 를 보려고 이 시나리오만 USB 를 꽂고 잰다. 측정 앞뒤로 f2fs dirty·free segment 와 idle maintenance 기록을 남긴다. 1회만 잰다 (00:00 전후 시작). 준비: USB 연결 (충전 중), UX_DEVICE=<serial> UX_SERIAL=<serial>, measure_night.sh 로 실행",
+  "repeatCount": 1,
+  "steps": [
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input keyevent KEYCODE_WAKEUP; sleep 1; wm dismiss-keyguard; sleep 1; dumpsys window | grep -c isKeyguardShowing=true || true",
+        "label": "화면 켜기·잠금 해제"
+      }
+    },
+    {
+      "type": "key",
+      "params": {
+        "keycode": "3",
+        "label": "홈"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "5",
+        "label": "대기 5초"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys battery | grep -E 'AC powered|USB powered|status|level'; dumpsys battery | grep -qE '(AC|USB) powered: true' && echo CHARGING || echo NOT_CHARGING",
+        "label": "충전 상태 확인"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "for d in /sys/fs/f2fs/*/; do echo $d gc_urgent=$(cat $d/gc_urgent 2>/dev/null) dirty=$(cat $d/dirty_segments 2>/dev/null) free=$(cat $d/free_segments 2>/dev/null); done; dumpsys mount | grep -iE 'maint' || true",
+        "label": "f2fs·idle maintenance 상태 기록"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input keyevent KEYCODE_SLEEP; sleep 1; dumpsys power | grep -m1 mWakefulness=",
+        "label": "화면 끄기"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "10",
+        "label": "화면 꺼짐 안정"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
+        "label": "대기 상태·배터리 기록"
+      }
+    },
+    {
+      "type": "trace_start",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "window_seconds": "1",
+        "include_vfs": "false",
+        "include_dram": "false",
+        "label": "측정 시작"
+      }
+    },
+    {
+      "type": "sleep",
+      "params": {
+        "seconds": "21600",
+        "label": "충전하며 6시간 대기"
+      }
+    },
+    {
+      "type": "trace_stop",
+      "params": {
+        "trace_type": "fsio_ufs",
+        "label": "측정 종료"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
+        "label": "대기 상태·배터리 기록"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "dumpsys battery | grep -E 'AC powered|USB powered|status|level'; dumpsys battery | grep -qE '(AC|USB) powered: true' && echo CHARGING || echo NOT_CHARGING",
+        "label": "충전 상태 확인"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "for d in /sys/fs/f2fs/*/; do echo $d gc_urgent=$(cat $d/gc_urgent 2>/dev/null) dirty=$(cat $d/dirty_segments 2>/dev/null) free=$(cat $d/free_segments 2>/dev/null); done; dumpsys mount | grep -iE 'maint' || true",
+        "label": "f2fs·idle maintenance 상태 기록"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "logcat -d -b main -b system | grep -iE 'idle.?maint|fstrim|gc_urgent|MountServiceIdler' | tail -30 || true",
+        "label": "idle maintenance 로그"
+      }
+    },
+    {
+      "type": "shell",
+      "params": {
+        "cmd": "input keyevent KEYCODE_WAKEUP; sleep 1; wm dismiss-keyguard; sleep 1; dumpsys window | grep -c isKeyguardShowing=true || true",
+        "label": "화면 켜기·잠금 해제"
+      }
+    }
+  ],
+  "loops": [],
+  "requirements": {
+    "packages": [],
+    "sourceWidth": 1272,
+    "sourceHeight": 2772,
+    "traceType": "fsio_ufs"
+  },
+  "origin": {
+    "deviceModel": "CPH2749"
+  }
+}
