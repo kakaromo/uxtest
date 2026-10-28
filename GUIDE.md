@@ -78,10 +78,15 @@ cd agent
 USB 로 측정하면 기기가 충전 상태라 결과가 달라져요(deviceidle 이 ACTIVE 로 남아 f2fs Discard 가 화면 켜진 동안 안 나가요). **본 측정은 USB 를 빼고 무선 adb 로** 해요.
 
 ```sh
-adb devices                                   # USB 로 처음 연결
-adb tcpip 5555 && adb connect <기기 IP>:5555  # 또는 개발자 옵션의 '무선 디버깅'
-adb -s <기기 IP>:5555 shell id                # uid=0 확인
+adb devices                                          # USB 로 처음 연결 (serial 확인)
+UX_SERIAL=<USB serial> scenarios/setup.sh --wifi     # 무선 adb 로 전환 + 배터리 측정용 설정
+# 출력된 export 줄을 실행하고 USB 를 뽑는다
+UX_SERIAL=<USB serial> scenarios/setup.sh --usb      # (되돌리기) 무선 adb 끄기
 ```
+
+`--wifi` 가 하는 일: root 확인 → Wi-Fi IP 확인 → `setprop persist.adb.tcp.port 5555`(USB 를 뽑거나 재부팅해도 무선 adb 가 남음) → `adb tcpip`·`adb connect` → 무선 root 확인 → 배터리 설정(`BATTERY_SETTINGS`, 원래 값은 `--restore` 로 되돌림).
+
+배터리 설정 중 OxygenOS 배터리 앱의 **수면 대기 최적화(Deep Sleep)** 는 학습한 수면 시간대에 Wi-Fi 를 꺼서 밤 측정이 끊겨요. 이 설정의 key 를 찾기 전까지는 설정 앱에서 직접 꺼 주세요.
 
 agent 는 adb serial 을 device id 로 써요. 무선이면 `<IP>:5555` 가 device id 예요.
 
