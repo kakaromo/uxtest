@@ -1,9 +1,10 @@
 #!/bin/bash
 # PreToolUse(Bash): 측정·TC 가 도는 동안 adb 명령을 막는다 (trace 오염 방지).
 #   측정 중 판단: measure_*.sh / run.py / wl/run_tc.py 를 실행 중인 프로세스, 또는 runs/.measuring 파일
+#   adb 가 명령 위치(줄 처음, ; & | ( ` $( 뒤, 환경 변수·경로 앞붙임 허용)에 있을 때만 본다. 문자열 속 단어는 무시
 #   명령에 UX_ALLOW_ADB=1 이 있으면 통과
 cmd=$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("tool_input",{}).get("command",""))' 2>/dev/null) || exit 0
-echo "$cmd" | grep -Eq '(^|[^[:alnum:]_./-])adb([[:space:]]|$)' || exit 0
+echo "$cmd" | grep -Eq '(^|[;&|(`]|\$\(|xargs|exec|sudo)[[:space:]]*([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)*([^[:space:]]*/)?adb([[:space:]]|$)' || exit 0
 echo "$cmd" | grep -q 'UX_ALLOW_ADB=1' && exit 0
 busy=$(ps -axo command= | grep -E '^(/[^ ]*/)?(bash|sh|python3?) ([^ ]*/)?(measure_[a-z_]+\.sh|run\.py|wl/run_tc\.py|run_tc\.py)( |$)' | head -1)
 [ -z "$busy" ] && [ -f "$CLAUDE_PROJECT_DIR/runs/.measuring" ] && busy="runs/.measuring"
