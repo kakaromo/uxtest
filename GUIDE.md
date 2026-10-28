@@ -223,7 +223,7 @@ cd web && npm run dev                # http://localhost:5173 로 확인
 
 fsiotrace 를 바꿨거나 다른 커널에서 쓸 때는 이름·flag 가 맞는지 먼저 확인해요.
 
-1. **실제 시나리오 점검:** 서로 다른 시나리오 몇 개를 1회씩 돌리고, UFS Read/Write 바이트를 (앱/커널 스레드) × (파일 이름 있음/없음)으로 나눠 봐요. 커널 스레드·이름 없음이 크면 그 줄의 파티션·fs·flag 를 보고 원인을 찾아요.
+1. **실제 시나리오 점검:** 서로 다른 시나리오 몇 개를 1회씩 돌리고, UFS Read/Write 바이트를 (앱/커널 스레드) × (파일 이름 있음/없음)으로 나눠 봐요 (`python3 report/audit.py <parquet>...`). 커널 스레드·이름 없음이 크면 그 줄의 파티션·fs·flag 를 보고 원인을 찾아요.
 2. **정답지 대조 (Write):** ftrace `f2fs/f2fs_submit_folio_write` 를 같이 켜고 버퍼 Write + `sync` 를 일으킨 뒤, ftrace 의 `newaddr`(+ userdata 시작 LBA)로 UFS Write request 의 주인 inode 와 fsiotrace 가 붙인 inode 를 비교해요. 2026-10-28 기준 결과는 오귀속 0% 예요.
 3. fsiotrace 를 두 개 동시에 붙이지 마세요. 둘 다 이벤트를 크게 놓쳐요. 그리고 fsiotrace 가 붙는 데 10~20초 걸리므로 출력 로그에 `writing events` 가 나온 뒤에 작업을 시작해요.
 
@@ -259,3 +259,20 @@ UX_SERIAL=<IP>:5555 python3 run_tc.py day1   # push → 재생 + trace → compa
 | 분석이 parquet 을 못 찾음 | agent 가 archive 폴더 이름을 바꿀 수 있어요. 분석은 trace job id 로 다시 찾아요(`report/extract.py` 의 `parquet_of`) |
 | 이름이 이상하게 붙음 (작은 로그 파일에 수백 MB 등) | 2026-10-28 이전 fsiotrace. 2절의 새 버전으로 다시 측정 |
 | 충전 중 Discard 가 0 | USB 전원이면 deviceidle 이 ACTIVE 로 남아 f2fs Discard 가 늦어요. 배터리로 측정 |
+
+## 11. Claude Code 로 작업할 때
+
+저장소에 `CLAUDE.md`(공통 규칙)와 `.claude/`(subagent, hook)가 들어 있어요. Claude Code 를 `uxtest/` 에서 열면 자동으로 읽어요.
+
+| subagent | 언제 부르나 | 권한 |
+|---|---|---|
+| fsiotrace-dev | fsiotrace 이름·flag 가 틀릴 때, 새 hook·커널 대응 | 수정·빌드 |
+| site-writer | 해설 문장, 용어 변환, 사이트 페이지·차트, 배포 | 수정 |
+| scenario-author | 새 시나리오, 기존 시나리오 수정, gen.py 동기화 | 수정 |
+| trace-analyst | "이 시나리오 Write 는 누가 내나?" 같은 분석, 해설 검증, TC 비교 해석 | 읽기 전용 |
+| release-checker | 커밋·push 전 검사 (원자료·secret·데이터셋 값·문장 규칙·빌드) | 읽기 전용 |
+
+- 부르는 법: "trace-analyst 로 TikTok feed 의 fsync 를 내는 파일을 찾아줘"처럼 이름을 말하면 돼요.
+- 폰을 쓰는 일(측정, `setup.sh`, TC 실행)은 subagent 에 맡기지 말고 메인 대화에서 해요.
+- **hook:** 측정(`measure_*.sh`, `run.py`)이나 TC(`wl/run_tc.py`)가 도는 동안 Claude 가 보내는 `adb` 명령을 막아요 (`.claude/hooks/no-adb-while-measuring.sh`). 손으로 따로 측정할 때는 `touch runs/.measuring` 으로 켜고 끝나면 지워요. 꼭 필요한 명령은 앞에 `UX_ALLOW_ADB=1` 을 붙이면 통과해요.
+- 개인 설정은 `.claude/settings.local.json` 에 두세요 (커밋되지 않아요).
