@@ -25,7 +25,7 @@
 - 커밋 금지: `runs/`, 원자료(parquet 등), `wl/.private/`, `DESIGN.md`, `report/confluence.py`, `../agent/config/devices.toml`(minio secret).
 - secret·token·비밀번호는 읽어서 출력하거나 인용하지 않아요.
 - 사용 로그 데이터셋은 라이선스가 불명이에요. 거기서 뽑은 값(카테고리 비중, 세션 분포 등)은 커밋·공개하지 않아요. `wl/.private/` 에만 둬요.
-- `report/extract.py` 의 `FIX_AT`(2026-10-28 14:00, fsiotrace 2b14f12) 이전 trace 의 파일 이름·comm·NODE/META/Checkpoint/fsync flag 는 믿지 않아요. Volume·size·LBA·Latency 는 맞아요.
+- `report/extract.py` 의 `FIX_AT`(2026-10-28 14:00, fsiotrace 2b14f12 이후) 이전 trace 의 파일 이름·comm·NODE/META/Checkpoint/fsync flag 는 믿지 않아요. Volume·size·LBA·Latency 는 맞아요.
 
 ## 자주 쓰는 명령
 - 사이트 갱신: `report/publish.sh` (extract → build_report → export_web → copy-data → 커밋·push)
