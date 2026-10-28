@@ -3,7 +3,7 @@
 report/extract.py 의 trace_metrics 와 같은 정의를 쓰되(방향, 크기 구간, 순차, flow), 구간으로 자르고 더할 수 있게 따로 둔다.
   raw(pq, a, b)  구간의 더할 수 있는 합계 (바이트, 건수, 구간별 건수 …)
   finish(raw)    합계 → 비교 지표. 여러 구간의 raw 를 add 로 더한 뒤 finish 하면 카테고리·전체 지표가 된다.
-FS 유발 Write = journal·checkpoint·f2fs meta·GC + kworker/f2fs 문맥의 node write (fsync 안의 앱 스레드 node write 는 fsync 로 센다)
+FS 유발 Write = journal·checkpoint·f2fs meta·GC + fsync 밖의 node write (fsync 안의 node write 는 fsync 로 센다, FSYNC_NODE)
 """
 import sys
 from pathlib import Path
@@ -13,12 +13,17 @@ import duckdb
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "report"))
 import extract  # noqa: E402
 
-APP = "not (comm like 'kworker%' or comm like 'f2fs%' or comm like 'jbd2%')"
-FSW = ("coalesce(is_journal or is_checkpoint or is_f2fs_meta_write or is_gc or is_f2fs_node_gc or is_f2fs_data_gc, false) "
-       f"or (coalesce(is_f2fs_node_write, false) and not ({APP}))")
 QD_MAX = 64
 # Checkpoint Write: comm 이 f2fs_ckpt 가 아닌 다른 이름(logd 등)으로 찍히는 trace 가 있어 flag 도 같이 본다
 CK = "(coalesce(is_checkpoint, false) or comm like 'f2fs_ckpt%')"
+# fsync 안의 node Write. 2026-10-28 이후 fsiotrace 는 FSYNC_TRIGGERED 를 붙이므로 그걸 쓴다.
+# 그 전 trace 는 flag 가 늘 0 이라 "커널 문맥이 아닌 node Write" 로 어림한다. 고친 도구는 writeback·checkpoint
+# node Write 의 comm 을 주인 앱으로 붙이므로, comm 대신 writeback·checkpoint·GC flag 로 커널 문맥을 가린다.
+KERN = ("(comm like 'kworker%' or comm like 'f2fs%' or comm like 'jbd2%' "
+        f"or coalesce(is_writeback_kworker or is_gc, false) or {CK})")
+NODE = "coalesce(is_f2fs_node_write, false)"
+FSYNC_NODE = {True: f"({NODE} and coalesce(is_fsync_triggered, false))", False: f"({NODE} and not {KERN})"}
+FS_BASE = "coalesce(is_journal or is_checkpoint or is_f2fs_meta_write or is_gc or is_f2fs_node_gc or is_f2fs_data_gc, false)"
 
 con = duckdb.connect()
 _tables = {}
@@ -28,9 +33,11 @@ def table(pq):
     """parquet 을 한 번만 읽어 메모리 표로 둔다 (구간을 여러 번 잘라 보므로)"""
     if pq not in _tables:
         name = f"t{len(_tables)}"
+        has_flag = con.execute(f"select count(*) filter (where is_fsync_triggered) > 0 from read_parquet('{pq}')").fetchone()[0]
+        fn = FSYNC_NODE[bool(has_flag)]
         con.execute(f"""create temp table {name} as
             select time, lun, lba, size, least(qd, {QD_MAX}) qd, {extract.DIR} dir,
-                   ({FSW}) fsw, coalesce(is_f2fs_node_write, false) and {APP} and not {CK} fsync_node, {CK} ck
+                   {FS_BASE} or ({NODE} and not {fn}) fsw, {fn} fsync_node, {CK} ck
             from read_parquet('{pq}') where action = 'send_req' and coalesce(is_mgmt, false) = false order by time""")
         # Hibern8: enter 완료 → 다음 exit 요청 구간 (UFS 관리 명령, 위 표에서는 빠져 있다)
         con.execute(f"""create temp table {name}h as select time, nt from (

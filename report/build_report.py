@@ -276,7 +276,7 @@ d7_per = med("D7", "writeMB") / 5
 # 수집 도구 귀속 수정(2026-10-28) 뒤 다시 잰 시나리오. 이름·flag 에 기대는 문장은 아래 REVIEWED 에 넣기 전까지 '확인 중' 표시
 FIXED = sorted({x["id"] for x in D["scenarios"] if x.get("toolFixed")})
 OLD = sorted({x["id"] for x in D["scenarios"] if not x.get("toolFixed")})
-REVIEWED = set()   # 새 도구 측정으로 다시 확인한 문장의 시나리오 ID
+REVIEWED = {"D1", "D8", "A1", "B1", "B3", "B7t", "C3"}   # 새 도구 측정으로 다시 확인한 문장의 시나리오 ID (10-28 trace-analyst 검증)
 
 
 def chk(*sids):
@@ -382,7 +382,7 @@ PAGE = f"""<title>UX 워크로드 I/O 패턴 보고서</title>
     <tbody>
       <tr><th scope="row"><a href="#t-A">앱 실행</a></th><td class="num">처음 열 때 앱당 <b>약 190MB 읽기</b></td><td>중간 크기 읽기를 한꺼번에 여러 개 보내요</td><td>여러 읽기를 동시에 빨리 처리하는 능력</td></tr>
       <tr><th scope="row"><a href="#t-B">웹·피드</a></th><td class="num">40~60초에 <b>쓰기 4~29MB</b></td><td>작은 쓰기가 띄엄띄엄, 대부분 쉬어요</td><td>작은 쓰기의 지연, 쉬었다가 깨어나는 속도</td></tr>
-      <tr><th scope="row"><a href="#t-C">미디어 재생</a></th><td class="num">스트리밍 3분 <b>쓰기 {mb(med('C1', 'writeMB'))}</b><br>로컬 영상 <b>처음 10초에 몰아 읽기</b></td><td>스트리밍은 거의 쉬고, 로컬 재생은 앞부분을 미리 읽어 둬요</td><td>재생 시작 순간의 읽기 속도</td></tr>
+      <tr><th scope="row"><a href="#t-C">미디어 재생</a></th><td class="num">스트리밍 3분 <b>쓰기 {mb(med('C1', 'writeMB'))}</b><br>로컬 영상 <b>약 45초마다 몰아 읽기</b></td><td>스트리밍은 거의 쉬고, 로컬 재생은 구간을 미리 읽어 두고 쉬어요</td><td>재생 시작 순간의 읽기 속도</td></tr>
       <tr><th scope="row"><a href="#t-D">카메라</a></th><td class="num">사진 10장 <b>쓰기 {mb(med('D1', 'writeMB'))}</b><br>버스트 10초 <b>쓰기 {mb(med('D2', 'writeMB'))}</b></td><td>큰 쓰기를 이어서, 초당 최대 {med('D2', 'peakMBs'):.0f}MB. 4K 동영상은 1080p의 약 {d5_x:.0f}배</td><td>쓰기 버퍼 크기와 저장장치 수명</td></tr>
       <tr><th scope="row"><a href="#t-E">파일 작업</a></th><td class="num">512MB 복사 <b>초당 최대 {med('E2', 'peakMBs') / 1000:.1f}GB</b></td><td>큰 읽기·쓰기를 끊김 없이 이어서</td><td>최대 대역폭</td></tr>
       <tr><th scope="row"><a href="#t-F">생산성</a></th><td class="num">메모·녹음·연락처·캘린더 <b>쓰기 1~11MB</b></td><td>작은 쓰기 몇 번, 대부분 쉬어요</td><td>거의 영향 없음. 앱이 처음 뜨는 순간만 읽기가 많아요</td></tr>
@@ -410,7 +410,7 @@ PAGE = f"""<title>UX 워크로드 I/O 패턴 보고서</title>
     </div>
     <ul class="points">
       <li>사진 10장을 찍는 27초 동안 {mb(med('D1', 'writeMB'))}를 썼어요. 버스트샷 3초(약 23장)는 10초 동안 {mb(med('D2', 'writeMB'))}를 썼어요.</li>
-      <li>셔터를 누를 때마다 카메라 앱이 <code>/data/vendor/camera_process/</code>에 약 128MB짜리 중간 파일을 만들고 다시 읽어요. 쓰기 양의 대부분이 이 파일이에요.{chk('D1')}</li>
+      <li>셔터를 누를 때마다 카메라 앱이 <code>/data/vendor/camera_process/</code>에 촬영 한 번당 약 80MB(16MB 안팎 파일 여러 개)의 중간 파일을 써요. 쓰기 양의 약 90%가 이 파일이고, 측정 구간 안에서 저장장치로 다시 읽지는 않았어요.{chk('D1')}</li>
       <li>동영상은 달라요. 30초 1080p 녹화 파일 {capkb('D3'):.0f}MB에 쓰기 {mb(med('D3', 'writeMB'))}로, 파일 크기만큼만 써요.</li>
     </ul>
     <div class="tl-row"><div class="chart" data-tl="D1" style="height:140px"></div><div class="chart" data-tl="D2" style="height:140px"></div></div>
@@ -418,7 +418,7 @@ PAGE = f"""<title>UX 워크로드 I/O 패턴 보고서</title>
       <li><b>동영상은 길이·화질에 비례해요.</b> 2분 녹화는 파일 {capkb('D4'):.0f}MB에 쓰기 {mb(med('D4', 'writeMB'))}, 4K 30초는 파일 {capkb('D5'):.0f}MB에 쓰기 {mb(med('D5', 'writeMB'))}예요. 같은 길이 1080p의 약 {d5_x:.1f}배예요.</li>
       <li><b>전면 카메라도 중간 파일을 써요.</b> 5장에 {mb(med('D7', 'writeMB'))}, 장당 약 {d7_per:.0f}MB로 후면(장당 {d1_per:.0f}MB)과 비슷한 수준이고, 남는 JPEG의 20배가 넘어요.</li>
       <li><b>찍자마자 갤러리를 열면 읽기가 크게 늘어요.</b> 5장 찍고 바로 뷰어를 열면 읽기 {mb(med('D6', 'readMB'))}·쓰기 {mb(med('D6', 'writeMB'))}였어요. 읽기 대부분이 카메라 후처리 스레드(ApsCaptureDefer)예요. 사진만 찍었을 때는 10장에 읽기 {mb(med('D1', 'readMB'))}였어요.</li>
-      <li>촬영 없이 사진·동영상 모드만 오가도 35초에 읽기 {mb(med('D8', 'readMB'))}·쓰기 {mb(med('D8', 'writeMB'))}예요. 카메라 앱 자체의 기본 몫이에요.{chk('D8')}</li>
+      <li>촬영 없이 사진·동영상 모드만 오가도 35초에 읽기 {mb(med('D8', 'readMB'))}·쓰기 {mb(med('D8', 'writeMB'))}예요. 쓰기는 대부분 카메라 앱의 화면 스냅샷 파일이고, 읽기는 거의 다 다른 앱의 배경 동작이에요.{chk('D8')}</li>
       <li>화면 녹화 1분은 쓰기 {mb(med('D9', 'writeMB'))}로 녹화 파일(약 25MB) 크기만큼만 써요.</li>
     </ul></div>
     <p class="sowhat"><b>무엇을 뜻하나</b> 사진 쓰기 양은 이미지가 아니라 카메라 앱의 중간 파일이 정해요. 버스트 10초에 1.5GB면 쓰기 버퍼(SLC 캐시) 크기와 수명 계산에 바로 들어가요. 중간 파일을 메모리(tmpfs)로 옮기면 가장 크게 줄일 수 있어요.</p>
@@ -434,7 +434,7 @@ PAGE = f"""<title>UX 워크로드 I/O 패턴 보고서</title>
     </div>
     <ul class="points">
       <li>Chrome, YouTube, 설정, 갤러리, 지도는 처음 열 때 각각 170~195MB를 읽었어요(cold start 순회 6앱). 카메라는 약 100MB였어요.</li>
-      <li>캐시를 비우고 Chrome을 다섯 번 다시 열면 첫 번째만 약 220MB이고, 2~5번째는 25MB 안팎이었어요. 다른 프로세스가 붙잡고 있는 Chrome 라이브러리가 캐시에 남는 것으로 보여요.{chk('A1')}</li>
+      <li>캐시를 비우고 Chrome을 다섯 번 다시 열면 Chrome 파일 읽기가 첫 번째만 약 225MB이고, 2~5번째는 30MB 안팎이었어요. 캐시를 비워도 base.apk 대부분이 메모리에 남는데, 어떤 프로세스가 붙잡고 있는지는 아직 확인하지 못했어요.{chk('A1')}</li>
       <li>읽기는 128~512KB 크기가 대부분이고, 한 번에 최대 {med('A2', 'qdP99'):.0f}개까지 동시에 쌓여요. 99%의 요청이 {med('A2', 'dtocP99', 'R'):.1f}ms 안에 끝났어요.</li>
       <li>이미 떠 있는 앱 사이를 오가면 1분 동안 {mb(med('A3', 'readMB') + med('A3', 'writeMB'))} 정도라 거의 없어요.</li>
     </ul>
@@ -458,7 +458,7 @@ PAGE = f"""<title>UX 워크로드 I/O 패턴 보고서</title>
     </div>
     <ul class="points">
       <li>읽기는 거의 없어요. 화면에 필요한 건 이미 메모리에 있어요.</li>
-      <li>쓰기는 브라우저 캐시와 썸네일이에요. 쓰기의 약 5분의 1은 파일 내용이 아니라 파일시스템 관리 정보(f2fs 메타데이터)예요.{chk('B1', 'B3')}</li>
+      <li>쓰기는 브라우저 캐시와 썸네일, 그리고 앱의 기록 파일이에요. Chrome은 사용 통계 파일(BrowserMetrics)이 약 3분의 1, YouTube는 설정 파일(youtube.xml)을 반복해서 다시 쓰는 몫이 커요. 쓰기의 15~20%는 파일 내용이 아니라 파일시스템 관리 정보(f2fs 메타데이터)예요.{chk('B1', 'B3')}</li>
       <li>같은 동작을 해도 회차마다 2배 가까이 달라요(YouTube 홈피드 {S['B3']['writeMB']['min']:.0f}~{S['B3']['writeMB']['max']:.0f}MB). 백그라운드 동기화가 섞이기 때문이에요.</li>
     </ul>
     <div class="tl-row"><div class="chart" data-tl="B1" style="height:140px"></div><div class="chart" data-tl="B3" style="height:140px"></div></div>
@@ -468,7 +468,7 @@ PAGE = f"""<title>UX 워크로드 I/O 패턴 보고서</title>
       <li>이미지가 200개 넘는 문서도 글 위주 문서와 쓰기 양이 비슷했어요.</li>
       <li><b>Instagram 피드는 YouTube 피드의 약 {med('B7', 'writeMB') / med('B3', 'writeMB'):.0f}배를 써요.</b> 같은 1분 40번 스크롤에 Instagram은 쓰기 {mb(med('B7', 'writeMB'))}, YouTube는 {mb(med('B3', 'writeMB'))}예요. 피드의 사진·영상을 캐시에 받아 두는 쓰기로, 128KB가 넘는 큰 쓰기가 대부분이에요. 회차 차이도 작아요({S['B7']['writeMB']['min']:.0f}~{S['B7']['writeMB']['max']:.0f}MB).</li>
       <li><b>Instagram 릴스는 100초에 {mb(med('B7r', 'writeMB'))}를 써요.</b> 릴스 20개를 5초씩 보면 Read가 거의 0이고 Write만 나와요(회차별 {S['B7r']['writeMB']['min']:.0f}~{S['B7r']['writeMB']['max']:.0f}MB). 1분으로 따지면 약 {60 * med('B7r', 'writeMB') / med('B7r', 'durSec'):.0f}MB로 피드(1분 {mb(med('B7', 'writeMB'))})보다 적고, YouTube 3분 재생({mb(med('C1', 'writeMB'))})의 약 {med('B7r', 'writeMB') / med('C1', 'writeMB'):.0f}배예요. 다음 영상을 미리 받아 캐시에 쓰는 큰 Sequential Write가 대부분이고, Peak throughput은 {med('B7r', 'peakMBs'):.0f} MB/s예요.</li>
-      <li><b>TikTok은 같은 동작에 릴스의 약 {med('B7t', 'writeMB') / med('B7r', 'writeMB'):.1f}배를 쓰고, 모양도 달라요.</b> 영상 20개를 5초씩 보면 Write {mb(med('B7t', 'writeMB'))}(회차별 {S['B7t']['writeMB']['min']:.0f}~{S['B7t']['writeMB']['max']:.0f}MB)예요. 릴스는 큰 Sequential Write가 대부분인데, TikTok은 4~128KB Random Write가 대부분이고 Write 요청 수가 약 {med('B7t', 'writeN') / med('B7r', 'writeN'):.0f}배예요. Metadata가 {med('B7t', 'metaPct'):.0f}%(릴스 {med('B7r', 'metaPct'):.0f}%), Flush가 초당 {med('B7t', 'flushPerSec'):.0f}번(릴스 {med('B7r', 'flushPerSec'):.0f}번)이에요. 영상 파일보다 앱 안의 SQLite DB(전략·추적·추천 기록으로 보이는 이름)를 자주 고쳐 쓰는 쪽이 커 보여요.{chk('B7t')}</li>
+      <li><b>TikTok은 같은 동작에 릴스의 약 {med('B7t', 'writeMB') / med('B7r', 'writeMB'):.1f}배를 쓰고, 모양도 달라요.</b> 영상 20개를 5초씩 보면 Write {mb(med('B7t', 'writeMB'))}(회차별 {S['B7t']['writeMB']['min']:.0f}~{S['B7t']['writeMB']['max']:.0f}MB)예요. 릴스는 큰 Sequential Write가 대부분인데, TikTok은 4~128KB Random Write가 대부분이고 Write 요청 수가 약 {med('B7t', 'writeN') / med('B7r', 'writeN'):.0f}배예요. Metadata가 {med('B7t', 'metaPct'):.0f}%(릴스 {med('B7r', 'metaPct'):.0f}%), Flush가 초당 {med('B7t', 'flushPerSec'):.0f}번(릴스 {med('B7r', 'flushPerSec'):.0f}번)이에요. 영상 파일보다 앱 안의 SQLite DB(전략·추적·추천 기록으로 보이는 이름)를 자주 고쳐 쓰는 쪽이 커요. 전략 DB(ttm_strategy) 하나가 Write의 약 5분의 1이에요.{chk('B7t')}</li>
       <li><b>YouTube Shorts는 같은 동작에 Write가 {mb(med('B7y', 'writeMB'))}로, 셋 중 가장 적어요.</b> Shorts 20개를 5초씩 보면 회차별 {S['B7y']['writeMB']['min']:.0f}~{S['B7y']['writeMB']['max']:.0f}MB를 써서 릴스({mb(med('B7r', 'writeMB'))})의 약 {100 * med('B7y', 'writeMB') / med('B7r', 'writeMB'):.0f}%, TikTok({mb(med('B7t', 'writeMB'))})의 약 {100 * med('B7y', 'writeMB') / med('B7t', 'writeMB'):.0f}%예요. 그래서 Write 양은 Shorts &lt; 릴스 &lt; TikTok 순이에요. YouTube 앱에는 영상을 받아 두는 큰 캐시 폴더가 없고, 영상은 메모리에서 재생하는 것으로 보여요. 남는 Write는 썸네일·기록 쪽 작은 쓰기라 Metadata가 {med('B7y', 'metaPct'):.0f}%예요. Flush는 초당 {med('B7y', 'flushPerSec'):.1f}번이에요.</li>
     </ul></div>
     <p class="sowhat"><b>무엇을 뜻하나</b> 이 유형은 속도보다 작은 쓰기의 지연과, 쉬다가 다시 깨어나는 시간이 체감을 좌우해요.</p>
@@ -485,7 +485,7 @@ PAGE = f"""<title>UX 워크로드 I/O 패턴 보고서</title>
     <ul class="points">
       <li>YouTube 3분 재생은 쓰기 {mb(med('C1', 'writeMB'))}, 요청 없는 시간이 {med('C1', 'idlePct'):.0f}%예요.</li>
       <li>Shorts 30회 넘기기는 회차마다 {S['C2']['writeMB']['min']:.0f}MB에서 {S['C2']['writeMB']['max']:.0f}MB까지 달라서 대표값을 정하기 어려워요.</li>
-      <li>230MB 로컬 영상은 재생을 시작하고 10초 안에 대부분 읽고, 그 뒤로는 쉬어요. 파일 읽기는 앱이 아니라 저장소 관리 프로세스(MediaProvider)에 잡혀요.{chk('C3')}</li>
+      <li>로컬 영상은 재생을 시작하자마자 한 번 몰아 읽고(첫 burst에 약 70MB), 그 뒤에는 약 45초마다 다음 구간을 몰아 읽고 쉬어요. 파일 읽기는 앱이 아니라 저장소 관리 프로세스(MediaProvider)에 잡혀요.{chk('C3')}</li>
     </ul>
     <div class="tl-row"><div class="chart" data-tl="C1" style="height:140px"></div><div class="chart" data-tl="C3" style="height:140px"></div></div>
     <div class="more"><h4>변형 시나리오 (P2)</h4><ul class="points">
@@ -615,7 +615,7 @@ PAGE = f"""<title>UX 워크로드 I/O 패턴 보고서</title>
       <li>시나리오마다 3번 반복하고, 그 사이 60초를 쉬었어요. 값은 3번의 중앙값이에요.</li>
       <li>"cold"는 측정 전에 메모리 캐시를 비운 상태예요. 갤러리 그리드 처음→끝, 뷰어 1000장, 빠른 fling은 첫 회차 직전에 사진 1000장을 새 이름으로 다시 넣어 썸네일이 없는 상태로 시작했어요. 나머지 갤러리 시나리오(빠른 넘기기, 확대, 삭제, 가벼운 사용)는 썸네일이 있는 상태(warm)예요.</li>
       <li>P1 {n_p1}개를 먼저 재고, 조건을 바꾼 P2 {n_main - n_p1}개를 같은 날 이어서 쟀어요. 시나리오는 저장소의 <code>scenarios/gen.py</code>에 있어요.</li>
-      <li>하루 사용 TC에 쓰는 47개(A~G 46개와 화면 켜진 홈 대기)는 10월 27일 16:23~21:20에 USB를 뽑고 무선 adb로 다시 쟀어요(배터리 91%→68%). 실제 사용처럼 충전하지 않는 상태에 맞추려는 거예요. USB 전원에서는 deviceidle이 깨어 있는 상태로 남아 블록 반납 같은 배경 동작이 달라져요. 나머지 9개(날씨 첫 실행, YouTube 검색, YouTube 홈피드, 로컬 동영상 2분, 로컬 동영상 이동, 사진 5장 → 갤러리, 갤러리 뷰어 1000장, 갤러리 빠른 fling, 갤러리 20장 삭제)는 USB 전원 측정 그대로예요. 녹음 1분과 Chrome 100MB 다운로드는 기다리는 동안 화면이 꺼지지 않게 10초마다 화면을 켰어요(설정은 바꾸지 않음).</li>
+      <li>대기를 뺀 57개(A~G와 화면 켜진 홈 대기)는 수집 도구를 고친 뒤 10월 28일 07:50~13:29에 USB를 뽑고 무선 adb로 다시 쟀어요(배터리 93%→62%). 실제 사용처럼 충전하지 않는 상태에 맞추려는 거예요. USB 전원에서는 deviceidle이 깨어 있는 상태로 남아 블록 반납 같은 배경 동작이 달라져요. 녹음 1분과 Chrome 100MB 다운로드는 기다리는 동안 화면이 꺼지지 않게 10초마다 화면을 켰어요(설정은 바꾸지 않음).</li>
       <li>대기(S) {len(s_ids)}개는 다음 날 밤에 USB를 뽑고 무선 adb로 쟀어요. 충전 중이면 대기 상태에 들어가지 않기 때문이에요. 회차 사이 휴식은 120초, 배터리는 100%에서 95%까지 내려갔어요. 3시간 대기는 길어서 1번만 쟀고, 첫 시도가 Deep Sleep 때문에 66분에 끊겨 10월 26일 밤 22:36~01:36에 다시 쟀어요(배터리 100% 그대로).</li>
       <li>갤러리는 화면 프레임 기록(Perfetto)도 같이 남겼어요. 기록 파일을 저장장치에 쓰면 측정이 오염되기 때문에 메모리에 썼어요.</li>
     </ul>
