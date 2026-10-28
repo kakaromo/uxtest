@@ -4,6 +4,12 @@
 !/.gitignore
 !/README.md
 !/GUIDE.md
+!/CLAUDE.md
+!/.claude/
+/.claude/*
+!/.claude/agents/
+!/.claude/hooks/
+!/.claude/settings.json
 !/.github/
 !/run.py
 !/measure_*.sh
@@ -25,6 +31,7 @@
 !/report/perstep.py
 !/report/terms.py
 !/report/publish.sh
+!/report/audit.py
 !/report/build_report.py
 !/report/pages.py
 !/report/web/
