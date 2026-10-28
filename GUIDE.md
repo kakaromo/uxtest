@@ -56,7 +56,8 @@ docker run --rm --platform linux/amd64 \
 cp out/aarch64/fsiotrace ../agent/tools/fsiotrace
 ```
 
-- **2026-10-28 이후 버전(d4aac83 이상)을 쓰세요.** 그 전 버전은 writeback·공유 bio·kblockd 발급 request 에 다른 파일·앱 이름과 NODE/META/Checkpoint flag 를 붙였어요(Write 의 최대 38%). Volume·size·LBA·Latency 는 영향이 없지만 이름·flag 기반 분석은 틀려요.
+- **2026-10-28 이후 버전(2b14f12 이상)을 쓰세요.** 그 전 버전은 writeback·공유 bio·kblockd 발급 request 에 다른 파일·앱 이름과 NODE/META/Checkpoint flag 를 붙였어요(Write 의 최대 38%). Volume·size·LBA·Latency 는 영향이 없지만 이름·flag 기반 분석은 틀려요.
+- 2b14f12 에서 더 고친 것: fsync 안에서 나간 request 에 `FSYNC_TRIGGERED` 가 붙어요(그 전에는 늘 0). `REQ_SYNC`·`REQ_PRIO` 도 이제 나와요. 다른 파일시스템(cgroup 등)의 같은 inode 번호 이름이 f2fs Write 에 붙던 문제도 막았어요.
 - 빌드 확인: `adb shell /dev/fsiotrace --version`. 시작할 때 BPF load 가 `-EAGAIN` 이면 스스로 최대 4번 다시 시도해요.
 
 ## 3. agent 실행

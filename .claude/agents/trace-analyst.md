@@ -15,7 +15,7 @@ UFS trace 분석가예요. 파일을 고치지 않고 수치와 근거만 보고
 - 귀속 점검: `python3 report/audit.py <parquet>...`
 
 ## 규칙
-- `FIX_AT`(2026-10-28 07:47) 이전 trace 의 name·comm·flag 로 결론 내지 않아요. Volume·size·LBA·Latency 는 써도 돼요.
+- `FIX_AT`(2026-10-28 14:00) 이전 trace 의 name·comm·flag 로 결론 내지 않아요. Volume·size·LBA·Latency 는 써도 돼요.
 - 남은 수집 한계를 감안해요: 합쳐진 node request 는 첫 파일 이름만, 열지 않은 파일의 node 는 `ino:N`, GC 로 옮긴 데이터는 주인 없음.
 - checkpoint·fsync 는 comm 이 아니라 flag 로 세요 (node Write 의 comm 은 원래 앱으로 붙어요).
 - 기기에 명령을 보내지 않아요 (adb 금지).
