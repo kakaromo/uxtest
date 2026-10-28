@@ -186,10 +186,12 @@ export UX_DEVICE=<IP>:5555                    # agent device id (무선이면 se
 ./run.py A1 B7y                   # 본 측정 (시나리오의 repeatCount 대로)
 ./measure_battery.sh              # 화면 켜짐 시나리오 전체 (배터리·무선). UX_WIFI=<IP>:5555
 ./measure_standby.sh              # 대기 시나리오 (약 7.5시간)
+UX_START=00:00 ./measure_night.sh # 야간 충전 대기 S6 (충전 중, USB adb, 6시간)
 ```
 
 - 결과: `runs/<ID>/<시각>.json` (실행 로그, trace job id) + agent archive 의 parquet. 분석은 시나리오마다 **가장 최근** 실행 파일을 써요.
 - `measure_battery.sh` 는 시나리오마다 충전 여부와 배터리를 보고, 충전 중이거나 20% 아래면 멈춰요.
+- `measure_night.sh` 만 반대로 충전 중이어야 시작해요. 밤 idle maintenance(fstrim·GC)는 충전 중에만 돌기 때문이에요.
 - **측정 중에는 기기에서 다른 명령을 돌리지 마세요.** adb 로 `find` 를 한 번 돌린 것도 trace 에 12MB 가 섞였어요.
 - OxygenOS 의 배터리 앱 "Deep Sleep" 이 학습한 수면 시간대(예: 23:30~07:00)에 Wi-Fi 를 끄면 무선 adb 가 끊겨요. 밤새 측정은 그 시간대를 피하거나 수면 대기 최적화를 끄고 해요.
 

@@ -875,6 +875,23 @@ scenario("S5", "S", 3, "아무것도 안 하는 대기 3시간",
           trace_start(), sleep(10800, "아무것도 안 하고 3시간"), trace_stop(), STBY_LOG, WAKE],
          [], repeat=1, needs=STBY_NEEDS)
 
+# 야간 충전 대기: 밤에 충전기를 꽂아 둔 상태. Android idle maintenance(fstrim·f2fs gc_urgent)는
+# "idle + 충전 중" 에서 돌아서 배터리 대기(S1·S5)에는 거의 안 잡힌다. 그래서 이 시나리오만 USB 를 꽂고 잰다.
+# step 파라미터에 콤마를 넣지 않는다 (회차별 값으로 잘림).
+CHARGE_CHECK = sh("dumpsys battery | grep -E 'AC powered|USB powered|status|level'; "
+                  "dumpsys battery | grep -qE '(AC|USB) powered: true' && echo CHARGING || echo NOT_CHARGING", "충전 상태 확인")
+F2FS_LOG = sh("for d in /sys/fs/f2fs/*/; do echo $d gc_urgent=$(cat $d/gc_urgent 2>/dev/null) dirty=$(cat $d/dirty_segments 2>/dev/null) "
+              "free=$(cat $d/free_segments 2>/dev/null); done; dumpsys mount | grep -iE 'maint' || true", "f2fs·idle maintenance 상태 기록")
+IDLE_MAINT_LOG = sh("logcat -d -b main -b system | grep -iE 'idle.?maint|fstrim|gc_urgent|MountServiceIdler' | tail -30 || true",
+                    "idle maintenance 로그")
+scenario("S6", "S", 3, "야간 충전 대기 6시간",
+         "밤에 충전기를 꽂아 둔 채 화면을 끄고 6시간 둔다. Android idle maintenance(fstrim → Discard, f2fs gc_urgent → GC)는 "
+         "기기가 idle 이면서 충전 중일 때 돌아서 배터리 대기에는 거의 안 나온다. 실제 사용자의 밤 I/O 를 보려고 이 시나리오만 USB 를 꽂고 잰다. "
+         "측정 앞뒤로 f2fs dirty·free segment 와 idle maintenance 기록을 남긴다. 1회만 잰다 (00:00 전후 시작).",
+         [WAKE, HOME, sleep(5), CHARGE_CHECK, F2FS_LOG, SCREEN_OFF, sleep(10, "화면 꺼짐 안정"), STBY_LOG,
+          trace_start(), sleep(21600, "충전하며 6시간 대기"), trace_stop(), STBY_LOG, CHARGE_CHECK, F2FS_LOG, IDLE_MAINT_LOG, WAKE],
+         [], repeat=1, needs=["USB 연결 (충전 중)", "UX_DEVICE=<serial> UX_SERIAL=<serial>", "measure_night.sh 로 실행"])
+
 # ---------------- 출력 ----------------
 DIRS = {"A": "A-app-launch", "B": "B-web-feed", "C": "C-media", "D": "D-camera", "E": "E-storage", "F": "F-productivity", "G": "G-gallery", "S": "S-standby"}
 
