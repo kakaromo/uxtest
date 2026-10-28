@@ -11,7 +11,7 @@
   "categories": {
     "browser":      {"weight": null, "scenarios": {"B1": 0.3, "B1i": 0.1, "B4": 0.3, "B5": 0.3}},
     "sns":          {"weight": null, "scenarios": {"B7": 0.4, "B7r": 0.3, "B7t": 0.3}, "_note": "TikTok(B7t) 비중은 데이터셋에 없어 손으로 정함"},
-    "video":        {"weight": null, "scenarios": {"C1": 0.3, "C2": 0.3, "C4a": 0.1, "C4b": 0.2, "C5": 0.1}},
+    "video":        {"weight": null, "scenarios": {"C1": 0.3, "C2": 0.15, "B7y": 0.15, "C4a": 0.1, "C4b": 0.2, "C5": 0.1}},
     "music":        {"weight": null, "scenarios": {"C6": 1}},
     "maps":         {"weight": null, "scenarios": {"B6": 1}},
     "camera":       {"weight": null, "scenarios": {"D1": 0.35, "D2": 0.1, "D3": 0.15, "D4": 0.1, "D5": 0.05, "D7": 0.15, "D8": 0.1}},
