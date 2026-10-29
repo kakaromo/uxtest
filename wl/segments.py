@@ -72,11 +72,18 @@ def runs():
 
 def build(pq):
     t0, t1 = con.execute(f"select min(time), max(time) from read_parquet('{pq}')").fetchone()
+    # 2026-10-28 이후 fsiotrace 는 fsync 안 Write 에 FSYNC_TRIGGERED 를 붙이고, writeback·Checkpoint Write 의 comm 을
+    # 주인 앱으로 붙인다. 그래서 comm 만으로는 앱 스레드를 가릴 수 없다 → flag 가 있으면 flag 로 가린다 (metrics.py 와 같은 기준)
+    has_flag = con.execute(f"select count(*) filter (where is_fsync_triggered) > 0 from read_parquet('{pq}')").fetchone()[0]
+    # is_writeback_kworker 는 fsync 안 Write·O_DIRECT Write 에도 붙는다 → 둘 다 아닌 writeback 만 커널 몫
+    app = (f"({APP} and not coalesce(is_checkpoint or is_gc, false) and not (coalesce(is_writeback_kworker, false) "
+           f"and not coalesce(is_fsync_triggered or is_direct_io, false)))") if has_flag else APP
+    fsn = "coalesce(is_fsync_triggered, false)" if has_flag else app
     rows = con.execute(f"""
         select time - {t0} t, {extract.DIR} dir, lba, size, coalesce(ino, 0) ino, coalesce(tid, 0) tid,
-               {APP} app, coalesce(is_direct_io, false) dio,
+               {app} app, coalesce(is_direct_io, false) dio,
                coalesce(is_journal or is_checkpoint or is_f2fs_meta_write or is_gc or is_f2fs_node_gc or is_f2fs_data_gc, false) fsw,
-               coalesce(is_f2fs_node_write, false) node, comm, name
+               coalesce(is_f2fs_node_write, false) node, comm, name, {fsn} fsn, coalesce(is_checkpoint, false) ck
         from read_parquet('{pq}')
         where action = 'send_req' and coalesce(is_mgmt, false) = false
         order by time""").fetchall()
@@ -84,13 +91,13 @@ def build(pq):
     # 1. 요청 분류
     ev = []  # (t, op, ino, lba, nblk, tid)
     flush = [t for t, d, *_ in rows if d == "F"]
-    ckpt = [r[0] for r in rows if (r[10] or "").startswith("f2fs_ckpt")]
+    ckpt = [r[0] for r in rows if (r[10] or "").startswith("f2fs_ckpt") or r[13]]
     names, lastck = {}, -1.0
-    for t, d, lba, size, ino, tid, app, dio, fsw, node, comm, name in rows:
+    for t, d, lba, size, ino, tid, app, dio, fsw, node, comm, name, fsn, ck in rows:
         ino = ino if ino and ino > 1 else 0
         if ino and name and ino not in names:
             names[ino] = os.path.basename(name)
-        if (comm or '').startswith('f2fs_ckpt'):
+        if (comm or '').startswith('f2fs_ckpt') or ck:
             if t - lastck > 0.001:   # Checkpoint 하나 안의 Write 간격은 0.2ms 안팎, Checkpoint 사이는 2ms 이상
                 ev.append([t, 'CP', 0, 0, 0, 0])
             lastck = t
@@ -100,9 +107,9 @@ def build(pq):
         elif d == "D":
             ev.append([t, "DB", 0, 0, nb, tid])
         elif d == "W":
-            if fsw or (node and not app):
+            if fsw or (node and not fsn):
                 continue                       # f2fs 몫
-            if node:                           # 앱 스레드 node write = fsync 안
+            if node:                           # fsync 안 node write
                 if ino:
                     # 바로 뒤 Checkpoint 가 오면 그 Flush 는 Checkpoint 몫 → 일반 fsync (+ CP). 아니고 Flush 만 따라오면 atomic commit
                     j = bisect.bisect_left(flush, t)

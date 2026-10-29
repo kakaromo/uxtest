@@ -134,6 +134,9 @@ CHECKS = [
     ("gap", "dist", 15.0), ("idlePct", "diff", 5.0), ("wakesPerMin", "ratio", 0.20), ("qdP99", "ratio", 0.5),
     ("h8PerMin", "ratio", 0.20), ("h8Pct", "diff", 5.0),
 ]
+# 판정하지 않고 값만 보여 주는 항목. Discard 는 f2fs 가 idle 때 알아서 내므로 언제 나올지 TC 가 정할 수 없다
+# (cal4: 앞 구간에서 지운 파일의 Discard 가 카메라 구간에 652MB, 원본 fstrim 구간 1075MB 는 TC 에서 3MB)
+INFO = {"discardMB"}
 # 배경 I/O(폰의 다른 앱·시스템) 때문에 생기는 절대 차이는 허용: 이 안이면 비율이 기준을 넘어도 통과
 SLACK = {"readMB": "mb", "writeMB": "mb", "dataWriteMB": "mb", "fsWriteMB": "mb", "discardMB": "mb",
          "flushPerSec": 0.5, "fsyncPerSec": 0.5, "ckptPerSec": 0.2, "wakesPerMin": 5.0, "h8PerMin": 5.0}
@@ -156,11 +159,11 @@ def judge(orig, tc):
             else:
                 out[k] = (o, t, round(t - o, 1), abs(t - o) <= th)
         else:
-            if max(o, t) < FLOOR.get(k, 0):
+            if max(o, t) < FLOOR.get(k, 0) or (k in INFO and not o):
                 out[k] = (o, t, None, None)
                 continue
             r = t / o if o else float("inf")
             sl = SLACK.get(k, 0)
             sl = max(1.0, 0.5 * orig["durSec"] / 60) if sl == "mb" else sl
-            out[k] = (o, t, round(r, 2) if o else None, abs(r - 1) <= th or abs(t - o) <= sl)
+            out[k] = (o, t, round(r, 2) if o else None, None if k in INFO else abs(r - 1) <= th or abs(t - o) <= sl)
     return out
