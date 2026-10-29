@@ -270,7 +270,7 @@ UX_SERIAL=<IP>:5555 python3 run_tc.py day1   # push → 재생 + trace → compa
 - **같은 순간의 Read 는 Linux AIO 로 묶어 내요** (`replay/main.go` 의 `burstGap` 100µs, `burstSpan` 200µs). 원본은 thread 여러 개·readahead 가 Read 를 한꺼번에 내고 커널 block plug 가 묶어 보내 QD 가 50~60 까지 오르는데, pread 를 하나씩 부르면 QD 가 7 에 머물렀어요. 묶어 내면 이웃 Read 가 합쳐지지 않게 조각의 파일 offset 은 원본에서 떨어져 있던 구간 사이에 4KB 빈칸을 둬요 (`segments.py`).
 - **Discard 는 판정하지 않고 값만 보여 줘요** (`metrics.py` 의 `INFO`). f2fs 가 idle 때 알아서 내므로 언제 나올지 TC 가 정할 수 없어요.
 - **화면 꺼진 TC 에는 기기 배경 I/O 가 섞여요.** systemui `unlockcounter_prefs.xml` fsync(약 1/s), 제조사 서비스 DB 등이에요. 원본 I/O 가 많은 구간에는 영향이 없지만, YouTube·갤러리처럼 적은 구간은 fsync/s·Flush/s·Idle% 가 비율로 크게 어긋나 보여요.
-  그래서 `compare.py` 는 TC trace 에서 `uxwl` 과 커널 문맥(kworker·f2fs·jbd2)의 request 만 세요 (`metrics.TC_ONLY`). 원본 조각은 그때 다른 앱 I/O 까지 uxwl 이 재생하므로 원본 쪽은 거르지 않아요. Flush·Checkpoint·Discard 는 누구 몫인지 나눌 수 없어 남기고, Hibern8 은 UFS 관리 명령이라 거를 수 없어요. 전부 세려면 `--all`.
+  그래서 `compare.py` 는 TC trace 에서 `uxwl` 과 커널 문맥(kworker·f2fs·jbd2)의 request 만 세요 (`metrics.TC_ONLY`). 원본 조각은 그때 다른 앱 I/O 까지 uxwl 이 재생하므로 원본 쪽은 거르지 않아요. Flush·Checkpoint·Discard 는 누구 몫인지 나눌 수 없어 남기고, Hibern8 은 UFS 관리 명령이라 거를 수 없어서 h8/분·h8% 는 Discard 처럼 값만 보여 주고 판정하지 않아요. 전부 세려면 `--all`.
 
 ## 10. 자주 생기는 문제
 
