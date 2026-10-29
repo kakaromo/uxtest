@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """조각 → TC (wl/.private/tc/<name>/{tc.bin, manifest.json})
 
-  python3 wl/gen_tc.py seq --name cal-b7t B7t-2              # 보정용: 조각을 순서대로
+  python3 wl/gen_tc.py seq --name cal-b7t B7t-2              # 보정용: 조각을 순서대로 (S5-1@0:1200 = 0~1200초만)
   python3 wl/gen_tc.py seq --name cal --rest 20 A1-1 B7t-2 C1-1
   python3 wl/gen_tc.py day --name day1 --seed 1                # 하루: 카테고리 가중치 × 사용 패턴
   python3 wl/gen_tc.py day --name sns --seed 1 --set sns=0.5 --hours 2
@@ -136,9 +136,11 @@ class Builder:
 def cmd_seq(a):
     b = Builder()
     t = a.lead
-    for name in a.segments:
+    for spec in a.segments:
+        name, _, rng = spec.partition("@")    # S5-1@0:1200 = 조각의 0~1200초만
+        lo, hi = (float(x) for x in rng.split(":")) if rng else (0.0, None)
         b.screen(t - a.rest / 2 if t > a.lead else 0, not name.startswith(SCREEN_OFF))
-        t += b.add_segment(name, t) + a.rest
+        t += b.add_segment(name, t, lo, hi) + a.rest
     b.write(a.name, {"mode": "seq", "segments": a.segments, "rest": a.rest, "lead": a.lead})
 
 
