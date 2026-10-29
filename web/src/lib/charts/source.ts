@@ -34,3 +34,38 @@ export function chartHTML(o: unknown, opt: { title: string; height: number; bg: 
 </script>
 `;
 }
+
+/** 차트 여러 개를 HTML 조각 하나로 (Confluence HTML macro 하나에 붙이기). 좁으면 세로로 쌓인다 */
+export function chartsHTML(list: { o: unknown; title: string; height: number }[], opt: { title: string; bg: string; fg: string; caption?: string; renderer?: 'svg' | 'canvas' }) {
+	const id = 'ux-' + Math.random().toString(36).slice(2, 8);
+	const boxes = list
+		.map(
+			(c, i) => `    <div style="flex:1 1 360px;min-width:0">
+      <div style="font-weight:600;font-size:13px;margin-bottom:4px">${esc(c.title)}</div>
+      <div id="${id}-${i}" style="width:100%;height:${c.height}px"></div>
+    </div>`
+		)
+		.join('\n');
+	return `<!-- ${opt.title} · UX I/O 분석 사이트에서 복사 -->
+<figure style="margin:0;font-family:'Pretendard Variable',Pretendard,-apple-system,sans-serif;background:${opt.bg};color:${opt.fg};padding:16px;border-radius:16px">
+  <figcaption style="font-weight:600;font-size:15px;margin-bottom:12px">${esc(opt.title)}</figcaption>
+  <div style="display:flex;flex-wrap:wrap;gap:16px">
+${boxes}
+  </div>${opt.caption ? `\n  <p style="font-size:12px;opacity:.7;margin:8px 0 0">${esc(opt.caption)}</p>` : ''}
+</figure>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script>
+(function () {
+  var opts = [
+${list.map((c) => '    ' + optionJS(c.o, 4).trimStart()).join(',\n')}
+  ];
+  var charts = opts.map(function (o, i) {
+    var c = echarts.init(document.getElementById('${id}-' + i), null, { renderer: '${opt.renderer ?? 'svg'}' });
+    c.setOption(o);
+    return c;
+  });
+  window.addEventListener('resize', function () { charts.forEach(function (c) { c.resize(); }); });
+})();
+</script>
+`;
+}
