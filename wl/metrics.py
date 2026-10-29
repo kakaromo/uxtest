@@ -142,7 +142,9 @@ CHECKS = [
 ]
 # 판정하지 않고 값만 보여 주는 항목. Discard 는 f2fs 가 idle 때 알아서 내므로 언제 나올지 TC 가 정할 수 없다
 # (cal4: 앞 구간에서 지운 파일의 Discard 가 카메라 구간에 652MB, 원본 fstrim 구간 1075MB 는 TC 에서 3MB)
-INFO = {"discardMB"}
+# Hibern8 은 UFS 관리 명령이라 TC_ONLY 로 거를 수 없고, 화면 꺼진 TC 동안 다른 앱 request 가 링크를 깨우는 몫이 섞인다
+# (day4: 거른 뒤 Idle% 82.2 vs 83.2 로 맞는데 h8/분 124 vs 88)
+INFO = {"discardMB", "h8PerMin", "h8Pct"}
 # 배경 I/O(폰의 다른 앱·시스템) 때문에 생기는 절대 차이는 허용: 이 안이면 비율이 기준을 넘어도 통과
 SLACK = {"readMB": "mb", "writeMB": "mb", "dataWriteMB": "mb", "fsWriteMB": "mb", "discardMB": "mb",
          "flushPerSec": 0.5, "fsyncPerSec": 0.5, "ckptPerSec": 0.2, "wakesPerMin": 5.0, "h8PerMin": 5.0}
@@ -163,7 +165,7 @@ def judge(orig, tc):
             if k == "seqR" and orig["readMB"] < FLOOR["readMB"] or k == "seqW" and orig["writeMB"] < FLOOR["writeMB"]:
                 out[k] = (o, t, round(t - o, 1), None)
             else:
-                out[k] = (o, t, round(t - o, 1), abs(t - o) <= th)
+                out[k] = (o, t, round(t - o, 1), None if k in INFO else abs(t - o) <= th)
         else:
             if max(o, t) < FLOOR.get(k, 0) or (k in INFO and not o):
                 out[k] = (o, t, None, None)
