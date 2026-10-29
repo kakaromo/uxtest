@@ -15,12 +15,8 @@
 	import RankStrip from '#lib/components/RankStrip.svelte';
 	import { mb, f, n0, x, sec } from '#lib/fmt.js';
 	import type { ScenarioDoc, Run, Points } from '#lib/types.js';
-	import { ChevronLeft, ChevronRight, CodeXml } from '@lucide/svelte';
-	import { Button } from '#lib/components/ui/button/index.js';
-	import { theme } from '#lib/charts/theme.js';
-	import { chartsHTML } from '#lib/charts/source.js';
-	import { copy } from '#lib/clipboard.js';
-	import { toast } from 'svelte-sonner';
+	import { ChevronLeft, ChevronRight } from '@lucide/svelte';
+	import PairCopy from '#lib/components/PairCopy.svelte';
 
 	const id = $derived(page.params.id!);
 	let doc = $state<ScenarioDoc | null>(null);
@@ -122,16 +118,17 @@
 	const exSpec = $derived(run ? explorerSpec(run, res, `${row ? nameOf(row) : id} · Run ${run.repeat} Timeline (${res === '1s' ? '1초' : '100ms'} 단위 MB/s, 위 Read · 아래 Write)`) : null);
 	const sizeSpec = $derived(run ? stackSpec('Request size 분포 (건수 %)', ['Read', 'Write'], B.size, [run.size.R, run.size.W], PROV_TRACE) : null);
 	const dtocSpec = $derived(run ? stackSpec('Latency 분포 (건수 %)', ['Read', 'Write'], B.dtoc, [run.dtoc.R, run.dtoc.W], PROV_TRACE) : null);
-	// Request size·Latency 분포 두 차트를 HTML 조각 하나로 (Confluence HTML macro 하나에 붙이기)
-	async function copyDist() {
-		if (!run || !sizeSpec || !dtocSpec) return;
-		const th = theme();
-		const html = chartsHTML(
-			[sizeSpec, dtocSpec].map((c) => ({ o: c.option(th), title: c.title, height: 170 })),
-			{ title: `${row ? nameOf(row) : id} · Run ${run.repeat}`, bg: th.surface, fg: th.fg }
-		);
-		(await copy(html)) ? toast.success('Request size·Latency 분포 차트 2개를 HTML 하나로 복사했어요. Confluence HTML macro에 붙이면 돼요') : toast.error('복사하지 못했어요');
-	}
+	const latSizeSpec = $derived(run ? latSpec('Request size별 Latency (p50 막대, p99 선)', B.size, run.latSize, PROV_TRACE + ' 완료 응답(complete_rsp)의 dtoc 를 Request size 구간마다 백분위로.') : null);
+	const latQdSpec = $derived(run ? latSpec('QD별 Latency (p50 막대, p99 선)', QB, run.latQd, PROV_TRACE + ' 완료 시점의 queue depth 구간마다 dtoc 백분위.') : null);
+	const gapSpec = $derived(run ? stackSpec('DtoD · dispatch-to-dispatch (건수 %)', ['전체'], B.gap, [run.gap], PROV_TRACE + ' 앞 request를 보낸 시각부터 다음 request를 보낸 시각까지예요. DtoC(Latency)와는 달라요. 16ms·200ms 넘는 간격은 UFS가 절전·유휴 정리에 들어갈 수 있는 틈이에요.', 1) : null);
+	const ctodSpec = $derived(run?.ctod ? stackSpec('CtoD · complete-to-dispatch (건수 %)', ['전체'], B.ctod ?? ['0 (overlap)', '<1ms', '1–16ms', '16–200ms', '≥200ms'], [run.ctod], PROV_TRACE + ' 직전 request가 완료된 시각부터 이번 request를 보낼 때까지예요(parquet ctod). 0은 앞 request가 아직 처리 중일 때 보낸 것이에요. 길수록 UFS가 실제로 쉰 틈이에요.', 1) : null);
+	const lbaRSpec = $derived(run ? lbaSpec(run, 'R', app.index!.meta.lbaMaxGB) : null);
+	const lbaWSpec = $derived(run ? lbaSpec(run, 'W', app.index!.meta.lbaMaxGB) : null);
+	const flowSpec = $derived(run ? stackSpec('Write path (바이트 %)', ['Write'], B.flow, [run.flow], PROV_TRACE) : null);
+	const kindSpec = $derived(run ? rwBarSpec('File type별 (MB)', run.kinds.map((k) => k.kind), run.kinds.map((k) => k.readMB), run.kinds.map((k) => k.writeMB), PROV_TRACE + ' 파일 이름 확장자·경로로 나눴어요.') : null);
+	const kindH = $derived(run ? Math.max(160, 30 * run.kinds.length + 60) : 160);
+	const sname = $derived(row ? nameOf(row) : id);
+	const rtitle = $derived(run ? `${sname} · Run ${run.repeat}` : sname);
 </script>
 
 <svelte:head><title>UX I/O 분석 · {id} {app.names[id] ?? ''}</title></svelte:head>
@@ -272,6 +269,7 @@
 		<section class="mb-12 space-y-4">
 			<h2 id="runs" class="text-h2 font-bold">Run comparison</h2>
 			<div class="grid gap-3 lg:grid-cols-2">
+				<PairCopy class="lg:col-span-2" title="{sname} · Run comparison" label="Run 비교" items={[{ spec: runsSpec(doc.runs), height: 260 }, { spec: overlaySpec(doc.runs), height: 260 }]} />
 				<Chart spec={runsSpec(doc.runs)} height={260} />
 				<Chart spec={overlaySpec(doc.runs)} height={260} />
 			</div>
@@ -299,17 +297,20 @@
 			<p class="text-body-2 text-muted-foreground">Run {run.repeat} 기준이에요. 위의 Run 선택을 바꾸면 같이 바뀌어요.</p>
 			<div class="grid gap-3 lg:grid-cols-2">
 				{#if sizeSpec && dtocSpec}
-					<div class="flex flex-wrap items-center gap-1 text-body-3 text-ink-3 lg:col-span-2">
-						<span class="mr-1">HTML 복사 (아래 두 차트를 하나로):</span>
-						<Button variant="secondary" size="xs" onclick={copyDist}><CodeXml />Request size + Latency</Button>
-					</div>
+					<PairCopy class="lg:col-span-2" title={rtitle} label="Request size + Latency" items={[{ spec: sizeSpec, height: 170 }, { spec: dtocSpec, height: 170 }]} />
 					<Chart spec={sizeSpec} height={170} />
 					<Chart spec={dtocSpec} height={170} />
 				{/if}
-				<Chart spec={latSpec('Request size별 Latency (p50 막대, p99 선)', B.size, run.latSize, PROV_TRACE + ' 완료 응답(complete_rsp)의 dtoc 를 Request size 구간마다 백분위로.')} height={280} />
-				<Chart spec={latSpec('QD별 Latency (p50 막대, p99 선)', QB, run.latQd, PROV_TRACE + ' 완료 시점의 queue depth 구간마다 dtoc 백분위.')} height={280} />
-				<Chart spec={stackSpec('DtoD · dispatch-to-dispatch (건수 %)', ['전체'], B.gap, [run.gap], PROV_TRACE + ' 앞 request를 보낸 시각부터 다음 request를 보낸 시각까지예요. DtoC(Latency)와는 달라요. 16ms·200ms 넘는 간격은 UFS가 절전·유휴 정리에 들어갈 수 있는 틈이에요.', 1)} height={130} />
-				{#if run.ctod}<Chart spec={stackSpec('CtoD · complete-to-dispatch (건수 %)', ['전체'], B.ctod ?? ['0 (overlap)', '<1ms', '1–16ms', '16–200ms', '≥200ms'], [run.ctod], PROV_TRACE + ' 직전 request가 완료된 시각부터 이번 request를 보낼 때까지예요(parquet ctod). 0은 앞 request가 아직 처리 중일 때 보낸 것이에요. 길수록 UFS가 실제로 쉰 틈이에요.', 1)} height={130} />{/if}
+				{#if latSizeSpec && latQdSpec}
+					<PairCopy class="lg:col-span-2" title={rtitle} label="Request size별 + QD별 Latency" items={[{ spec: latSizeSpec, height: 280 }, { spec: latQdSpec, height: 280 }]} />
+					<Chart spec={latSizeSpec} height={280} />
+					<Chart spec={latQdSpec} height={280} />
+				{/if}
+				{#if gapSpec}
+					{#if ctodSpec}<PairCopy class="lg:col-span-2" title={rtitle} label="DtoD + CtoD" items={[{ spec: gapSpec, height: 130 }, { spec: ctodSpec, height: 130 }]} />{/if}
+					<Chart spec={gapSpec} height={130} />
+				{/if}
+				{#if ctodSpec}<Chart spec={ctodSpec} height={130} />{/if}
 				<CopyTable title="Top streams (Bytes %)">
 					<table>
 						<thead><tr><th>Direction</th><th>Size</th><th>Sequential/Random</th><th class="num">Bytes %</th></tr></thead>
@@ -334,8 +335,11 @@
 		<section class="mb-12 space-y-4">
 			<h2 id="lba" class="text-h2 font-bold">LBA heatmap</h2>
 			<div class="grid gap-3 lg:grid-cols-2">
-				<Chart spec={lbaSpec(run, 'R', app.index!.meta.lbaMaxGB)} height={320} />
-				<Chart spec={lbaSpec(run, 'W', app.index!.meta.lbaMaxGB)} height={320} />
+				{#if lbaRSpec && lbaWSpec}
+					<PairCopy class="lg:col-span-2" title={rtitle} label="LBA heatmap Read + Write" items={[{ spec: lbaRSpec, height: 320 }, { spec: lbaWSpec, height: 320 }]} />
+					<Chart spec={lbaRSpec} height={320} />
+					<Chart spec={lbaWSpec} height={320} />
+				{/if}
 			</div>
 		</section>
 
@@ -373,8 +377,11 @@
 				</div>
 			{/if}
 			<div class="grid gap-3 lg:grid-cols-2">
-				<Chart spec={stackSpec('Write path (바이트 %)', ['Write'], B.flow, [run.flow], PROV_TRACE)} height={130} />
-				<Chart spec={rwBarSpec('File type별 (MB)', run.kinds.map((k) => k.kind), run.kinds.map((k) => k.readMB), run.kinds.map((k) => k.writeMB), PROV_TRACE + ' 파일 이름 확장자·경로로 나눴어요.')} height={Math.max(160, 30 * run.kinds.length + 60)} />
+				{#if flowSpec && kindSpec}
+					<PairCopy class="lg:col-span-2" title={rtitle} label="Write path + File type" items={[{ spec: flowSpec, height: 130 }, { spec: kindSpec, height: kindH }]} />
+					<Chart spec={flowSpec} height={130} />
+					<Chart spec={kindSpec} height={kindH} />
+				{/if}
 			</div>
 			<CopyTable title="{id} Run {run.repeat} Process 상위">
 				<table>
