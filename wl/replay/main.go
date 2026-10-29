@@ -28,9 +28,10 @@ import (
 	"io"
 	"math"
 	"math/rand"
-	"os/exec"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"sync"
 	"sync/atomic"
@@ -251,6 +252,68 @@ type segStat struct {
 	ops [nOps]stat
 }
 
+// Linux AIO (io_submit). 원본 앱은 thread 여러 개·readahead 가 같은 순간에 Read 를 내고 커널이 block plug 로 묶어
+// 한꺼번에 UFS 에 보낸다 (Chrome cold start QD 50~60). pread 를 goroutine 마다 따로 부르면 수십 µs 간격으로 나가
+// QD 가 7 에 머물렀다. 그래서 같은 순간의 Read 묶음은 io_submit 한 번으로 낸다 (io_submit 안에서 plug 가 걸린다).
+type iocb struct {
+	data     uint64
+	key      uint32
+	rwFlags  uint32
+	opcode   uint16
+	prio     int16
+	fd       uint32
+	buf      uint64
+	nbytes   uint64
+	offset   int64
+	reserved uint64
+	flags    uint32
+	resfd    uint32
+}
+
+type ioEvent struct {
+	data, obj uint64
+	res, res2 int64
+}
+
+const (
+	aioDepth  = 128 // 묶음 하나의 최대 Read 수
+	burstGap  = 100 // µs: 앞 Read 와 이 안에 이어지면 같은 묶음
+	burstSpan = 200 // µs: 묶음 첫 Read 부터 이 안까지만 (앞당겨 내는 시간 상한)
+	iocbPread = 0
+)
+
+var aioCtxs = make(chan uintptr, 512)
+
+func aioCtx() (uintptr, bool) {
+	select {
+	case c := <-aioCtxs:
+		return c, true
+	default:
+	}
+	var c uintptr
+	if _, _, en := unix.Syscall(unix.SYS_IO_SETUP, aioDepth, uintptr(unsafe.Pointer(&c)), 0); en != 0 {
+		return 0, false
+	}
+	return c, true
+}
+
+func aioPut(c uintptr) {
+	select {
+	case aioCtxs <- c:
+	default:
+		unix.Syscall(unix.SYS_IO_DESTROY, c, 0, 0)
+	}
+}
+
+// aioOK: 기기 커널이 AIO 를 지원하는지 (CONFIG_AIO). 안 되면 묶음 없이 pread 로 낸다
+func aioOK() bool {
+	c, ok := aioCtx()
+	if ok {
+		aioPut(c)
+	}
+	return ok
+}
+
 func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out string) {
 	s := &store{root: root, m: map[uint32]*ofile{}}
 	var ops [nOps]stat
@@ -279,6 +342,21 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 	unix.ClockGettime(unix.CLOCK_MONOTONIC, &mono)
 	unix.ClockGettime(unix.CLOCK_BOOTTIME, &boot)
 	t0 := time.Now()
+	record := func(r req, sg *segStat, ns int64, err error) {
+		for _, o := range []*stat{&ops[r.op], &sg.ops[r.op]} {
+			atomic.AddUint64(&o.n, 1)
+			atomic.AddUint64(&o.bytes, uint64(r.ln))
+			if err != nil {
+				atomic.AddUint64(&o.errs, 1)
+			}
+			o.lat.add(ns)
+		}
+		if err != nil {
+			errMu.Lock()
+			errKinds[opName[r.op]+": "+err.Error()]++
+			errMu.Unlock()
+		}
+	}
 	exec := func(r req, sg *segStat) {
 		f := s.get(r.file)
 		// WD 도 파일마다 하나씩: 앱은 파일 하나를 스레드 하나가 순서대로 쓴다. 동시에 쓰면 f2fs 가 파일끼리 블록을 섞어 할당해 Write 가 4KB 로 쪼개진다
@@ -369,20 +447,104 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 			err = unix.Unlink(fpath(root, r.file))
 			f.gone = true
 		}
-		ns := time.Since(st).Nanoseconds()
-		for _, o := range []*stat{&ops[r.op], &sg.ops[r.op]} {
-			atomic.AddUint64(&o.n, 1)
-			atomic.AddUint64(&o.bytes, uint64(r.ln))
-			if err != nil {
-				atomic.AddUint64(&o.errs, 1)
+		record(r, sg, time.Since(st).Nanoseconds(), err)
+	}
+	// Read 묶음을 io_submit 한 번으로. 파일 잠금은 파일 번호 순서로 잡는다 (FS·UNLINK 와 엇갈려 멈추지 않게)
+	useAIO := aioOK()
+	burst := func(grp []req, sg *segStat) {
+		ids := make([]uint32, 0, len(grp))
+		seen := map[uint32]*ofile{}
+		for _, r := range grp {
+			if _, ok := seen[r.file]; !ok {
+				seen[r.file] = s.get(r.file)
+				ids = append(ids, r.file)
 			}
-			o.lat.add(ns)
 		}
-		if err != nil {
-			errMu.Lock()
-			errKinds[opName[r.op]+": "+err.Error()]++
-			errMu.Unlock()
+		sort.Slice(ids, func(a, b int) bool { return ids[a] < ids[b] })
+		for _, id := range ids {
+			seen[id].mu.RLock()
 		}
+		defer func() {
+			for _, id := range ids {
+				seen[id].mu.RUnlock()
+			}
+		}()
+		ctx, ok := aioCtx()
+		if !ok {
+			for _, r := range grp {
+				st := time.Now()
+				b := pool.Get().([]byte)
+				var err error = unix.ENOENT
+				if fd := s.fd(r.file, seen[r.file], true); fd >= 0 {
+					_, err = unix.Pread(fd, b[:min(r.ln, maxIO)], int64(r.off))
+				}
+				pool.Put(b)
+				record(r, sg, time.Since(st).Nanoseconds(), err)
+			}
+			return
+		}
+		defer aioPut(ctx)
+		cbs := make([]iocb, 0, len(grp))
+		bufs := make([][]byte, 0, len(grp))
+		idx := make([]int, 0, len(grp))
+		for k, r := range grp {
+			fd := s.fd(r.file, seen[r.file], true)
+			if fd < 0 {
+				record(r, sg, 0, unix.ENOENT)
+				continue
+			}
+			b := pool.Get().([]byte)
+			n := min(r.ln, maxIO)
+			bufs = append(bufs, b)
+			idx = append(idx, k)
+			cbs = append(cbs, iocb{data: uint64(k), opcode: iocbPread, fd: uint32(fd),
+				buf: uint64(uintptr(unsafe.Pointer(&b[0]))), nbytes: uint64(n), offset: int64(r.off)})
+		}
+		defer func() {
+			for _, b := range bufs {
+				pool.Put(b)
+			}
+		}()
+		if len(cbs) == 0 {
+			return
+		}
+		ptrs := make([]*iocb, len(cbs))
+		for k := range cbs {
+			ptrs[k] = &cbs[k]
+		}
+		st := time.Now()
+		sub, _, en := unix.Syscall(unix.SYS_IO_SUBMIT, ctx, uintptr(len(ptrs)), uintptr(unsafe.Pointer(&ptrs[0])))
+		if en != 0 {
+			sub = 0
+		}
+		for k := int(sub); k < len(cbs); k++ { // 못 낸 것은 pread 로
+			r := grp[idx[k]]
+			t1 := time.Now()
+			_, err := unix.Pread(int(cbs[k].fd), bufs[k][:cbs[k].nbytes], int64(r.off))
+			record(r, sg, time.Since(t1).Nanoseconds(), err)
+		}
+		evs := make([]ioEvent, sub)
+		for got := 0; got < int(sub); {
+			n, _, en := unix.Syscall6(unix.SYS_IO_GETEVENTS, ctx, 1, uintptr(int(sub)-got),
+				uintptr(unsafe.Pointer(&evs[got])), 0, 0)
+			if en == unix.EINTR {
+				continue
+			}
+			if en != 0 {
+				break
+			}
+			ns := time.Since(st).Nanoseconds()
+			for _, e := range evs[got : got+int(n)] {
+				var err error
+				if e.res < 0 {
+					err = unix.Errno(-e.res)
+				}
+				record(grp[e.data], sg, ns, err)
+			}
+			got += int(n)
+		}
+		runtime.KeepAlive(cbs)
+		runtime.KeepAlive(ptrs)
 	}
 	// 같은 파일·같은 동작(R/W/WD)이 0.2ms 안에 이어지면 한 goroutine 이 순서대로 낸다.
 	// 따로 띄우면 장치에 닿는 순서가 섞여 readahead·카메라 저장 같은 Sequential 요청이 Random 처럼 보이고 QD 가 부풀었다
@@ -408,6 +570,31 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 			continue
 		}
 		j := i + 1
+		if r.op == opR && useAIO {
+			for j < len(reqs) && j-i < aioDepth && reqs[j].op == opR && reqs[j].t-reqs[j-1].t <= burstGap && reqs[j].t-r.t <= burstSpan {
+				j++
+			}
+		}
+		if j-i > 1 { // Read 묶음 → io_submit
+			lg := int64(time.Since(t0) - due)
+			lag.add(lg)
+			if lg > int64(5*time.Millisecond) {
+				late++
+			}
+			lateMax = max(lateMax, lg)
+			sem <- struct{}{}
+			wg.Add(1)
+			q := atomic.AddInt64(&qd, 1)
+			if q > atomic.LoadInt64(&qdMax) {
+				atomic.StoreInt64(&qdMax, q)
+			}
+			go func(grp []req, sg *segStat) {
+				defer func() { atomic.AddInt64(&qd, -1); <-sem; wg.Done() }()
+				burst(grp, sg)
+			}(reqs[i:j], &segs[seg])
+			i = j
+			continue
+		}
 		if r.op == opR || r.op == opW || r.op == opWD {
 			for j < len(reqs) && reqs[j].file == r.file && reqs[j].op == r.op && (reqs[j].t-r.t <= 200 || r.op == opWD && reqs[j].t-reqs[j-1].t <= 200) {
 				j++

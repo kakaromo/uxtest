@@ -224,6 +224,8 @@ def build(pq):
                     acc += b - en[-1]
                     en[-1] = b
                 continue
+            if st:
+                acc += 1    # 떨어져 있던 구간 사이 4KB 빈칸: 붙여 두면 같은 순간에 낸 Read 를 커널이 원본에 없던 큰 request 로 합친다
             st.append(a), en.append(b), base.append(acc)
             acc += b - a
         fmap[ino] = (st, base, acc)
