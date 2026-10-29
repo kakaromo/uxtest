@@ -9,6 +9,7 @@ TC 쪽은 재생기(uxwl)와 커널 문맥의 request 만 본다 (metrics.TC_ONL
 구간별·카테고리별·전체로 합쳐 judge 로 판정한다. 구간이 많으면(하루 TC) 카테고리·전체 표만 출력한다.
 결과는 <run>/compare.json, 요약 한 줄은 wl/.private/results/history.jsonl 에 쌓는다.
 """
+import hashlib
 import json
 import sys
 import time
@@ -150,13 +151,14 @@ def main():
         jt, tp, tn = {}, 0, 0
     npass = sum(x["pass"] for x in items)
     ntot = sum(x["of"] for x in items)
-    out = {"run": run.name, "T0": T0, "tcOnly": bool(only), "itemPass": npass, "itemOf": ntot, "totalPass": tp, "totalOf": tn,
+    sha = hashlib.sha256((run / "tc.bin").read_bytes()).hexdigest()[:12]
+    out = {"run": run.name, "version": M.VERSION, "tcSha": sha, "T0": T0, "tcOnly": bool(only), "itemPass": npass, "itemOf": ntot, "totalPass": tp, "totalOf": tn,
            "lateOver5ms": res["lateOver5ms"], "elapsedSec": res["elapsedSec"], "total": pack(jt), "categories": cats, "synth": synth,
            "settle": {"sec": SETTLE, "tc": M.finish(carry)} if carry else None,
            "items": items}
     (run / "compare.json").write_text(json.dumps(out, ensure_ascii=False, indent=1))
     with open(RES / "history.jsonl", "a") as fo:
-        fo.write(json.dumps({"at": time.strftime("%Y-%m-%d %H:%M:%S"), "run": run.name, "tcOnly": bool(only), "itemPass": npass, "itemOf": ntot,
+        fo.write(json.dumps({"at": time.strftime("%Y-%m-%d %H:%M:%S"), "run": run.name, "version": M.VERSION, "tcSha": sha, "tcOnly": bool(only), "itemPass": npass, "itemOf": ntot,
                              "totalPass": tp, "totalOf": tn, "late": res["lateOver5ms"],
                              "cats": {c: [v["pass"], v["of"]] for c, v in cats.items()},
                              "items": [(x["seg"], x["pass"], x["of"]) for x in items] if not many else None},

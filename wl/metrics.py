@@ -138,6 +138,8 @@ def metrics(pq, a, b):
 
 
 # 비교 항목: (이름, 종류, 기준). ratio = TC/원본 비율이 1±기준, diff = 차이가 기준 이하, dist = 분포 차이(%p) 가 기준 이하
+# 판정 기준(CHECKS·INFO·SLACK·FLOOR, compare.SETTLE)과 재생 방식의 버전. 바꾸면 올리고 GUIDE 9.3 에 적는다
+VERSION = "v1"
 CHECKS = [
     ("readMB", "ratio", 0.10), ("writeMB", "ratio", 0.10), ("dataWriteMB", "ratio", 0.10),
     ("fsWriteMB", "ratio", 0.20), ("fsPct", "diff", 5.0), ("flushPerSec", "ratio", 0.20), ("fsyncPerSec", "ratio", 0.20),
