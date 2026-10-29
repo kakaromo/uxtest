@@ -250,6 +250,26 @@ UX_SERIAL=<IP>:5555 python3 run_tc.py day1   # push → 재생 + trace → compa
 - 결과: `wl/.private/results/<TC>-<시각>/compare.json`, 추세는 `history.jsonl`. 비교 항목은 `wl/metrics.py` 의 `CHECKS`(Volume, FS 유발 Write, Flush, fsync, Discard, Checkpoint, size·DtoD 분포, Sequential, Idle, Wakeups, QD, Hibern8).
 - TC 도 배터리·무선 상태에서 돌려요. 원본 측정 조건과 같아야 비교가 맞아요.
 
+### 9.1 하루 TC 를 짜는 방식 (`gen_tc.py day`)
+
+1. **화면 켜짐 세션을 뽑아요.** 사용 로그 데이터셋의 시간대별 세션 수·세션 길이로 하루 세션을 만들고, 하루 화면 켜짐 합이 `--on-min`(기본: 데이터셋 중앙값 사용자)이 되게 맞춰요.
+2. **2시간 안에 넣어요.** `--hours`(기본 2)를 넘으면 하루 전체에 고르게 퍼진 순서로 세션을 골라 예산까지만 써요. 시간대 모양은 유지돼요.
+3. **카테고리를 정해요.** 카테고리마다 "가중치 × 화면 켜짐 시간"만큼 방문을 먼저 만들고, 세션을 채울 때 다음 카테고리는 데이터셋 전이 확률 × 남은 할당량으로 골라요. 비중은 가중치대로, 순서는 실제 사용처럼 돼요. 끝에 목표·실제 비중 표를 출력해요.
+4. **시나리오 조각을 붙여요.** 카테고리 안에서 시나리오 가중치로 시나리오를, 무작위로 회차를 골라요. 방문이 조각보다 길면 이어 붙이고(새 파일로), 짧으면 앞에서부터 잘라요. 측정이 없는 메시지는 SQLite WAL transaction 합성(`db`)으로 대신해요.
+5. **앱이 바뀔 때 앱 실행 조각을 끼워요.** cold(`coldRatio`, 기본 20%)·warm 시나리오 하나를 실행 횟수 `n` 으로 나눈 한 조각이에요. 홈·통화는 빼요.
+6. **세션 사이 화면 꺼짐을 대기 조각으로 채워요.** 길이는 `--standby-scale`(기본 2%)로 압축하고(최소 5초), 꺼진 시간 길이에 따라 `mix.json` 의 `standby` 구간(5분 이하·30분 이하·그 이상)에서 대기 시나리오를 골라요.
+7. **하루 이벤트**(`daily`: 앱 재설치, 다운로드, 파일 삭제 …)는 하루 횟수만큼 화면 켜진 방문 사이 무작위 시각에 넣어요.
+
+같은 `--seed` 면 같은 TC 가 나와요. `manifest.json` 의 `timeline` 에 구간마다 카테고리·조각·시각이 있어 이걸로 구성을 확인해요.
+
+### 9.2 조각과 비교에서 알아 둘 점
+
+- **조각은 기준 측정이 바뀌면 다시 만들어요** (`python3 segments.py`). 시나리오마다 `runs/<ID>/` 의 마지막 run 을 쓰므로, 기준 세트(배터리 측정)보다 뒤에 시험 run 을 남기지 않아요.
+- **fsync 는 fsiotrace 의 FSYNC_TRIGGERED flag 로 가려요** (2026-10-28 이후 trace). 고친 fsiotrace 는 writeback·Checkpoint Write 의 comm 을 주인 앱으로 붙여서 comm 만으로는 앱 스레드를 알 수 없어요. 또 `is_writeback_kworker` 는 fsync 안 Write 와 O_DIRECT Write 에도 붙으므로, fsync flag 도 O_DIRECT 도 아닌 writeback 만 커널 몫으로 봐요.
+- **측정 전에 Discard 가 다 나가길 기다려요.** `run_tc.py` 는 앞 TC 재생 파일을 지우고 채운 뒤 `/sys/fs/f2fs/*/pending_discard` 가 0 이 될 때까지(최대 15분) 기다렸다가 trace 를 시작해요. FITRIM 이나 f2fs 설정 변경으로 억지로 비우지 않아요.
+- **Discard 는 판정하지 않고 값만 보여 줘요** (`metrics.py` 의 `INFO`). f2fs 가 idle 때 알아서 내므로 언제 나올지 TC 가 정할 수 없어요.
+- **화면 꺼진 TC 에는 기기 배경 I/O 가 섞여요.** systemui `unlockcounter_prefs.xml` fsync(약 1/s), 제조사 서비스 DB 등이에요. 원본 I/O 가 많은 구간에는 영향이 없지만, YouTube·갤러리처럼 적은 구간은 fsync/s·Flush/s·Idle% 가 비율로 크게 어긋나 보여요.
+
 ## 10. 자주 생기는 문제
 
 | 증상 | 원인·해결 |

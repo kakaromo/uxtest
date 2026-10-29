@@ -58,7 +58,19 @@ def main():
     adb("shell", f"mkdir -p {DEV}")
     adb("push", "-q", str(HERE / ".private" / "uxwl"), str(src / "tc.bin"), f"{DEV}/")
     adb("shell", f"chmod 755 {DEV}/uxwl; rm -f {DEV}/result.json {DEV}/done")
+    # 앞 TC 가 남긴 재생 파일을 지우고 새로 채운다. 지운 공간의 Discard 는 f2fs 가 idle 때 알아서 내는데, 바로 측정하면
+    # 그게 측정 앞부분에 섞이므로 (cal3: 첫 구간에 원본에 없던 Discard 2.9GB) pending_discard 가 0 이 될 때까지 기다린다.
+    # FITRIM·f2fs 설정 변경으로 억지로 비우지 않는다
+    adb("shell", f"{DEV}/uxwl clean --root {DEV}")
     print(adb("shell", f"{DEV}/uxwl prep --root {DEV} {DEV}/tc.bin").strip())
+    t_wait = time.time()
+    while True:
+        pend = adb("shell", "sync; cat /sys/fs/f2fs/*/pending_discard 2>/dev/null").split()
+        pend = sum(int(x) for x in pend if x.isdigit())
+        if pend == 0 or time.time() - t_wait > 900:
+            break
+        time.sleep(10)
+    print(f"Discard 대기 {time.time() - t_wait:.0f}s, 남은 pending_discard {pend}", flush=True)
     run_cmd = (f"cd {DEV} && (./uxwl run --root {DEV} --speed {a.speed} --max-qd {a.max_qd} tc.bin > run.log 2>&1; "
                "touch done) &")
     dur = man["durSec"] / a.speed
