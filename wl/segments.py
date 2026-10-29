@@ -16,7 +16,7 @@
     └ 그 fsync 가 FA                           WX  atomic write 안의 pwrite (처음이면 F2FS_IOC_START_ATOMIC_WRITE)
   앱 스레드 Data Write, O_DIRECT               WD  O_DIRECT pwrite
   그 밖의 Data Write (kworker writeback 등)    W   buffered pwrite + sync_file_range(WRITE) 로 바로 내보냄
-  Discard                                     DB  반납할 바이트 (gen_tc 가 앞서 쓴 파일 삭제로 바꿈)
+  Discard                                     DB  반납할 바이트 (기록만, gen_tc 는 재생하지 않음)
   fsync 직후 3ms 안에 Checkpoint 가 왔던 fsync  DS  그 뒤 디렉터리 fsync → f2fs 가 Checkpoint. SQLite 는 새 journal 을 만들면
                                                   디렉터리를 fsync 하고, AtomicFile(.tmp → rename) 도 같은 결과를 낸다
   그 밖의 f2fs_ckpt Checkpoint 묶음 시작        CP  원인을 모르는 Checkpoint (sync·배경). 디렉터리 fsync 로 같은 시각에 일으킴
