@@ -41,9 +41,6 @@ class Builder:
         self.files = []        # (size, prefill)
         self.reqs = []         # (t_us, op, file, off, len)
         self.timeline = []
-        self.created = []      # 재생 중 새로 만든 파일 (Discard 를 만들 때 지울 후보) [(file, size)]
-        self.garbage = []      # 지울 후보가 모자랄 때 쓰는 미리 채운 파일
-        self.last_trim = -10**12
         self.shared = {}       # (조각, 파일) → TC 파일: 원래 있던 파일은 같은 조각을 다시 써도 같은 파일 (미리 채우는 양을 줄임)
 
     def add_file(self, size, prefill):
@@ -71,44 +68,15 @@ class Builder:
                 gid[k] = self.shared[key]
             else:
                 gid[k] = self.add_file(a["file_size"][k], False)
-        gone = set()
+        # Discard(DB) 는 재생하지 않는다. f2fs 가 지운 파일의 블록을 스스로 반납해서, 재생하지 않아도 대기 구간 Discard 가
+        # 원본보다 많다 (calsb 123 vs 62MB). 파일 삭제 + FITRIM 으로 재생하던 코드는 지웠다
         for t_, op, f, off, ln in zip(t[sel], a["op"][sel], a["f"][sel], a["off"][sel], a["len"][sel]):
-            ts = int((tc_start + t_ - src_from) * 1e6)
-            if op == DB:
-                self.discard(ts, int(ln))
-            else:
-                self.reqs.append((ts, int(op), gid.get(int(f), 0), int(off), int(ln)))
-                if op == UNLINK:
-                    gone.add(int(f))
-        # 이 구간에서 새로 만들고 지우지 않은 파일은 뒤 구간의 Discard 때 지울 후보
-        for k in gid:
-            if not a["file_existing"][k] and k not in gone:   # 원래 있던(공유) 파일은 지우지 않는다
-                self.created.append((gid[k], int(a["file_size"][k])))
+            if op != DB:
+                self.reqs.append((int((tc_start + t_ - src_from) * 1e6), int(op), gid.get(int(f), 0), int(off), int(ln)))
         return float(src_to - src_from)
 
     def screen(self, tc_start, on):
         self.reqs.append((max(0, int(tc_start * 1e6) - 1), SCREEN, 1 if on else 0, 0, 0))
-
-    def discard(self, ts, nbytes):
-        """Discard 는 블록으로 재생하지 않는다. 그 양만큼 앞서 만든 파일을 1초 전에 지우고, 그 시각에 FITRIM 을 불러
-        f2fs 가 직접 반납하게 한다. (원본 Discard 는 대기 중에만 나온다: 파일 삭제만으로는 바로 반납하지 않고,
-        화면 꺼짐 idle maintenance 의 fstrim 같은 OS 동작이 내보낸다. 1초 안 Discard 는 FITRIM 한 번으로 묶음)"""
-        if ts - self.last_trim > 1_000_000:
-            self.reqs.append((ts, TRIM, 0, 0, 0))
-            self.last_trim = ts
-        ts = max(0, ts - 1_000_000)
-        # f2fs discard_granularity(16블록=64KB) 보다 작게 풀린 조각은 FITRIM 으로도 반납되지 않는다 → 큰 파일부터 지운다.
-        # (원본은 대기 중 f2fs_discard 가 4~32KB 로 냈다. 양은 맞추지만 Discard 크기 분포는 다르다)
-        while nbytes > 0:
-            big = [i for i, (_, sz) in enumerate(self.created) if sz >= 256 << 10]
-            if big:
-                f, s = self.created.pop(big[0])
-            else:
-                s = min(nbytes, 4 << 20)
-                f = self.add_file(s, True)
-                self.garbage.append(f)
-            self.reqs.append((ts, UNLINK, f, 0, 0))
-            nbytes -= s
 
     def write(self, name, meta):
         out = TCD / name
@@ -125,7 +93,7 @@ class Builder:
             "prefillMB": round(sum(s for s, p in self.files if p) / 1e6, 1),
             "durSec": round(self.reqs[-1][0] / 1e6, 3), "requests": len(self.reqs),
             "MB": {k: round(float(ln[ops == v].sum()) / 1e6, 1) for k, v in (("R", R), ("W", W), ("WB", WB), ("WX", WX), ("WD", WD))},
-            "fsync": int((ops == FS).sum()), "atomic": int((ops == FA).sum()), "ckpt": int((ops == CP).sum()), "dirsync": int((ops == DS).sum()), "trim": int((ops == TRIM).sum()), "unlink": int((ops == UNLINK).sum()), "garbageFiles": len(self.garbage),
+            "fsync": int((ops == FS).sum()), "atomic": int((ops == FA).sum()), "ckpt": int((ops == CP).sum()), "dirsync": int((ops == DS).sum()), "unlink": int((ops == UNLINK).sum()),
         }
         (out / "manifest.json").write_text(json.dumps(man, ensure_ascii=False, indent=1))
         print(f"wrote {out}: {man['durSec']}s, 요청 {man['requests']}, 파일 {man['files']} (미리 채움 {man['prefillMB']}MB), "
@@ -277,7 +245,7 @@ def cmd_day(a):
             if cats[c].get("db"):                  # DB 동작 모델 (측정 안 한 카테고리)
                 p = cats[c]["db"]
                 if c not in dbs:
-                    dbs[c] = DB(b, p.get("mode", "wal"), p.get("kb", 12), p.get("dbKb", 8), rng=random.Random(a.seed * 7 + len(dbs)))
+                    dbs[c] = SqlTx(b, p.get("mode", "wal"), p.get("kb", 12), p.get("dbKb", 8), rng=random.Random(a.seed * 7 + len(dbs)))
                 st["tc"] += dbs[c].run(st["tc"], v, p.get("perMin", 30), cat=c)[0]
                 return
             sid = pick(rng, {k: w for k, w in cats[c]["scenarios"].items() if k in reps})
@@ -359,7 +327,7 @@ def cmd_day(a):
 
 
 # ---------------- DB 동작 (SQLite transaction 합성) ----------------
-class DB:
+class SqlTx:
     """SQLite 가 transaction 마다 내는 파일 동작을 그대로 만든다. 측정 안 한 앱(메시지 등)을 흉내 낼 때와
     "Checkpoint 표시 없이 원인만으로 FS I/O 가 나오는지" 검증할 때 쓴다.
       journal (rollback, DELETE): journal 생성·쓰기 → fsync → 디렉터리 fsync(DS) → header 4KB → DB 쓰기 → fsync → journal 삭제
@@ -428,7 +396,7 @@ class DB:
 
 def cmd_dbtx(a):
     b = Builder()
-    db = DB(b, a.mode, a.kb, a.db_kb, rng=random.Random(a.seed))
+    db = SqlTx(b, a.mode, a.kb, a.db_kb, rng=random.Random(a.seed))
     _, n = db.run(5.0, a.sec, a.per_min)
     b.reqs.append((int((5 + a.sec + 5) * 1e6), MARK, len(b.timeline), 0, 0))
     b.write(a.name, {"mode": "dbtx", "db": vars(a) | {"fn": None}, "transactions": n})
