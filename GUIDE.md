@@ -281,6 +281,26 @@ UX_SERIAL=<IP>:5555 python3 run_tc.py day1   # push → 재생 + trace → compa
 - **대기 구간 Flush/s 는 원본의 60% 정도로 남아 있어요.** 원본 대기 Checkpoint 는 Flush 5개(앞에 파일 동기화 2개 + Checkpoint 3개), TC 는 3개예요. syncfs 로 재생하면 쌓인 Discard 가 다 나가 Flush·Discard 가 몇 배가 됐고, Flush 개수는 커널 flush_merge 와 그때 dirty 양에 따라 4~7개로 흔들려 맞추지 못했어요.
 - **I/O 가 적은 구간(대기·홈·통화)은 FS Write 가 원본의 1.5배 정도로 나와요.** 지금 폰에서 도는 배경 앱이 node·quota 를 더럽히고, TC 가 원본 간격으로 일으키는 Checkpoint 가 그것까지 같이 써요. 원본의 배경 앱 I/O 는 이미 uxwl 이 재생하고 있어서 그만큼이 더해져요. 앱 데이터 Write 는 comm 으로 걸러내지만 Checkpoint 안의 FS Write 는 누구 몫인지 나눌 수 없어요.
   보정 TC(calq, 화면 끔, 2.6초마다 Checkpoint)로 확인했어요. uxwl 이 데이터를 하나도 쓰지 않은 5분에도 Checkpoint Write 가 6.4MB 로 원본 대기 5분(5.0MB)보다 많았어요. Checkpoint 안팎 node Write 합은 원본 725, TC 601 블록으로 비슷하고, 원본은 앱 fsync 가 밖에서 쓰던 것을 TC 는 Checkpoint 가 써요.
+- **Run 사이 흔들림보다 작은 차이로 TC 를 좋다 나쁘다 하지 않아요.** 같은 day6 TC·같은 uxwl 로 두 번 돌린 TC 끼리 구간별로 비교했어요 (2026-10-30).
+  - 구간별 전체 통과율은 76~77% 로 1%p 안에서 흔들려요. 전체(16/16) 판정은 세 번 다 같았어요.
+  - 거의 안 흔들리는 항목: Read Volume(두 Run 이 같음), Sequential Read(p90 0.4%p), Request size, Inter-arrival, Idle%(p90 2.7%p), fsync/s(p90 x1.14).
+  - 많이 흔들리는 항목: FS Write(p90 x2.1), Checkpoint/s(p90 x3.0), Flush/s(p90 x1.6), Wakeups/분(p90 x2.0), QD p99(p90 x1.9), Sequential Write(p90 13%p). 구간 판정이 Run 마다 10~25% 뒤집혀요.
+  - 그래서 항목별 통과율은 5%p, 카테고리 통과 수는 2개 안의 차이를 흔들림으로 봐요. 그보다 큰 차이가 나거나 여러 카테고리에서 같은 쪽으로 움직일 때만 고친 효과로 봐요.
+
+### 9.3 버전 (v1)
+
+v1 은 git 태그 `wl-v1` 의 `wl/` 코드예요. 판정 기준(`metrics.py` 의 `CHECKS`·`INFO`·`SLACK`·`FLOOR`, `compare.py` 의 `SETTLE`)과 uxwl 재생 방식을 이 태그로 고정해요.
+
+```bash
+cd wl
+python3 segments.py                                   # 기준 측정이 바뀌었을 때만
+python3 gen_tc.py day --name day6 --seed 1 --hours 2  # 같은 조각·같은 seed 면 tc.bin 이 바이트까지 같아요
+python3 run_tc.py day6
+```
+
+- `compare.json` 과 `history.jsonl` 에 `version`(지금 `v1`)과 `tcSha`(tc.bin sha256 앞 12자리)가 남아요. 결과를 견줄 때 둘이 같은지 먼저 봐요. 조각은 각자 측정에서 만들므로 `tcSha` 는 기기·측정 세트마다 달라요.
+- 판정 기준이나 재생 방식을 바꾸면 `metrics.VERSION` 을 올리고 여기에 무엇이 바뀌었는지 적어요.
+- v1 기준 결과(day6, 세 번): 구간별 통과 76~77%, 전체 16/16, 늦은 요청(>5ms) 0.13~0.18%. 남은 차이는 9.2 의 대기 Flush/s, I/O 가 적은 구간의 FS Write, readahead 체인 QD 예요.
 
 ## 10. 자주 생기는 문제
 
