@@ -267,6 +267,7 @@ UX_SERIAL=<IP>:5555 python3 run_tc.py day1   # push → 재생 + trace → compa
 - **조각은 기준 측정이 바뀌면 다시 만들어요** (`python3 segments.py`). 시나리오마다 `runs/<ID>/` 의 마지막 run 을 쓰므로, 기준 세트(배터리 측정)보다 뒤에 시험 run 을 남기지 않아요.
 - **fsync 는 fsiotrace 의 FSYNC_TRIGGERED flag 로 가려요** (2026-10-28 이후 trace). 고친 fsiotrace 는 writeback·Checkpoint Write 의 comm 을 주인 앱으로 붙여서 comm 만으로는 앱 스레드를 알 수 없어요. 또 `is_writeback_kworker` 는 fsync 안 Write 와 O_DIRECT Write 에도 붙으므로, fsync flag 도 O_DIRECT 도 아닌 writeback 만 커널 몫으로 봐요.
 - **측정 전에 Discard 가 다 나가길 기다려요.** `run_tc.py` 는 앞 TC 재생 파일을 지우고 채운 뒤 `/sys/fs/f2fs/*/pending_discard` 가 0 이 될 때까지(최대 15분) 기다렸다가 trace 를 시작해요. FITRIM 이나 f2fs 설정 변경으로 억지로 비우지 않아요.
+- **같은 순간의 Read 는 Linux AIO 로 묶어 내요** (`replay/main.go` 의 `burstGap` 100µs, `burstSpan` 200µs). 원본은 thread 여러 개·readahead 가 Read 를 한꺼번에 내고 커널 block plug 가 묶어 보내 QD 가 50~60 까지 오르는데, pread 를 하나씩 부르면 QD 가 7 에 머물렀어요. 묶어 내면 이웃 Read 가 합쳐지지 않게 조각의 파일 offset 은 원본에서 떨어져 있던 구간 사이에 4KB 빈칸을 둬요 (`segments.py`).
 - **Discard 는 판정하지 않고 값만 보여 줘요** (`metrics.py` 의 `INFO`). f2fs 가 idle 때 알아서 내므로 언제 나올지 TC 가 정할 수 없어요.
 - **화면 꺼진 TC 에는 기기 배경 I/O 가 섞여요.** systemui `unlockcounter_prefs.xml` fsync(약 1/s), 제조사 서비스 DB 등이에요. 원본 I/O 가 많은 구간에는 영향이 없지만, YouTube·갤러리처럼 적은 구간은 fsync/s·Flush/s·Idle% 가 비율로 크게 어긋나 보여요.
 
