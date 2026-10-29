@@ -8,7 +8,7 @@
 	import CopyTable from '#lib/components/CopyTable.svelte';
 	import MiniTimeline from '#lib/components/MiniTimeline.svelte';
 	import { app } from '#lib/state.svelte.js';
-	import { volSpec, mapSpec, stackSpec, PROV_TRACE } from '#lib/charts/build.js';
+	import { volSpec, mapSpec, stackSpec, miniOption, PROV_TRACE } from '#lib/charts/build.js';
 	import { label, rowsOf, nameOf, rowOf, PAIRS, cname } from '#lib/view.js';
 	import { copy, copyGrid } from '#lib/clipboard.js';
 	import { theme } from '#lib/charts/theme.js';
@@ -32,7 +32,7 @@
 		const h = 26 * rs.length + 70;
 		const html = chartsHTML(
 			keys.map((k) => ({ o: distSpecs[k].option(th), title: distSpecs[k].title, height: h })),
-			{ title: `${app.index!.types[t]} · ${name}`, bg: th.surface, fg: th.fg, caption: '값은 Run 평균, 건수 %예요.' }
+			{ title: `${app.index!.types[t]} · ${name}`, bg: th.surface, fg: th.fg, caption: '값은 Run 평균이에요. 단위는 차트 제목에 있어요.' }
 		);
 		(await copy(html)) ? toast.success(`${name} 차트 ${keys.length}개를 HTML 하나로 복사했어요. Confluence HTML macro에 붙이면 돼요`) : toast.error('복사하지 못했어요');
 	}
@@ -59,6 +59,13 @@
 		flow: stackSpec('Write path (바이트 %)', cats, B.flow, rs.map((r) => r.flow), PROV_TRACE + ' fsiotrace flag로 나눴어요. 10월 28일 이전 측정은 flag가 다른 파일 것으로 붙은 경우가 있어요.')
 	});
 
+	// Timelines 의 작은 차트를 HTML 조각 하나로 복사
+	async function copyTl() {
+		const th = theme();
+		const list = rs.filter((r) => r.tl).map((r) => ({ o: miniOption(th, r.tl!.readMBs, r.tl!.writeMBs), title: `${label(r)} ${nameOf(r)}`, height: 96 }));
+		const html = chartsHTML(list, { title: `${app.index!.types[t]} · 1s Timeline`, bg: th.surface, fg: th.fg, caption: '대표 Run의 1초 단위 Read(위)·Write(아래) MB/s예요. 칸마다 세로 눈금이 달라요.' });
+		(await copy(html)) ? toast.success(`Timeline 차트 ${list.length}개를 HTML 하나로 복사했어요. Confluence HTML macro에 붙이면 돼요`) : toast.error('복사하지 못했어요');
+	}
 	function tlGrid() {
 		return {
 			cols: ['시나리오', '초', 'Read MB/s', 'Write MB/s'],
@@ -124,6 +131,7 @@
 <section class="mb-12 space-y-4">
 	<div class="flex items-end gap-3">
 		<h2 id="timelines" class="flex-1 text-h2 font-bold">Timelines</h2>
+		<Button variant="quiet" size="xs" onclick={copyTl}><CodeXml />HTML 복사</Button>
 		<Button variant="quiet" size="xs" onclick={() => copyGrid(tlGrid(), `${t} 1s Timeline`, '데이터')}><Table2 />Copy data</Button>
 	</div>
 	<p class="text-body-2 text-muted-foreground">대표 Run(Volume이 가운데인 Run)의 1초 단위 Read(위, 파랑)·Write(아래, 회색)예요. 칸마다 세로 눈금이 달라요. 누르면 시나리오 분석으로 가요.</p>
@@ -154,10 +162,12 @@
 			<Tabs.Trigger value="flow">Write path</Tabs.Trigger>
 		</Tabs.List>
 		<div class="flex flex-wrap items-center gap-1 text-body-3 text-ink-3">
-			<span class="mr-1">HTML 복사 (Read·Write 차트를 하나로):</span>
+			<span class="mr-1">HTML 복사 (차트 여러 개를 하나로):</span>
 			<Button variant="secondary" size="xs" onclick={() => copyDist(['sizeR', 'sizeW'], 'Request size 분포')}><CodeXml />Request size</Button>
 			<Button variant="secondary" size="xs" onclick={() => copyDist(['dtocR', 'dtocW'], 'Latency 분포')}><CodeXml />Latency</Button>
-			<Button variant="secondary" size="xs" onclick={() => copyDist(['sizeR', 'sizeW', 'dtocR', 'dtocW'], 'Request size·Latency 분포')}><CodeXml />둘 다</Button>
+			<Button variant="secondary" size="xs" onclick={() => copyDist(['sizeR', 'sizeW', 'dtocR', 'dtocW'], 'Request size·Latency 분포')}><CodeXml />Request size + Latency</Button>
+			<Button variant="secondary" size="xs" onclick={() => copyDist(['gap', 'ctod'], 'DtoD·CtoD 분포')}><CodeXml />DtoD + CtoD</Button>
+			<Button variant="secondary" size="xs" onclick={() => copyDist(['sizeR', 'sizeW', 'dtocR', 'dtocW', 'gap', 'ctod', 'flow'], 'Distributions 전체')}><CodeXml />전체 7개</Button>
 		</div>
 		<Tabs.Content value="size" class="grid gap-3 lg:grid-cols-2">
 			<Chart spec={distSpecs.sizeR} height={26 * rs.length + 70} />
