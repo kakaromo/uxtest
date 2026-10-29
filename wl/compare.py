@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """TC trace 를 원본 UX workload 패턴과 비교 (TC 를 돌릴 때마다 run_tc.py 가 부른다)
 
-  python3 wl/compare.py wl/.private/results/<run>
+  python3 wl/compare.py wl/.private/results/<run> [--all]
+
+TC 쪽은 재생기(uxwl)와 커널 문맥의 request 만 본다 (metrics.TC_ONLY). --all 이면 폰의 다른 앱 I/O 까지 다 센다.
 
 타임라인 구간마다 원본 조각의 [srcFrom, srcTo) 와 TC trace 의 같은 길이 구간을 metrics.raw 로 재고,
 구간별·카테고리별·전체로 합쳐 judge 로 판정한다. 구간이 많으면(하루 TC) 카테고리·전체 표만 출력한다.
@@ -79,6 +81,11 @@ def main():
     res = json.loads((run / "result.json").read_text())
     info = json.loads((run / "run.json").read_text())
     pq = info["pq"]
+    only = None if "--all" in sys.argv else M.TC_ONLY
+    if only:
+        n, ex = M.con.execute(f"""select count(*), count(*) filter (where not {only}) from read_parquet('{pq}')
+            where action = 'send_req' and not coalesce(is_mgmt, false)""").fetchone()
+        print(f"다른 앱 request {ex}/{n} ({ex / max(n, 1) * 100:.1f}%) 는 빼고 비교 (--all 이면 포함)")
     idx = json.loads((SEG / "index.json").read_text())
     reqs = load_tc(run / "tc.bin")
     T0 = align(pq, res, reqs)
@@ -96,7 +103,7 @@ def main():
     for it in tl:
         if it["seg"] not in idx:                # 합성 구간(DB 동작 등): 원본이 없어 TC 지표만
             L = it["srcTo"] - it["srcFrom"]
-            m = M.finish(M.raw(pq, T0 + it["tcStart"], T0 + it["tcStart"] + L))
+            m = M.finish(M.raw(pq, T0 + it["tcStart"], T0 + it["tcStart"] + L, only))
             synth.append({"i": it["i"], "seg": it["seg"], "synth": it.get("synth"), "tc": m})
             print(f"\n[{it['i']}] {it['seg']} {L:.0f}s (합성, 원본 없음) {it.get('synth')}")
             for k in ("writeMB", "dataWriteMB", "fsWriteMB", "fsPct", "flushPerSec", "fsyncPerSec", "ckptPerSec", "qdP99"):
@@ -106,7 +113,7 @@ def main():
         o0 = M.t0(seg["pq"])
         L = it["srcTo"] - it["srcFrom"]
         ro = M.raw(seg["pq"], o0 + it["srcFrom"], o0 + it["srcTo"])
-        rt = M.raw(pq, T0 + it["tcStart"], T0 + it["tcStart"] + L)
+        rt = M.raw(pq, T0 + it["tcStart"], T0 + it["tcStart"] + L, only)
         cat = it.get("cat", it["seg"])
         co, ct = by_cat.get(cat, ({}, {}))
         by_cat[cat] = (M.add(co, ro), M.add(ct, rt))
@@ -130,12 +137,12 @@ def main():
         jt, tp, tn = {}, 0, 0
     npass = sum(x["pass"] for x in items)
     ntot = sum(x["of"] for x in items)
-    out = {"run": run.name, "T0": T0, "itemPass": npass, "itemOf": ntot, "totalPass": tp, "totalOf": tn,
+    out = {"run": run.name, "T0": T0, "tcOnly": bool(only), "itemPass": npass, "itemOf": ntot, "totalPass": tp, "totalOf": tn,
            "lateOver5ms": res["lateOver5ms"], "elapsedSec": res["elapsedSec"], "total": pack(jt), "categories": cats, "synth": synth,
            "items": items}
     (run / "compare.json").write_text(json.dumps(out, ensure_ascii=False, indent=1))
     with open(RES / "history.jsonl", "a") as fo:
-        fo.write(json.dumps({"at": time.strftime("%Y-%m-%d %H:%M:%S"), "run": run.name, "itemPass": npass, "itemOf": ntot,
+        fo.write(json.dumps({"at": time.strftime("%Y-%m-%d %H:%M:%S"), "run": run.name, "tcOnly": bool(only), "itemPass": npass, "itemOf": ntot,
                              "totalPass": tp, "totalOf": tn, "late": res["lateOver5ms"],
                              "cats": {c: [v["pass"], v["of"]] for c, v in cats.items()},
                              "items": [(x["seg"], x["pass"], x["of"]) for x in items] if not many else None},
