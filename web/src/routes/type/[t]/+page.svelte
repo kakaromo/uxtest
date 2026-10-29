@@ -10,10 +10,13 @@
 	import { app } from '#lib/state.svelte.js';
 	import { volSpec, mapSpec, stackSpec, PROV_TRACE } from '#lib/charts/build.js';
 	import { label, rowsOf, nameOf, rowOf, PAIRS, cname } from '#lib/view.js';
-	import { copyGrid } from '#lib/clipboard.js';
+	import { copy, copyGrid } from '#lib/clipboard.js';
+	import { theme } from '#lib/charts/theme.js';
+	import { chartsHTML } from '#lib/charts/source.js';
+	import { toast } from 'svelte-sonner';
 	import { mb, f, x } from '#lib/fmt.js';
 	import { emph, headlines, tint } from '#lib/insight.js';
-	import { Table2 } from '@lucide/svelte';
+	import { Table2, CodeXml } from '@lucide/svelte';
 
 	const t = $derived(page.params.t!);
 	const rs = $derived(rowsOf(t));
@@ -23,6 +26,16 @@
 	const pairs = $derived(PAIRS.filter((p) => ids.includes(p.a) || ids.includes(p.b)));
 	const jank = $derived((app.index?.jank ?? []).filter((j) => ids.includes(j.scenario) && j.jank));
 	const cats = $derived(rs.map(cname));
+	// Distributions 의 Read·Write 차트를 HTML 조각 하나로 복사 (Confluence HTML macro 하나에 붙이기)
+	async function copyDist(keys: (keyof typeof distSpecs)[], name: string) {
+		const th = theme();
+		const h = 26 * rs.length + 70;
+		const html = chartsHTML(
+			keys.map((k) => ({ o: distSpecs[k].option(th), title: distSpecs[k].title, height: h })),
+			{ title: `${app.index!.types[t]} · ${name}`, bg: th.surface, fg: th.fg, caption: '값은 Run 평균, 건수 %예요.' }
+		);
+		(await copy(html)) ? toast.success(`${name} 차트 ${keys.length}개를 HTML 하나로 복사했어요. Confluence HTML macro에 붙이면 돼요`) : toast.error('복사하지 못했어요');
+	}
 	// 표 칸 농도: 같은 열 안에서 상대 크기
 	const col = (get: (r: (typeof rs)[number]) => number, log = false) => {
 		const vals = rs.map(get);
@@ -140,6 +153,12 @@
 			<Tabs.Trigger value="ctod">CtoD</Tabs.Trigger>
 			<Tabs.Trigger value="flow">Write path</Tabs.Trigger>
 		</Tabs.List>
+		<div class="flex flex-wrap items-center gap-1 text-body-3 text-ink-3">
+			<span class="mr-1">HTML 복사 (Read·Write 차트를 하나로):</span>
+			<Button variant="secondary" size="xs" onclick={() => copyDist(['sizeR', 'sizeW'], 'Request size 분포')}><CodeXml />Request size</Button>
+			<Button variant="secondary" size="xs" onclick={() => copyDist(['dtocR', 'dtocW'], 'Latency 분포')}><CodeXml />Latency</Button>
+			<Button variant="secondary" size="xs" onclick={() => copyDist(['sizeR', 'sizeW', 'dtocR', 'dtocW'], 'Request size·Latency 분포')}><CodeXml />둘 다</Button>
+		</div>
 		<Tabs.Content value="size" class="grid gap-3 lg:grid-cols-2">
 			<Chart spec={distSpecs.sizeR} height={26 * rs.length + 70} />
 			<Chart spec={distSpecs.sizeW} height={26 * rs.length + 70} />
