@@ -27,34 +27,40 @@ FS_BASE = "coalesce(is_journal or is_checkpoint or is_f2fs_meta_write or is_gc o
 
 con = duckdb.connect()
 _tables = {}
+# TC trace 에서 재생기와 커널 문맥만 남기는 조건. 화면 꺼진 TC 동안 폰의 다른 앱(systemui SharedPreferences fsync,
+# SettingsProvider, OPPO 서비스 DB 등)이 낸 I/O 는 빼야 한다. 원본 조각은 그때의 다른 앱 I/O 까지 uxwl 이 재생하므로
+# 그대로 두면 두 번 센다. Flush(kworker)·Checkpoint·Discard 는 누구 몫인지 나눌 수 없어 남기고, Hibern8 도 못 거른다
+TC_ONLY = "(comm = 'uxwl' or comm like 'kworker%' or comm like 'f2fs%' or comm like 'jbd2%')"
 
 
-def table(pq):
-    """parquet 을 한 번만 읽어 메모리 표로 둔다 (구간을 여러 번 잘라 보므로)"""
-    if pq not in _tables:
+def table(pq, only=None):
+    """parquet 을 한 번만 읽어 메모리 표로 둔다 (구간을 여러 번 잘라 보므로). only: request 를 거를 조건"""
+    key = (pq, only)
+    if key not in _tables:
         name = f"t{len(_tables)}"
         has_flag = con.execute(f"select count(*) filter (where is_fsync_triggered) > 0 from read_parquet('{pq}')").fetchone()[0]
         fn = FSYNC_NODE[bool(has_flag)]
         con.execute(f"""create temp table {name} as
             select time, lun, lba, size, least(qd, {QD_MAX}) qd, {extract.DIR} dir,
                    {FS_BASE} or ({NODE} and not {fn}) fsw, {fn} fsync_node, {CK} ck
-            from read_parquet('{pq}') where action = 'send_req' and coalesce(is_mgmt, false) = false order by time""")
+            from read_parquet('{pq}') where action = 'send_req' and coalesce(is_mgmt, false) = false
+            {f"and {only}" if only else ""} order by time""")
         # Hibern8: enter 완료 → 다음 exit 요청 구간 (UFS 관리 명령, 위 표에서는 빠져 있다)
         con.execute(f"""create temp table {name}h as select time, nt from (
             select time, k, lead(time) over (order by time) nt, lead(k) over (order by time) nk from (
               select time, mgmt_name = 'DME_HIBER_ENTER' k from read_parquet('{pq}')
               where (action = 'uic_complete' and mgmt_name = 'DME_HIBER_ENTER') or (action = 'uic_send' and mgmt_name = 'DME_HIBER_EXIT')))
             where k and nk = false""")
-        _tables[pq] = name
-    return _tables[pq]
+        _tables[key] = name
+    return _tables[key]
 
 
 def t0(pq):
     return con.execute(f"select min(time) from read_parquet('{pq}')").fetchone()[0]
 
 
-def raw(pq, a, b):
-    T = table(pq)
+def raw(pq, a, b, only=None):
+    T = table(pq, only)
     q = lambda s: con.execute(s).fetchall()  # noqa: E731
     w = f"from {T} where time >= {a} and time < {b}"
     r = {"dur": max(b - a, 1e-3)}
