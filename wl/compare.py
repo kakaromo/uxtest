@@ -22,6 +22,9 @@ import metrics as M  # noqa: E402
 
 SEG = HERE / ".private" / "seg"
 RES = HERE / ".private" / "results"
+# 앞 구간이 화면 켜짐이면 대기 구간 처음 SETTLE 초는 앞 구간이 남긴 f2fs 일(writeback·Checkpoint·Discard)이 몰린다
+# (day5: 대기 시간의 19% 에 FS Write 44%, Discard 82%). 원본 대기 측정은 쉰 뒤에 시작해 이게 없다 → 양쪽 다 빼고 판정, TC 값은 따로 보여 줌
+SETTLE = 10.0
 REQ = np.dtype([("t", "<u8"), ("op", "u1"), ("f", "<u4"), ("off", "<u8"), ("len", "<u4")])
 
 
@@ -100,6 +103,7 @@ def main():
     items, by_cat, tot_o, tot_t = [], {}, {}, {}
     t_start = time.time()
     synth = []
+    carry, prev = {}, None
     for it in tl:
         if it["seg"] not in idx:                # 합성 구간(DB 동작 등): 원본이 없어 TC 지표만
             L = it["srcTo"] - it["srcFrom"]
@@ -112,18 +116,27 @@ def main():
         seg = idx[it["seg"]]
         o0 = M.t0(seg["pq"])
         L = it["srcTo"] - it["srcFrom"]
-        ro = M.raw(seg["pq"], o0 + it["srcFrom"], o0 + it["srcTo"])
-        rt = M.raw(pq, T0 + it["tcStart"], T0 + it["tcStart"] + L, only)
         cat = it.get("cat", it["seg"])
+        sk = min(SETTLE, L) if cat == "standby" and prev not in (None, "standby") else 0.0
+        prev = cat
+        if sk:
+            carry = M.add(carry, M.raw(pq, T0 + it["tcStart"], T0 + it["tcStart"] + sk, only))
+        if L - sk < 1:
+            continue
+        ro = M.raw(seg["pq"], o0 + it["srcFrom"] + sk, o0 + it["srcTo"])
+        rt = M.raw(pq, T0 + it["tcStart"] + sk, T0 + it["tcStart"] + L, only)
         co, ct = by_cat.get(cat, ({}, {}))
         by_cat[cat] = (M.add(co, ro), M.add(ct, rt))
         tot_o, tot_t = M.add(tot_o, ro), M.add(tot_t, rt)
         j = M.judge(M.finish(ro), M.finish(rt))
         ok = [v[3] for v in j.values() if v[3] is not None]
-        items.append({"i": it["i"], "seg": it["seg"], "cat": cat, "sec": round(L, 1), "pass": sum(ok), "of": len(ok),
+        items.append({"i": it["i"], "seg": it["seg"], "cat": cat, "sec": round(L - sk, 1), "settle": sk, "pass": sum(ok), "of": len(ok),
                       "checks": pack(j)})
         if not many:
             show(f"[{it['i']}] {it['seg']} {L:.0f}s", j)
+    if carry:
+        m = M.finish(carry)
+        print(f"\n[대기 처음 {SETTLE:.0f}초, 판정 제외] {carry['dur']:.0f}s  " + "  ".join(f"{k} {m[k]:.2f}" for k in ("writeMB", "fsWriteMB", "readMB", "discardMB", "flushPerSec")))
     cats = {}
     if many:
         for c, (ro, rt) in sorted(by_cat.items(), key=lambda x: -x[1][0]["dur"]):
@@ -139,6 +152,7 @@ def main():
     ntot = sum(x["of"] for x in items)
     out = {"run": run.name, "T0": T0, "tcOnly": bool(only), "itemPass": npass, "itemOf": ntot, "totalPass": tp, "totalOf": tn,
            "lateOver5ms": res["lateOver5ms"], "elapsedSec": res["elapsedSec"], "total": pack(jt), "categories": cats, "synth": synth,
+           "settle": {"sec": SETTLE, "tc": M.finish(carry)} if carry else None,
            "items": items}
     (run / "compare.json").write_text(json.dumps(out, ensure_ascii=False, indent=1))
     with open(RES / "history.jsonl", "a") as fo:

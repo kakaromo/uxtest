@@ -3,7 +3,8 @@
 report/extract.py 의 trace_metrics 와 같은 정의를 쓰되(방향, 크기 구간, 순차, flow), 구간으로 자르고 더할 수 있게 따로 둔다.
   raw(pq, a, b)  구간의 더할 수 있는 합계 (바이트, 건수, 구간별 건수 …)
   finish(raw)    합계 → 비교 지표. 여러 구간의 raw 를 add 로 더한 뒤 finish 하면 카테고리·전체 지표가 된다.
-FS 유발 Write = journal·checkpoint·f2fs meta·GC + fsync 밖의 node write (fsync 안의 node write 는 fsync 로 센다, FSYNC_NODE)
+FS 유발 Write = journal·checkpoint·f2fs meta + fsync 밖의 node write (fsync 안의 node write 는 fsync 로 센다, FSYNC_NODE)
+GC Read·Write 는 Volume 에서 빼고 gcMB 로 따로 센다 (판정 안 함, INFO)
 """
 import sys
 from pathlib import Path
@@ -23,7 +24,10 @@ KERN = ("(comm like 'kworker%' or comm like 'f2fs%' or comm like 'jbd2%' "
         f"or coalesce(is_writeback_kworker or is_gc, false) or {CK})")
 NODE = "coalesce(is_f2fs_node_write, false)"
 FSYNC_NODE = {True: f"({NODE} and coalesce(is_fsync_triggered, false))", False: f"({NODE} and not {KERN})"}
-FS_BASE = "coalesce(is_journal or is_checkpoint or is_f2fs_meta_write or is_gc or is_f2fs_node_gc or is_f2fs_data_gc, false)"
+FS_BASE = "coalesce(is_journal or is_checkpoint or is_f2fs_meta_write, false)"
+# f2fs GC: 얼마나 할지는 파일 시스템이 얼마나 차고 조각났는지에 달려 TC 가 정할 수 없다. 하루 TC 는 하루치 파일 생성·삭제를
+# 2시간에 몰아 GC 가 원본의 15배(day5: 60.7 vs 4.2MB, 대기 구간 35 vs 2.7MB). Discard 처럼 따로 보여 주기만 한다
+GC = "(coalesce(is_gc or is_f2fs_node_gc or is_f2fs_data_gc, false) or comm like 'f2fs_gc%')"
 
 con = duckdb.connect()
 _tables = {}
@@ -42,7 +46,7 @@ def table(pq, only=None):
         fn = FSYNC_NODE[bool(has_flag)]
         con.execute(f"""create temp table {name} as
             select time, lun, lba, size, least(qd, {QD_MAX}) qd, {extract.DIR} dir,
-                   {FS_BASE} or ({NODE} and not {fn}) fsw, {fn} fsync_node, {CK} ck
+                   ({FS_BASE} or ({NODE} and not {fn})) and not {GC} fsw, {fn} fsync_node, {CK} ck, {GC} gc
             from read_parquet('{pq}') where action = 'send_req' and coalesce(is_mgmt, false) = false
             {f"and {only}" if only else ""} order by time""")
         # Hibern8: enter 완료 → 다음 exit 요청 구간 (UFS 관리 명령, 위 표에서는 빠져 있다)
@@ -62,10 +66,12 @@ def t0(pq):
 def raw(pq, a, b, only=None):
     T = table(pq, only)
     q = lambda s: con.execute(s).fetchall()  # noqa: E731
-    w = f"from {T} where time >= {a} and time < {b}"
+    wa = f"from {T} where time >= {a} and time < {b}"   # 시간 지표(간격·Idle·Wakeups)는 GC 도 깨우므로 다 본다
+    w = wa + " and not gc"                                 # 양·크기·순차·QD 는 GC 빼고
     r = {"dur": max(b - a, 1e-3)}
     for d, n, by in q(f"select dir, count(*), coalesce(sum(size), 0) {w} group by 1"):
         r[f"n{d}"], r[f"b{d}"] = n, by
+    r["gcb"] = q(f"select coalesce(sum(size), 0) {wa} and gc and dir in ('R', 'W')")[0][0]
     r["fsw"], r["fsyncN"] = q(f"select coalesce(sum(size) filter (where fsw), 0), count(*) filter (where fsync_node) {w} and dir = 'W'")[0]
     for d in "RW":
         r[f"size{d}"] = [0] * 5
@@ -78,13 +84,13 @@ def raw(pq, a, b, only=None):
         r["qd"][int(k or 0)] = n
     r["gap"] = list(q(f"""select count(*) filter (where gap < 0.001), count(*) filter (where gap >= 0.001 and gap < 0.016),
                 count(*) filter (where gap >= 0.016 and gap < 0.2), count(*) filter (where gap >= 0.2)
-                from (select time - lag(time) over (order by time) gap {w} and dir in ('R', 'W'))""")[0])
-    r["wakes"] = q(f"select count(*) filter (where gap >= 1) from (select time - lag(time) over (order by time) gap {w})")[0][0]
-    r["busy"] = q(f"select count(distinct floor((time - {a}) * 10)) {w} and dir in ('R', 'W')")[0][0]
+                from (select time - lag(time) over (order by time) gap {wa} and dir in ('R', 'W'))""")[0])
+    r["wakes"] = q(f"select count(*) filter (where gap >= 1) from (select time - lag(time) over (order by time) gap {wa})")[0][0]
+    r["busy"] = q(f"select count(distinct floor((time - {a}) * 10)) {wa} and dir in ('R', 'W')")[0][0]
     # Checkpoint 횟수: f2fs_ckpt Write 묶음 (안쪽 간격 0.2ms 안팎, 사이 2ms 이상)
     r["h8"], r["h8sec"] = q(f"""select count(*), coalesce(sum(least(nt, {b}) - greatest(time, {a})), 0)
         from {T}h where time < {b} and nt > {a}""")[0]
-    r["ckpt"] = q(f"select count(*) from (select time - lag(time) over (order by time) g {w} and ck) where g is null or g > 0.001")[0][0]
+    r["ckpt"] = q(f"select count(*) from (select time - lag(time) over (order by time) g {wa} and ck) where g is null or g > 0.001")[0][0]
     return r
 
 
@@ -103,7 +109,7 @@ def finish(r):
     dur = r["dur"]
     rb, wb = g("bR", 0), g("bW", 0)
     pct = lambda a, b: 100 * a / b if b else 0  # noqa: E731
-    m = {"durSec": round(dur, 2), "readMB": rb / 1e6, "writeMB": wb / 1e6, "discardMB": g("bD", 0) / 1e6,
+    m = {"durSec": round(dur, 2), "readMB": rb / 1e6, "writeMB": wb / 1e6, "discardMB": g("bD", 0) / 1e6, "gcMB": g("gcb", 0) / 1e6,
          "flushPerSec": g("nF", 0) / dur, "readN": g("nR", 0), "writeN": g("nW", 0),
          "fsWriteMB": r["fsw"] / 1e6, "dataWriteMB": (wb - r["fsw"]) / 1e6, "fsPct": pct(r["fsw"], wb),
          "fsyncPerSec": r["fsyncN"] / dur, "ckptPerSec": r.get("ckpt", 0) / dur}
@@ -135,7 +141,7 @@ def metrics(pq, a, b):
 CHECKS = [
     ("readMB", "ratio", 0.10), ("writeMB", "ratio", 0.10), ("dataWriteMB", "ratio", 0.10),
     ("fsWriteMB", "ratio", 0.20), ("fsPct", "diff", 5.0), ("flushPerSec", "ratio", 0.20), ("fsyncPerSec", "ratio", 0.20),
-    ("discardMB", "ratio", 0.20), ("ckptPerSec", "ratio", 0.20),
+    ("discardMB", "ratio", 0.20), ("gcMB", "ratio", 0.20), ("ckptPerSec", "ratio", 0.20),
     ("sizeR", "dist", 15.0), ("sizeW", "dist", 15.0), ("seqR", "diff", 10.0), ("seqW", "diff", 10.0),
     ("gap", "dist", 15.0), ("idlePct", "diff", 5.0), ("wakesPerMin", "ratio", 0.20), ("qdP99", "ratio", 0.5),
     ("h8PerMin", "ratio", 0.20), ("h8Pct", "diff", 5.0),
@@ -144,7 +150,7 @@ CHECKS = [
 # (cal4: 앞 구간에서 지운 파일의 Discard 가 카메라 구간에 652MB, 원본 fstrim 구간 1075MB 는 TC 에서 3MB)
 # Hibern8 은 UFS 관리 명령이라 TC_ONLY 로 거를 수 없고, 화면 꺼진 TC 동안 다른 앱 request 가 링크를 깨우는 몫이 섞인다
 # (day4: 거른 뒤 Idle% 82.2 vs 83.2 로 맞는데 h8/분 124 vs 88)
-INFO = {"discardMB", "h8PerMin", "h8Pct"}
+INFO = {"discardMB", "gcMB", "h8PerMin", "h8Pct"}
 # 배경 I/O(폰의 다른 앱·시스템) 때문에 생기는 절대 차이는 허용: 이 안이면 비율이 기준을 넘어도 통과
 SLACK = {"readMB": "mb", "writeMB": "mb", "dataWriteMB": "mb", "fsWriteMB": "mb", "discardMB": "mb",
          "flushPerSec": 0.5, "fsyncPerSec": 0.5, "ckptPerSec": 0.2, "wakesPerMin": 5.0, "h8PerMin": 5.0}

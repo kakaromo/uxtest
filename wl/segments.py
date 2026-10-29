@@ -25,6 +25,9 @@
 
 파일 offset: f2fs 는 덮어쓰기도 새 LBA 에 쓰므로 LBA 로 offset 을 알 수 없다. inode 별로 건드린 LBA 구간을
 LBA 순서로 이어 붙여 offset 을 준다 (구간 안 Sequential 유지). inode 가 없는 요청은 파일 0(scratch).
+덮어쓰던 파일: 위처럼 이어 붙이면 WAL·.pma·로그처럼 같은 자리를 계속 덮어쓰던 파일이 끝없이 늘어나는 append 가 되어
+매 Checkpoint 마다 블록 할당·quota 가 바뀐다 (대기 구간 Checkpoint quota 가 원본의 5배). 처음 접근이 Write 이고 지우지도 fsync 하지도 않으며
+1초 넘게 떨어진 작은 Write 묶음(≤1MB)이 두 번 넘게 오는 파일은 가장 큰 묶음 크기의 원래 있던 파일로 보고, 그 안을 돌며 덮어쓴다.
 
 지워진 파일: trace 에 unlink 는 없다. 새로 만든 파일 중 이름이 -journal·.tmp 로 끝나거나, 같은 이름이 inode 여러 개로
 나오면(앞 것이 지워지고 새로 만들어짐) 마지막 접근 직후 지운다. 예: TikTok 은 105초에 ttm_strategy.db-journal 을 inode 1045개로 만들고 지웠다.
@@ -48,6 +51,8 @@ SEG = HERE / ".private" / "seg"
 OPS = {"R": 0, "W": 1, "WB": 2, "WD": 3, "FS": 4, "DB": 5, "UL": 6, "FA": 9, "WX": 10, "CP": 11, "DS": 13}
 FSYNC_WIN = 1.0   # 앱 스레드 Data Write 뒤 이 시간 안에 같은 파일 fsync 가 오면 그 fsync 의 일부
 FLUSH_WIN = 0.003  # fsync node write 뒤 이 안에 Flush 가 오면 atomic commit (PREFLUSH|FUA 를 앞뒤 Flush 로 처리)
+REWRITE_GAP = 1.0   # 같은 파일 Write 사이가 이보다 벌어지면 다른 묶음
+REWRITE_MAX = 256   # 묶음 하나가 이 블록(1MB) 이하인 파일만 덮어쓰기로 본다 (영상 캐시 같은 큰 append 는 그대로)
 CKPT_WIN = 0.001   # fsync node write 뒤 이 안에 f2fs_ckpt Write 가 오면 그 fsync 가 Checkpoint 를 부른 것 (새 journal 파일 fsync 등)
 APP = "not (comm like 'kworker%' or comm like 'f2fs%' or comm like 'jbd2%')"
 TEMP = re.compile(r"(-journal|\.tmp|\.temp)$")
@@ -107,8 +112,10 @@ def build(pq):
         elif d == "D":
             ev.append([t, "DB", 0, 0, nb, tid])
         elif d == "W":
-            if fsw or (node and not fsn):
+            if fsw:
                 continue                       # f2fs 몫
+            if node and not fsn:
+                continue                       # f2fs 몫 (writeback node)
             if node:                           # fsync 안 node write
                 if ino:
                     # 바로 뒤 Checkpoint 가 오면 그 Flush 는 Checkpoint 몫 → 일반 fsync (+ CP). 아니고 Flush 만 따라오면 atomic commit
@@ -241,6 +248,20 @@ def build(pq):
         if op != "DB":
             first.setdefault(ino, op)
 
+    # 덮어쓰던 파일: 크기 = 가장 큰 Write 묶음 (블록)
+    WOPS = ("W", "WB", "WD", "WX")
+    ul = {e[2] for e in ev if e[1] in ("UL", "FS", "FA")}   # 지우거나 fsync 하는 파일은 빼기 (fsync 덮어쓰기는 f2fs 가 IPU 로 node 를 안 써서 fsync I/O 가 사라진다)
+    bursts = {}
+    for t, op, ino, lba, nb, _ in ev:
+        if op in WOPS and ino and ino not in ul and first.get(ino) in WOPS:
+            b = bursts.setdefault(ino, [])
+            if b and t - b[-1][0] <= REWRITE_GAP:
+                b[-1][0], b[-1][1] = t, b[-1][1] + nb
+            else:
+                b.append([t, nb])
+    cap = {ino: max(n for _, n in b) for ino, b in bursts.items() if len(b) > 2 and max(n for _, n in b) <= REWRITE_MAX}
+    cur = dict.fromkeys(cap, 0)
+
     n = len(ev)
     T = np.empty(n, np.float64)
     OP = np.empty(n, np.uint8)
@@ -260,10 +281,22 @@ def build(pq):
             j = bisect.bisect_right(st, lba) - 1
             OFF[k] = (base[j] + lba - st[j]) * 4096
             LN[k] = nb * 4096
+            if ino in cap:
+                c = cap[ino]
+                nb = min(nb, c)
+                if op in WOPS:
+                    if cur[ino] + nb > c:
+                        cur[ino] = 0
+                    OFF[k], cur[ino] = cur[ino] * 4096, cur[ino] + nb
+                else:                                     # Read 는 파일 안으로 접어 넣는다
+                    b = int(OFF[k]) // 4096 % c
+                    OFF[k] = (b if b + nb <= c else 0) * 4096
+                LN[k] = nb * 4096
     files = {"ino": np.array(inos, np.uint64),
-             "size": np.array([fmap[i][2] * 4096 for i in inos], np.uint64),
+             "size": np.array([cap.get(i, fmap[i][2]) * 4096 for i in inos], np.uint64),
              # 처음 접근이 Read 면 원래 있던 파일 → 준비 단계에서 미리 채움. Write 로 시작하면 새로 만든 파일
-             "existing": np.array([first.get(i, "R") == "R" or i == 0 for i in inos], bool)}
+             "existing": np.array([first.get(i, "R") == "R" or i == 0 or i in cap for i in inos], bool)}
+    db["rewriteFiles"], db["rewriteKB"] = len(cap), sum(cap.values()) * 4
     return {"t": T, "op": OP, "f": F, "off": OFF, "len": LN, **{"file_" + k: v for k, v in files.items()}}, t1 - t0, db
 
 
