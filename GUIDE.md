@@ -234,6 +234,8 @@ fsiotrace 를 바꿨거나 다른 커널에서 쓸 때는 이름·flag 가 맞�
 
 ## 9. UFS workload TC (wl/)
 
+설계 전체(규칙·상수·형식·시행착오)는 [`wl/TC_SPEC.md`](wl/TC_SPEC.md) 에 있어요. 다른 프로젝트에서 다시 만들 때는 그 문서를 봐요.
+
 측정한 trace 를 블록이 아니라 **파일 동작**(pwrite, fsync, O_DIRECT, unlink …)으로 바꿔 기기 `/data` 에서 재생해요. f2fs 가 Metadata·Checkpoint·Flush·Discard 를 직접 만들게 하고, 재생 trace 를 원본과 자동 비교해요.
 
 ```sh
