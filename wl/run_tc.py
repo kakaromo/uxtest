@@ -66,6 +66,8 @@ def main():
     t_wait = time.time()
     while True:
         pend = adb("shell", "sync; cat /sys/fs/f2fs/*/pending_discard 2>/dev/null").split()
+        if not any(x.isdigit() for x in pend):
+            print("경고: /sys/fs/f2fs/*/pending_discard 를 못 읽어 Discard 대기를 건너뛰어요 (root·f2fs 확인)", flush=True)
         pend = sum(int(x) for x in pend if x.isdigit())
         if pend == 0 or time.time() - t_wait > 900:
             break
@@ -77,7 +79,7 @@ def main():
 
     if a.no_trace:
         adb("shell", "sync")
-        adb("shell", run_cmd.replace(" &", ""))
+        adb("shell", run_cmd[:-2])
         info = {"pq": None}
     else:
         steps = [
@@ -119,6 +121,8 @@ def main():
     adb("pull", f"{DEV}/result.json", str(out / "result.json"))
     r = json.loads((out / "result.json").read_text())
     print(f"재생 {r['elapsedSec']:.1f}s / 예정 {r['scheduledSec']:.1f}s, 늦음(>5ms) {r['lateOver5ms']}, qdMax {r['qdMax']}")
+    if r.get("errorKinds"):                     # 재생 실패는 판정에 안 잡히므로 따로 보여 준다 (root 없음, atomic ioctl·O_DIRECT 미지원 등)
+        print("경고: 재생 오류", json.dumps(r["errorKinds"], ensure_ascii=False))
     if a.cleanup:
         adb("shell", f"{DEV}/uxwl clean --root {DEV}")
     if info["pq"]:
