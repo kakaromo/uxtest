@@ -151,6 +151,8 @@ def cmd_day(a):
         if not cats.get(c, {}).get("db") and not any(s in reps for s in cats.get(c, {}).get("scenarios", {})):
             target[c] = 0
     tot = sum(target.values())
+    if not tot:
+        raise SystemExit("카테고리 가중치가 모두 0 이에요 (mix.json 의 시나리오에 조각이 있는지 확인)")
     target = {c: w / tot for c, w in target.items() if w > 0}
 
     vis = {c: sampler(usage["visitSecQ"][c]["p"]) for c in target if c in usage["visitSecQ"]}
@@ -231,6 +233,8 @@ def cmd_day(a):
             L = max(5.0, gap * a.standby_scale)
             band = next(x for x in mix["standby"] if gap <= x["maxSec"])
             sid = pick(rng, {k: v for k, v in band["scenarios"].items() if k in reps})
+            if sid is None:
+                raise SystemExit(f"mix.json standby 구간(maxSec {band['maxSec']})의 시나리오에 조각이 없어요: {list(band['scenarios'])}")
             name = rng.choice(reps[sid])
             dur = idx[name]["durSec"]
             while L > 0.5:

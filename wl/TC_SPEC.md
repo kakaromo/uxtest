@@ -11,52 +11,77 @@
 
 ## 0. 코드를 그대로 가져갈 때
 
-### 0.1 가져갈 파일
-| 파일 | 역할 | 커밋 여부 |
-|---|---|---|
-| `wl/segments.py` | 원본 trace → 조각 (3절) | 코드 |
-| `wl/gen_tc.py` | 조각 → tc.bin·manifest (4절) | 코드 |
-| `wl/replay/main.go`, `go.mod`, `go.sum`, `wl/Makefile` | 재생기 uxwl (5절) | 코드 |
-| `wl/run_tc.py` | 기기 실행 + trace + 비교 호출 (6절) | 코드 |
-| `wl/compare.py`, `wl/metrics.py` | 비교·판정 (7절) | 코드 |
-| `wl/usage.py`, `wl/catmap.json` | 행동 모델 만들기 (4.4) | 코드 |
-| `wl/mix.json` | 가중치 (4.4) | 코드, 사용자가 고침 |
-| `wl/.private/` | 조각, TC, 결과, `usage.json` | **커밋 안 함** |
-
+### 0.1 가져갈 파일과 폴더 배치
+`wl/` 만 복사하면 import 에서 멈춰요. 아래 배치를 그대로 지켜요 (코드가 `wl/` 의 상위 폴더를 기준으로 경로를 잡아요).
+```
+<프로젝트>/
+  run.py                 agent HTTP 클라이언트 (run_tc.py 가 import run)
+  report/extract.py      작은 함수 네 개 (segments·metrics·compare·run_tc 가 import extract)
+  scenarios/*/<ID>.scenario.json   시나리오 목록 (ID 만 씀)
+  runs/<ID>/2*.json      시나리오 측정 결과 (trace ID)
+  wl/
+    segments.py gen_tc.py run_tc.py compare.py metrics.py usage.py
+    mix.json catmap.json Makefile
+    replay/main.go go.mod go.sum
+    .private/            조각·TC·결과·usage.json (커밋 안 함, 스크립트가 만듦)
+```
 `wl/export_site.py` 는 분석 사이트용이라 가져가지 않아도 돼요.
 
-### 0.2 이 저장소 밖에 기대는 것 (새 프로젝트에서 바꿀 곳)
-`wl/` 코드는 아래 다섯 곳에만 기대요. 이것만 새 환경에 맞추면 나머지는 그대로 돌아가요.
+### 0.2 이 저장소 밖에 기대는 것 (새 프로젝트에서 맞출 곳)
 
-1. **`report/extract.py` 의 작은 함수 네 개** (`segments.py`, `metrics.py`, `compare.py`, `run_tc.py` 가 `import extract` 로 씀). 같은 이름으로 옮겨 오면 돼요.
-   ```python
-   DIR = ("case when opcode in (40,136) then 'R' when opcode in (42,138) then 'W' "
-          "when opcode=66 then 'D' when opcode=53 then 'F' else 'X' end")
-   def size_bucket(col):   # ≤4K, ≤16K, ≤128K, ≤512K, 그 이상
-       return (f"case when {col}<=4096 then 0 when {col}<=16384 then 1 when {col}<=131072 then 2 "
-               f"when {col}<=524288 then 3 else 4 end")
-   ARCHIVE = Path.home() / ".agent-standalone/archive/jobs"
-   def parquet_of(tid):    # trace ID → parquet 경로
-       hits = glob.glob(str(ARCHIVE / "*" / "trace" / tid / "result_fsio_ufs.parquet"))
-       return hits[0] if hits else None
-   def scenario_info(sid): # 시나리오 ID → (시나리오 JSON, 마지막 run JSON, 경로)
-       p = glob.glob(str(ROOT / "scenarios" / "*" / f"{sid}.scenario.json"))[0]
-       run = sorted(f for f in glob.glob(str(ROOT / "runs" / sid / "*.json")) if not f.endswith("-dry.json"))[-1]
-       return json.load(open(p)), json.load(open(run)), run
-   ```
-2. **원본 측정 목록** (`segments.py` 의 `runs()`). 시나리오 ID 는 `scenarios/*/<ID>.scenario.json` 파일 이름에서, 회차별 trace 는 `runs/<ID>/<시각>.json` 의 `results[0].traceJobs[] = {repeatIndex, traceJobId}` 에서 찾아요. 측정 결과를 다른 방식으로 보관하면 `runs()` 만 고쳐 `(시나리오 ID, 회차, trace ID, parquet 경로)` 를 내게 하면 돼요.
-3. **trace 시작·끝** (`run_tc.py`). 지금은 agent(`../agent --standalone`, 기본 `http://127.0.0.1:50051`, 환경 변수 `UX_AGENT`, `UX_DEVICE`)의 `POST /api/agent/scenario/run` 으로 Step 목록(`shell`, `trace_start fsio_ufs`, `sleep`, `trace_stop`)을 보내고, `GET /api/agent/benchmark/status?jobId=`, `GET /api/agent/benchmark/result?jobId=&deviceId=` 로 끝과 trace ID 를 받아요. 다른 trace 실행기를 쓰면 6절 5번 순서를 지키는 함수로 바꾸고, 끝에 `run.json` 에 `{"pq": <TC trace parquet 경로>}` 만 남기면 compare 가 돌아요.
-4. **trace 도구** = fsiotrace `fsio_ufs` parquet (2.2 의 필드와 flag). 다른 도구면 같은 열 이름으로 바꿔 parquet 을 만들어요. flag 를 붙이는 규칙이 다르면 3.2 분류가 틀어지므로, 보정 세트(11절)로 다시 확인해요.
-5. **사용 로그 데이터셋 경로** (`usage.py` 의 `SRC`). 데이터셋을 받은 곳으로 바꿔요. `gen_tc.py day` 만 필요하고 `seq` 는 없어도 돼요.
+**1. `report/extract.py`.** 이 저장소 파일 전체를 가져가도 되고, 아래만 있으면 돼요. `ROOT` 는 반드시 `wl/` 의 상위 폴더예요.
+```python
+import glob, json
+from pathlib import Path
+ROOT = Path(__file__).resolve().parent.parent
+ARCHIVE = Path.home() / ".agent-standalone/archive/jobs"      # agent 가 trace 를 보관하는 곳
+DIR = ("case when opcode in (40,136) then 'R' when opcode in (42,138) then 'W' "
+       "when opcode=66 then 'D' when opcode=53 then 'F' else 'X' end")
+def size_bucket(col):   # ≤4K, ≤16K, ≤128K, ≤512K, 그 이상
+    return (f"case when {col}<=4096 then 0 when {col}<=16384 then 1 when {col}<=131072 then 2 "
+            f"when {col}<=524288 then 3 else 4 end")
+def parquet_of(tid):    # trace ID → parquet 경로
+    hits = glob.glob(str(ARCHIVE / "*" / "trace" / tid / "result_fsio_ufs.parquet"))
+    return hits[0] if hits else None
+def scenario_info(sid): # 시나리오 ID → (시나리오 JSON, 마지막 run JSON, 경로)
+    p = glob.glob(str(ROOT / "scenarios" / "*" / f"{sid}.scenario.json"))[0]
+    run = sorted(f for f in glob.glob(str(ROOT / "runs" / sid / "*.json")) if not f.endswith("-dry.json"))[-1]
+    return json.load(open(p)), json.load(open(run)), run
+```
 
-그 밖의 설정:
-- adb 기기: 환경 변수 `UX_SERIAL` (무선이면 `IP:5555`). 기기 쪽 재생 디렉터리는 `run_tc.py` 의 `DEV = /data/local/tmp/uxwl`.
-- 호스트: Python 3 + `duckdb`, `numpy`. Go 1.25 + `golang.org/x/sys` (`make` 가 linux/arm64 정적 바이너리를 `wl/.private/uxwl` 로 만듦).
-- 기기: root 권한 (uxwl 이 `/sys/power/wake_lock`, f2fs ioctl, `/sys/fs/f2fs/*/pending_discard` 를 씀), 커널 `CONFIG_AIO`.
+**2. 원본 측정 목록** (`segments.py` 의 `runs()`). 시나리오 ID 는 `scenarios/*/<ID>.scenario.json` 이름에서 오고, `runs/<ID>/` 에 이름이 `2*[0-9].json` 인 파일(`20261028-152536.json` 같은 시각 이름)이 있어야 대상이 돼요. 이름이 다르면 조용히 빠져요. 회차별 trace 는 그 파일의 `results[0].traceJobs[] = {repeatIndex, traceJobId}` 에서 찾아요. 측정 결과를 다른 방식으로 두면 `runs()` 가 `(시나리오 ID, 회차, trace ID, parquet 경로)` 를 내게 고쳐요.
 
-### 0.3 옮긴 뒤 처음 확인할 것
+**3. trace 실행기** (`run_tc.py` + 루트 `run.py`). `run.py` 의 `call(method, path, body)` 는 `UX_AGENT`(기본 `http://127.0.0.1:50051`)로 JSON 을 보내는 HTTP 클라이언트이고, `DEVICE` 는 `UX_DEVICE`(agent 의 기기 ID)예요. 쓰는 API:
+- `POST /api/agent/scenario/run` body `{deviceIds, scenarioName, steps, loops: [], repeat: 1, busyPolicy: "wait"}`, Step 은 `{type, params}` (`shell` cmd, `trace_start` trace_type=fsio_ufs·window_seconds·include_vfs·include_dram, `sleep` seconds, `trace_stop`)
+- `GET /api/agent/benchmark/status?jobId=` → `state` 가 `completed`/`failed`/`cancelled` 면 끝
+- `GET /api/agent/benchmark/result?jobId=&deviceId=` → `results[0].traceJobs[0].traceJobId`
+
+agent 는 Step 파라미터를 콤마로 잘라 회차별 값으로 써요. 그래서 shell 명령에 콤마를 넣지 않아요 (`DEV` 경로·uxwl 옵션 포함).
+다른 실행기로 바꾸면 6절 순서를 지키고, 결과 폴더에 `compare.py` 가 읽는 네 파일을 남겨요: `manifest.json`, `tc.bin`(run_tc 가 복사), 기기에서 받은 uxwl `result.json`(`startBoottime`, `startMonotonic`, `lateOver5ms`, `elapsedSec`, `requests` 사용), `run.json` 의 `{"pq": <TC trace parquet>}`.
+
+**4. trace 도구** = fsiotrace `fsio_ufs` parquet (2.2). 다른 도구면 같은 열 이름으로 parquet 을 만들어요. 꼭 맞출 값:
+- `time` 은 기기 boottime(또는 monotonic) 초여야 해요. compare 가 uxwl 시작 시각으로 맞추고, 범위 밖이면 멈춰요.
+- Hibern8 은 `action` 이 `uic_send`/`uic_complete`, `mgmt_name` 이 `'DME_HIBER_ENTER'`/`'DME_HIBER_EXIT'`.
+- 재생기 request 의 `comm` 이 정확히 `uxwl` 이어야 해요 (`metrics.TC_ONLY`). 바이너리 이름을 바꾸면 TC request 가 다 빠져요.
+- trace 에 `is_fsync_triggered` 가 하나도 없으면 segments·metrics 가 **옛 규칙**으로 바뀌어요: comm 만으로 앱 스레드를 가리고, 앱 comm 의 node Write 를 전부 fsync 로 봐요. 열 이름이 다르거나 fsync 가 없는 trace 는 조용히 이 규칙을 타요.
+
+**5. 사용 로그 데이터셋** (`usage.py`, `gen_tc.py day` 만 필요). `SRC` 를 받은 파일로 바꿔요. 입력은 JSON 배열이고 레코드마다 `pid`, `timestamp`(ms), `utcoffset`(시간), `package_name`, `name`, `is_system_app`, `type`(`MOVE_TO_FOREGROUND`/`MOVE_TO_BACKGROUND`) 이 있어야 해요. `usage.json` 을 손으로 채우면 4.4 표의 모양을 지켜요: `hourly` 키는 문자열 "0"~"23", `onMinQ`·`sessionsQ` 는 값 3개(가운데가 중앙값), `sessionSecQ`·`visitSecQ[c].p` 는 값 6개(10·25·50·75·90·99%).
+
+**6. 시나리오 ID 가 코드에 박힌 곳.** `mix.json` 말고도 `gen_tc.py` 의 `SCREEN_OFF = ("S1", "S2", "S3", "S5")`(seq 모드에서 화면을 끄고 재생할 대기 시나리오)가 있어요. 대기 시나리오 ID 가 다르면 여기도 고쳐요. `mix.json` 의 시나리오에 조각이 하나도 없는 standby 구간이 있으면 `gen_tc.py day` 가 멈추며 알려 줘요.
+
+### 0.3 호스트와 기기 조건
+- **호스트:** Python 3.9 이상 + `duckdb`, `numpy`. Go 1.25, `golang.org/x/sys v0.43.0` 을 받을 수 있는 네트워크(또는 vendor). `adb`, `make` 가 PATH 에 있어야 해요 (`run_tc.py` 가 매번 `make` 로 uxwl 을 다시 빌드해요).
+- **`UX_SERIAL`(adb serial)과 `UX_DEVICE`(agent 기기 ID)가 같은 폰**이어야 해요. 기본값은 이 저장소 실험실 값이라 그대로 두면 없는 폰을 가리켜요.
+- **adb shell 이 root 로 떠야 해요.** `run_tc.py` 는 `su` 없이 `adb shell` 로 uxwl·sysfs 를 다뤄요. 기준 폰은 루팅되어 `adb shell id` 가 `uid=0(root)` 예요. root 가 아니면:
+  - `/sys/power/wake_lock` 쓰기가 조용히 실패해 화면 꺼진 구간에 suspend 되고 시각이 밀려요.
+  - `pending_discard` 를 못 읽어요. 이때 `run_tc.py` 가 경고를 내고 Discard 대기를 건너뛰어요.
+- **`/data` 가 f2fs** 여야 해요. atomic write ioctl(FA·WX)과 Checkpoint 동작이 f2fs 전제예요. 재생 오류는 판정에 잡히지 않으므로 `run_tc.py` 가 `result.json` 의 `errorKinds` 를 경고로 보여 줘요. 비어 있는지 꼭 봐요.
+- **보안 잠금(PIN·패턴)이 없어야** 해요. SCREEN op 는 `input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard` 로 켜서, 잠금이 있으면 화면 켜짐 구간이 잠금 화면에 머물러요.
+- `/data` 여유 공간: TC 의 미리 채움 양 + 재생 중 새로 쓰는 양 (day6 은 미리 채움 7.9GB).
+
+### 0.4 옮긴 뒤 처음 확인할 것
 1. `python3 segments.py <시나리오 하나>` 가 조각을 만들고, 출력의 R·W·fsync·unlink 양이 원본 trace 와 맞는지.
-2. `gen_tc.py seq` 로 그 조각 하나만 TC 로 만들어 `run_tc.py` 로 돌리고, compare 결과가 이 저장소의 같은 시나리오 결과와 비슷한지.
+2. `gen_tc.py seq` 로 그 조각 하나만 TC 로 만들어 `run_tc.py` 로 돌리고, 재생 오류 경고가 없고 compare 결과가 이 저장소의 같은 시나리오 결과와 비슷한지. (seq 모드는 구간에 카테고리가 없어 SETTLE 이 적용되지 않아요, 7.3)
 3. 같은 seed 로 `gen_tc.py day` 를 두 번 돌려 tc.bin sha256 이 같은지.
 4. 기기가 다르면 2.3 의 block queue·f2fs mount 값을 먼저 비교하고, 다르면 11절 보정 세트를 다시 돌려요.
 
@@ -146,7 +171,7 @@ UFS request 마다 한 줄인 표(parquet)예요. 이 저장소는 fsiotrace(eBP
 | WD | 3 | O_DIRECT pwrite | 앱 스레드 O_DIRECT Data Write |
 | FS | 4 | fsync | 앱 스레드 fsync (node Write 로 보임) |
 | DB | 5 | (재생 안 함) | Discard 바이트. 기록만 |
-| UNLINK | 6 | unlink | 잠깐 쓰고 지워진 파일 |
+| UNLINK | 6 | unlink (`segments.py` 안에서는 `UL`) | 잠깐 쓰고 지워진 파일 |
 | TRUNC | 7 | ftruncate(off) | (합성용) |
 | MARK | 8 | 없음. file = timeline 구간 번호 | 구간 경계 (통계용) |
 | FA | 9 | `F2FS_IOC_COMMIT_ATOMIC_WRITE` | atomic commit (SQLite atomic write) |
@@ -159,6 +184,8 @@ UFS request 마다 한 줄인 표(parquet)예요. 이 저장소는 fsiotrace(eBP
 `F2FS_IOC_START_ATOMIC_WRITE = 0xf501`, `F2FS_IOC_COMMIT_ATOMIC_WRITE = 0xf502` (`_IO(0xf5, 1/2)`).
 
 ### 3.2 request 분류 규칙
+
+아래는 trace 에 `is_fsync_triggered` 가 있을 때(고친 fsiotrace) 규칙이에요. 하나도 없으면 comm 만으로 앱 스레드를 가리는 옛 규칙을 써요 (0.2 의 4).
 
 trace 의 `send_req` 를 시각순으로 보며 아래 순서로 정해요. 관리 명령(`is_mgmt`)은 빼요.
 
@@ -302,14 +329,14 @@ reqs    t_us u64 | op u8 | file u32 | off u64 | len u32   × nreq   (25바이트
 8. **하루 이벤트:** 앱 재설치, 다운로드, 큰 파일 복사·삭제 같은 시나리오를 하루 횟수만큼(소수는 확률) 하루 중 무작위 시각에 넣어요. 그 시각을 지나는 방문 앞에 끼워요.
 9. 하루 끝까지 남은 시간은 대기로 채워요.
 
-같은 `--seed` 와 같은 조각이면 tc.bin 이 바이트까지 같아요 (`random.Random(seed)` 하나만 쓰고, 길이 맞추기에서 다시 짤 때 상태를 되돌려요).
+같은 `--seed` 와 같은 조각이면 tc.bin 이 바이트까지 같아요. 난수는 `random.Random(seed)` 에서만 오고(SQLite 합성은 `Random(seed × 7 + 순번)`), 길이 맞추기에서 다시 짤 때 상태를 되돌려요.
 
 **`mix.json` 구조**
 ```json
 {
   "categories": {
     "browser": {"weight": null, "scenarios": {"B1": 0.3, "B4": 0.3, "B5": 0.3, "B1i": 0.1}},
-    "messaging": {"weight": null, "proxy": true, "scenarios": {}, "db": {"mode": "wal", "kb": 12, "perMin": 30}},
+    "messaging": {"weight": null, "proxy": true, "scenarios": {}, "db": {"mode": "wal", "kb": 12, "dbKb": 8, "perMin": 30}},
     "game": {"weight": 0, "scenarios": {}}
   },
   "launch": {"coldRatio": 0.2, "cold": {"A1": {"w": 0.4, "n": 5}}, "warm": {"A3": {"w": 0.4, "n": 6}}, "skip": ["home", "call"]},
@@ -337,6 +364,7 @@ Go 단일 바이너리(linux/arm64, `CGO_ENABLED=0`, `golang.org/x/sys/unix`)이
 uxwl prep  --root /data/local/tmp/uxwl tc.bin
 uxwl run   --root /data/local/tmp/uxwl [--speed 1] [--max-qd 256] [--max-wd 3] [--wakelock=true] tc.bin
 uxwl clean --root /data/local/tmp/uxwl
+uxwl trim  --root /data/local/tmp/uxwl          # FITRIM (v1 실행 흐름에서는 안 씀)
 ```
 파일은 `<root>/f/%06d` 이에요. Write 내용은 seed 1 난수 16MB 버퍼 하나를 같이 써요(압축·dedup 영향 없게).
 
@@ -421,7 +449,7 @@ Flush·Checkpoint·Discard 는 누구 몫인지 나눌 수 없어 남아요. `--
 
 ### 7.3 구간과 SETTLE
 timeline 구간마다 원본 조각의 `[srcFrom, srcTo)` 와 TC trace 의 `[T0+tcStart, T0+tcStart+길이)` 를 같은 함수로 재요.
-**화면 켜진 구간 바로 뒤 대기 구간은 처음 10초(`SETTLE`)를 양쪽 다 빼요.** 앞 구간이 남긴 writeback·Checkpoint·Discard 가 몰려요(대기 시간 19% 에 FS Write 44%, Discard 82%). 원본 대기는 쉰 뒤에 쟀으므로 이게 없어요. 뺀 부분의 TC 값은 따로 보여 줘요.
+**화면 켜진 구간 바로 뒤 대기 구간은 처음 10초(`SETTLE`)를 양쪽 다 빼요** (구간에 `cat` 이 있는 day TC 만. seq TC 는 적용 안 됨). 앞 구간이 남긴 writeback·Checkpoint·Discard 가 몰려요(대기 시간 19% 에 FS Write 44%, Discard 82%). 원본 대기는 쉰 뒤에 쟀으므로 이게 없어요. 뺀 부분의 TC 값은 따로 보여 줘요.
 
 ### 7.4 지표 정의
 구간 `[a, b)` 의 `send_req`(관리 명령 제외)로 더할 수 있는 합계(raw)를 만들고, 구간들을 더한 뒤 지표로 바꿔요. 카테고리·전체 지표는 raw 를 더해서 만들어요(평균의 평균이 아님).

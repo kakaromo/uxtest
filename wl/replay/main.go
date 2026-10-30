@@ -1,6 +1,6 @@
 // uxwl: UX workload TC 재생기 (기기에서 실행, root)
 //
-//	uxwl prep  --root /data/local/tmp/uxwl tc.bin   미리 있어야 하는 파일을 만들고 채운 뒤 page cache 를 비운다
+//	uxwl prep  --root /data/local/tmp/uxwl tc.bin   미리 있어야 하는 파일을 만들고 채운다 (page cache 는 비우지 않는다)
 //	uxwl run   --root /data/local/tmp/uxwl tc.bin   시각에 맞춰 파일 동작을 재생하고 result.json 을 쓴다
 //	uxwl clean --root /data/local/tmp/uxwl          재생 디렉터리를 지운다
 //
