@@ -169,3 +169,26 @@ export type Points = {
 	/** UFS 관리 명령: h8 = Hibern8 구간 [시작 초, 끝 초|null], ev = [초, names 번호] */
 	mg?: { h8: [number, number | null][]; ev: [number, number][]; names: string[] };
 };
+
+/** TC 검증 (wl/export_site.py → tc.json) */
+export type TcCheck = { orig: number | number[]; tc: number | number[]; d: number | null; ok: boolean | null };
+export type TcRun = {
+	id: string;
+	version: string;
+	note: string;
+	itemPassPct: number;
+	totalPass: number;
+	totalOf: number;
+	latePct: number;
+	total: Record<string, TcCheck>;
+	itemPct: Record<string, number | null>;
+	cats: Record<string, { pass: number; of: number; fail: string[]; ratio: Record<string, number | null> }>;
+};
+export type TcDoc = {
+	version: string;
+	tc: string;
+	tcSha: string | null;
+	metrics: { key: string; kind: 'ratio' | 'diff' | 'dist'; th: number; info: boolean; buckets?: string[] }[];
+	cats: string[];
+	runs: TcRun[];
+};

@@ -236,6 +236,14 @@ def main():
         p = OUT / f"s-{sid}.json"
         p.write_text(json.dumps(doc, ensure_ascii=False, separators=(",", ":"), default=float))
         print(f"  {sid}: {len(runs)}회차 {p.stat().st_size / 1024:.0f} KB")
+    tc_export()
+
+
+def tc_export():
+    """TC 검증 페이지용 tc.json (wl/export_site.py). TC 결과가 없는 PC 에선 지난 tc.json 을 그대로 둔다"""
+    sys.path.insert(0, str(X.ROOT / "wl"))
+    import export_site
+    export_site.export(OUT / "tc.json")
 
 
 if __name__ == "__main__":

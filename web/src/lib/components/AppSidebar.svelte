@@ -9,7 +9,7 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { app, TYPE_ORDER } from '#lib/state.svelte.js';
 	import { toggleMode } from 'mode-watcher';
-	import { ChevronRight, House, Moon, Sun, HardDrive } from '@lucide/svelte';
+	import { ChevronRight, House, Moon, Sun, HardDrive, FlaskConical } from '@lucide/svelte';
 
 	const sidebar = Sidebar.useSidebar();
 	let heads = $state<{ id: string; text: string; level: number }[]>([]);
@@ -77,6 +77,13 @@
 					<Sidebar.MenuButton isActive={page.route.id === '/'}>
 						{#snippet child({ props })}
 							<a href={resolve('/')} onclick={close} {...props}><House />홈 · 핵심 결론</a>
+						{/snippet}
+					</Sidebar.MenuButton>
+				</Sidebar.MenuItem>
+				<Sidebar.MenuItem>
+					<Sidebar.MenuButton isActive={page.route.id === '/tc'}>
+						{#snippet child({ props })}
+							<a href={resolve('/tc')} onclick={close} {...props}><FlaskConical />TC 검증</a>
 						{/snippet}
 					</Sidebar.MenuButton>
 				</Sidebar.MenuItem>
