@@ -9,6 +9,61 @@
 
 ---
 
+## 0. 코드를 그대로 가져갈 때
+
+### 0.1 가져갈 파일
+| 파일 | 역할 | 커밋 여부 |
+|---|---|---|
+| `wl/segments.py` | 원본 trace → 조각 (3절) | 코드 |
+| `wl/gen_tc.py` | 조각 → tc.bin·manifest (4절) | 코드 |
+| `wl/replay/main.go`, `go.mod`, `go.sum`, `wl/Makefile` | 재생기 uxwl (5절) | 코드 |
+| `wl/run_tc.py` | 기기 실행 + trace + 비교 호출 (6절) | 코드 |
+| `wl/compare.py`, `wl/metrics.py` | 비교·판정 (7절) | 코드 |
+| `wl/usage.py`, `wl/catmap.json` | 행동 모델 만들기 (4.4) | 코드 |
+| `wl/mix.json` | 가중치 (4.4) | 코드, 사용자가 고침 |
+| `wl/.private/` | 조각, TC, 결과, `usage.json` | **커밋 안 함** |
+
+`wl/export_site.py` 는 분석 사이트용이라 가져가지 않아도 돼요.
+
+### 0.2 이 저장소 밖에 기대는 것 (새 프로젝트에서 바꿀 곳)
+`wl/` 코드는 아래 다섯 곳에만 기대요. 이것만 새 환경에 맞추면 나머지는 그대로 돌아가요.
+
+1. **`report/extract.py` 의 작은 함수 네 개** (`segments.py`, `metrics.py`, `compare.py`, `run_tc.py` 가 `import extract` 로 씀). 같은 이름으로 옮겨 오면 돼요.
+   ```python
+   DIR = ("case when opcode in (40,136) then 'R' when opcode in (42,138) then 'W' "
+          "when opcode=66 then 'D' when opcode=53 then 'F' else 'X' end")
+   def size_bucket(col):   # ≤4K, ≤16K, ≤128K, ≤512K, 그 이상
+       return (f"case when {col}<=4096 then 0 when {col}<=16384 then 1 when {col}<=131072 then 2 "
+               f"when {col}<=524288 then 3 else 4 end")
+   ARCHIVE = Path.home() / ".agent-standalone/archive/jobs"
+   def parquet_of(tid):    # trace ID → parquet 경로
+       hits = glob.glob(str(ARCHIVE / "*" / "trace" / tid / "result_fsio_ufs.parquet"))
+       return hits[0] if hits else None
+   def scenario_info(sid): # 시나리오 ID → (시나리오 JSON, 마지막 run JSON, 경로)
+       p = glob.glob(str(ROOT / "scenarios" / "*" / f"{sid}.scenario.json"))[0]
+       run = sorted(f for f in glob.glob(str(ROOT / "runs" / sid / "*.json")) if not f.endswith("-dry.json"))[-1]
+       return json.load(open(p)), json.load(open(run)), run
+   ```
+2. **원본 측정 목록** (`segments.py` 의 `runs()`). 시나리오 ID 는 `scenarios/*/<ID>.scenario.json` 파일 이름에서, 회차별 trace 는 `runs/<ID>/<시각>.json` 의 `results[0].traceJobs[] = {repeatIndex, traceJobId}` 에서 찾아요. 측정 결과를 다른 방식으로 보관하면 `runs()` 만 고쳐 `(시나리오 ID, 회차, trace ID, parquet 경로)` 를 내게 하면 돼요.
+3. **trace 시작·끝** (`run_tc.py`). 지금은 agent(`../agent --standalone`, 기본 `http://127.0.0.1:50051`, 환경 변수 `UX_AGENT`, `UX_DEVICE`)의 `POST /api/agent/scenario/run` 으로 Step 목록(`shell`, `trace_start fsio_ufs`, `sleep`, `trace_stop`)을 보내고, `GET /api/agent/benchmark/status?jobId=`, `GET /api/agent/benchmark/result?jobId=&deviceId=` 로 끝과 trace ID 를 받아요. 다른 trace 실행기를 쓰면 6절 5번 순서를 지키는 함수로 바꾸고, 끝에 `run.json` 에 `{"pq": <TC trace parquet 경로>}` 만 남기면 compare 가 돌아요.
+4. **trace 도구** = fsiotrace `fsio_ufs` parquet (2.2 의 필드와 flag). 다른 도구면 같은 열 이름으로 바꿔 parquet 을 만들어요. flag 를 붙이는 규칙이 다르면 3.2 분류가 틀어지므로, 보정 세트(11절)로 다시 확인해요.
+5. **사용 로그 데이터셋 경로** (`usage.py` 의 `SRC`). 데이터셋을 받은 곳으로 바꿔요. `gen_tc.py day` 만 필요하고 `seq` 는 없어도 돼요.
+
+그 밖의 설정:
+- adb 기기: 환경 변수 `UX_SERIAL` (무선이면 `IP:5555`). 기기 쪽 재생 디렉터리는 `run_tc.py` 의 `DEV = /data/local/tmp/uxwl`.
+- 호스트: Python 3 + `duckdb`, `numpy`. Go 1.25 + `golang.org/x/sys` (`make` 가 linux/arm64 정적 바이너리를 `wl/.private/uxwl` 로 만듦).
+- 기기: root 권한 (uxwl 이 `/sys/power/wake_lock`, f2fs ioctl, `/sys/fs/f2fs/*/pending_discard` 를 씀), 커널 `CONFIG_AIO`.
+
+### 0.3 옮긴 뒤 처음 확인할 것
+1. `python3 segments.py <시나리오 하나>` 가 조각을 만들고, 출력의 R·W·fsync·unlink 양이 원본 trace 와 맞는지.
+2. `gen_tc.py seq` 로 그 조각 하나만 TC 로 만들어 `run_tc.py` 로 돌리고, compare 결과가 이 저장소의 같은 시나리오 결과와 비슷한지.
+3. 같은 seed 로 `gen_tc.py day` 를 두 번 돌려 tc.bin sha256 이 같은지.
+4. 기기가 다르면 2.3 의 block queue·f2fs mount 값을 먼저 비교하고, 다르면 11절 보정 세트를 다시 돌려요.
+
+판정 기준·재생 규칙을 바꾸면 `metrics.VERSION` 을 올려 v1 결과와 섞이지 않게 해요.
+
+---
+
 ## 1. 핵심 아이디어
 
 블록 request 를 그대로 다시 내는 TC(LBA replay)는 FS 가 만드는 I/O 를 재현하지 못해요. f2fs 의 node·Checkpoint·Flush·Discard·GC 는 앱 동작의 결과라서, 블록을 그대로 내면 FS I/O 가 두 번 나오거나(원본 몫 + 재생이 만든 몫) 아예 안 나와요.
