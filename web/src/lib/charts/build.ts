@@ -556,3 +556,37 @@ export function lbaPatternSpec(p: Points, run: Run, title: string): ChartSpec {
 		}
 	};
 }
+
+/** 묶음 가로 막대: cats 줄마다 series 여러 개 (값은 % , 축 0~100) */
+export function groupBarSpec(
+	title: string,
+	cats: string[],
+	series: { name: string; vals: (number | null)[] }[],
+	prov: string,
+	colors: (t: Theme) => string[]
+): ChartSpec {
+	const rc = cats.slice().reverse();
+	return {
+		title,
+		prov,
+		data: () => ({ cols: ['항목', ...series.map((s) => s.name + ' %')], rows: cats.map((c, i) => [c, ...series.map((s) => s.vals[i] ?? '')]) }),
+		option: (t) => {
+			const cs = colors(t);
+			return {
+				legend: { ...t.legend, top: 0, left: 0 },
+				tooltip: { ...t.tip, trigger: 'axis', axisPointer: { type: 'shadow' }, valueFormatter: pctFmt },
+				grid: { left: 8, right: 16, top: 30, bottom: 24, containLabel: true },
+				xAxis: { type: 'value', min: 0, max: 100, axisLabel: { ...t.axisLabel, formatter: '{value}%' }, splitLine: t.split },
+				yAxis: catAxis(t, rc),
+				series: series.map((s, i) => ({
+					type: 'bar',
+					name: s.name,
+					data: s.vals.slice().reverse(),
+					barMaxWidth: 8,
+					barGap: '20%',
+					itemStyle: { color: cs[i], borderRadius: [0, 3, 3, 0] }
+				}))
+			};
+		}
+	};
+}

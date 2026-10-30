@@ -277,7 +277,7 @@ UX_SERIAL=<IP>:5555 python3 run_tc.py day1   # push → 재생 + trace → compa
 - **같은 자리를 덮어쓰던 파일은 덮어쓰기로 재생해요** (`segments.py` 의 `REWRITE_GAP`·`REWRITE_MAX`). f2fs 는 덮어써도 새 LBA 에 써서, LBA 구간을 이어 붙이면 WAL·`.pma`·로그 파일이 끝없이 늘어나요. 그러면 매 Checkpoint 마다 블록 할당과 quota 가 바뀌어 대기 구간 Checkpoint 가 원본의 2배가 됐어요. 처음 접근이 Write 이고, 지우지도 fsync 하지도 않고, 1초 넘게 떨어진 1MB 이하 Write 묶음이 세 번 넘게 오는 파일은 가장 큰 묶음 크기로 미리 채워 그 안을 돌며 덮어써요.
   fsync 하는 파일은 빼요. 덮어쓴 뒤 fsync 하면 f2fs 가 in-place update(IPU)로 node 를 쓰지 않아 fsync I/O 가 사라져요 (TikTok fsync 1166 → 608).
 - **화면 켜진 구간 바로 뒤 대기 구간은 처음 10초를 판정에서 빼요** (`compare.py` 의 `SETTLE`). 앞 구간이 남긴 writeback·Checkpoint·Discard 가 몰려요(day5: 대기 시간 19% 에 FS Write 44%, Discard 82%). 원본 대기는 쉰 뒤에 쟀으므로 양쪽 다 빼고, TC 값은 따로 보여 줘요.
-- **GC 는 Volume 에서 빼고 `gcMB` 로 값만 보여 줘요.** 얼마나 할지는 파일 시스템이 얼마나 차고 조각났는지에 달려요. 하루 TC 는 하루치 파일 생성·삭제를 2시간에 몰아 GC 가 원본의 15배예요(60.7 vs 4.2MB).
+- **GC 는 Volume 에서 빼고 `gcMB` 로 값만 보여 줘요.** 얼마나 할지는 파일 시스템이 얼마나 차고 조각났는지에 달려요. 하루 TC 는 하루치 파일 생성·삭제를 2시간에 몰아 day5 는 GC 가 원본의 15배였고(60.7 vs 4.2MB), day6 은 Run 마다 0.85~6배로 흔들려요.
 - **대기 구간 Flush/s 는 원본의 60% 정도로 남아 있어요.** 원본 대기 Checkpoint 는 Flush 5개(앞에 파일 동기화 2개 + Checkpoint 3개), TC 는 3개예요. syncfs 로 재생하면 쌓인 Discard 가 다 나가 Flush·Discard 가 몇 배가 됐고, Flush 개수는 커널 flush_merge 와 그때 dirty 양에 따라 4~7개로 흔들려 맞추지 못했어요.
 - **I/O 가 적은 구간(대기·홈·통화)은 FS Write 가 원본의 1.5배 정도로 나와요.** 지금 폰에서 도는 배경 앱이 node·quota 를 더럽히고, TC 가 원본 간격으로 일으키는 Checkpoint 가 그것까지 같이 써요. 원본의 배경 앱 I/O 는 이미 uxwl 이 재생하고 있어서 그만큼이 더해져요. 앱 데이터 Write 는 comm 으로 걸러내지만 Checkpoint 안의 FS Write 는 누구 몫인지 나눌 수 없어요.
   보정 TC(calq, 화면 끔, 2.6초마다 Checkpoint)로 확인했어요. uxwl 이 데이터를 하나도 쓰지 않은 5분에도 Checkpoint Write 가 6.4MB 로 원본 대기 5분(5.0MB)보다 많았어요. Checkpoint 안팎 node Write 합은 원본 725, TC 601 블록으로 비슷하고, 원본은 앱 fsync 가 밖에서 쓰던 것을 TC 는 Checkpoint 가 써요.
