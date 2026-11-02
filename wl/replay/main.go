@@ -132,6 +132,10 @@ var (
 	errKinds = map[string]int{}
 )
 
+func isExcl(op uint8) bool {
+	return op == opFS || op == opUnlink || op == opTrunc || op == opFA || op == opWX || op == opWD
+}
+
 func fpath(root string, id uint32) string { return filepath.Join(root, "f", fmt.Sprintf("%06d", id)) }
 
 func prep(root string, files []tcFile) {
@@ -173,6 +177,25 @@ type ofile struct {
 	buf, dio int
 	gone     bool
 	atomic   bool // START_ATOMIC_WRITE 뒤 COMMIT 전
+	// 발행 순서 (주 루프만 만진다). 잠금은 동시 실행만 막아서, 뒤에 발행한 UNLINK·fsync 가 앞 Write 보다 먼저 잠금을 잡기도 했다
+	// (UNLINK 8~25% ENOENT, 뒤늦은 Write 가 O_CREAT 로 파일을 되살림)
+	lastExcl chan struct{}   // 마지막 독점 동작이 끝나면 닫힘
+	shared   []chan struct{} // 그 뒤 발행한 공유 동작
+}
+
+// 파일 안 발행 순서를 지키도록 먼저 끝나야 할 동작을 돌려주고 자기를 등록한다. 독점은 앞 동작 전부, 공유는 앞 독점만 기다린다
+func (f *ofile) order(excl bool, done chan struct{}) []chan struct{} {
+	var wait []chan struct{}
+	if f.lastExcl != nil {
+		wait = append(wait, f.lastExcl)
+	}
+	if excl {
+		wait = append(wait, f.shared...)
+		f.lastExcl, f.shared = done, nil
+	} else {
+		f.shared = append(f.shared, done)
+	}
+	return wait
 }
 
 type store struct {
@@ -360,8 +383,7 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 	exec := func(r req, sg *segStat) {
 		f := s.get(r.file)
 		// WD 도 파일마다 하나씩: 앱은 파일 하나를 스레드 하나가 순서대로 쓴다. 동시에 쓰면 f2fs 가 파일끼리 블록을 섞어 할당해 Write 가 4KB 로 쪼개진다
-		excl := r.op == opFS || r.op == opUnlink || r.op == opTrunc || r.op == opFA || r.op == opWX || r.op == opWD
-		if excl {
+		if isExcl(r.op) {
 			f.mu.Lock()
 			defer f.mu.Unlock()
 		} else {
@@ -642,7 +664,17 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 			if q > atomic.LoadInt64(&qdMax) {
 				atomic.StoreInt64(&qdMax, q)
 			}
-			rq <- rjob{reqs[i:j], &segs[seg], func() { atomic.AddInt64(&qd, -1); <-sem; wg.Done() }}
+			// Read 는 앞 동작을 기다리지 않고(제출 순서·QD 유지), 뒤 독점 동작만 이 Read 를 기다린다
+			done := make(chan struct{})
+			seenF := map[uint32]bool{}
+			for _, x := range reqs[i:j] {
+				if !seenF[x.file] {
+					seenF[x.file] = true
+					f := s.get(x.file)
+					f.shared = append(f.shared, done)
+				}
+			}
+			rq <- rjob{reqs[i:j], &segs[seg], func() { close(done); atomic.AddInt64(&qd, -1); <-sem; wg.Done() }}
 			i = j
 			continue
 		}
@@ -668,8 +700,16 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 		if q > atomic.LoadInt64(&qdMax) {
 			atomic.StoreInt64(&qdMax, q)
 		}
+		done := make(chan struct{})
+		var before []chan struct{}
+		if r.op != opCP && r.op != opDS && r.op != opTrim { // 파일에 묶이지 않는 동작 빼고. 한 묶음은 파일 하나
+			before = s.get(r.file).order(isExcl(r.op), done)
+		}
 		go func(grp []req, sg *segStat) {
-			defer func() { atomic.AddInt64(&qd, -1); <-sem; wg.Done() }()
+			defer func() { close(done); atomic.AddInt64(&qd, -1); <-sem; wg.Done() }()
+			for _, c := range before { // wdSem·파일 잠금을 잡기 전에 기다린다 (앞 동작이 그것을 기다리면 멈춘다)
+				<-c
+			}
 			if grp[0].op == opWD {
 				wdSem <- struct{}{}
 				defer func() { <-wdSem }()
@@ -734,7 +774,8 @@ var (
 func sh(cmd string) { exec.Command("sh", "-c", cmd).Run() }
 
 // 앱 사용 구간은 화면을 켜고(원본 앱 시나리오는 화면을 켜고 쟀다), 화면 꺼짐 구간은 끈다(대기 S 는 화면을 끄고 쟀다).
-// 화면 꺼짐 시간(30초)보다 자주 깨우기 키를 보내 켜진 상태를 유지한다 (설정은 바꾸지 않는다)
+// 화면 꺼짐 시간(30초)보다 자주 키코드 0 을 보내 켜진 상태를 유지한다 (설정은 바꾸지 않는다).
+// KEYCODE_WAKEUP 은 켜진 화면의 꺼짐 시간을 늘리지 않는다. 화면이 30초마다 꺼졌다 켜지고, 켜질 때마다 다른 앱의 fsync·Flush 가 나왔다
 func screen(on bool) {
 	if on == screenOn {
 		return
@@ -751,7 +792,7 @@ func screen(on bool) {
 				case <-stop:
 					return
 				case <-t.C:
-					sh("input keyevent KEYCODE_WAKEUP")
+					sh("input keyevent 0")
 				}
 			}
 		}(screenStp)

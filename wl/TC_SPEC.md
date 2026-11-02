@@ -1,11 +1,11 @@
-# UFS workload TC 설계서 (v1)
+# UFS workload TC 설계서 (v4)
 
 스마트폰에서 잰 UFS trace 를 **파일 동작**으로 바꿔 기기 `/data`(f2fs) 위에서 다시 재생하고, 재생 중 잡은 trace 를 원본과 자동으로 비교하는 TC 예요.
 이 문서만 보고 다른 프로젝트에서 같은 TC 를 다시 만들 수 있게, 규칙·상수·형식·시행착오를 전부 적었어요. 코드 위치는 이 저장소의 `wl/` 이고, 실행 방법은 `GUIDE.md` 9절이에요.
 
 - 기준 기기: OnePlus CPH2749, Android 16, kernel 6.12, UFS, `/data` = f2fs
-- 버전: v1 (git 태그 `wl-v1`, `wl/metrics.py` 의 `VERSION`)
-- 결과 수준: 2시간 하루 TC 에서 전체 지표 16/16 통과, 구간별 통과 76~77%, 늦은 request 0.13~0.18% (12절)
+- 버전: v4 (git 태그 `wl-v4`, `wl/metrics.py` 의 `VERSION`). 판정 기준은 v1 부터 그대로예요
+- 결과 수준: 2시간 하루 TC 에서 전체 지표 16/16 통과, 구간별 통과 81%, 늦은 request 0.18%. 유형별 13개 TC 는 구간별 평균 82%, 전체 173/204 (12절)
 
 ---
 
@@ -85,7 +85,7 @@ agent 는 Step 파라미터를 콤마로 잘라 회차별 값으로 써요. 그�
 3. 같은 seed 로 `gen_tc.py day` 를 두 번 돌려 tc.bin sha256 이 같은지.
 4. 기기가 다르면 2.3 의 block queue·f2fs mount 값을 먼저 비교하고, 다르면 11절 보정 세트를 다시 돌려요.
 
-판정 기준·재생 규칙을 바꾸면 `metrics.VERSION` 을 올려 v1 결과와 섞이지 않게 해요.
+판정 기준·재생 규칙을 바꾸면 `metrics.VERSION` 을 올려 앞 버전 결과와 섞이지 않게 해요.
 
 ---
 
@@ -202,11 +202,11 @@ trace 의 `send_req` 를 시각순으로 보며 아래 순서로 정해요. 관�
 
 **Write**
 1. FS 몫이면 버려요: `is_journal`, `is_checkpoint`, `is_f2fs_meta_write`, GC flag.
-2. node Write 인데 fsync 안이 아니면(writeback node) 버려요.
+2. atomic commit 의 node Write 면 `FA` 예요: node Write 이고, `is_fsync_triggered` 가 아니고, `io_flags` bit 41(SAW_FS)이 0, bit 35(WRITEBACK_KWORKER)가 1. uxwl 의 FA 가 같은 flag 값을 내는 것으로 확인했어요. fsync flag 가 없는 옛 trace 는 3번의 Flush 규칙을 그대로 써요.
+   그 밖에 fsync 안이 아닌 node Write(writeback node)는 버려요.
 3. fsync 안 node Write(`is_f2fs_node_write` 이고 `is_fsync_triggered`)면 fsync 예요. ino 가 있을 때만 넣어요.
-   - 1ms(`CKPT_WIN`) 안에 Checkpoint Write 가 오면 → `FS` (그 Flush 는 Checkpoint 몫)
-   - 아니고 3ms(`FLUSH_WIN`) 안에 Flush 가 오면 → `FA` (atomic commit 이 PREFLUSH|FUA 를 냄. `fsync_mode=nobarrier` 라 일반 fsync 는 Flush 가 없음)
-   - 둘 다 아니면 → `FS`
+   - fsync flag 가 있는 trace 는 늘 `FS` 예요. v2 까지는 "3ms 안에 Flush 가 오면 FA" 로 봤는데, 일반 fsync 의 node Write 도 약 60ms 뒤에 Flush 가 와서 이 시간 규칙이 맞지 않았고 진짜 atomic commit 은 빠졌어요.
+   - flag 가 없는 옛 trace 만: 1ms(`CKPT_WIN`) 안에 Checkpoint Write 가 오면 `FS`, 아니고 3ms(`FLUSH_WIN`) 안에 Flush 가 오면 `FA`, 둘 다 아니면 `FS`
 4. 앱 몫 O_DIRECT → `WD`
 5. 앱 몫 나머지 → 일단 `WA` (아래에서 WB/WX/W 로)
 6. 앱 몫이 아닌 Data Write → `W`
@@ -214,6 +214,8 @@ trace 의 `send_req` 를 시각순으로 보며 아래 순서로 정해요. 관�
 **같은 fsync 의 node 여러 개 합치기:** 같은 (tid, ino) 의 FS/FA 가 0.3ms 안에 이어지면 하나로 봐요. 하나라도 FA 면 FA 예요. WAL 은 0.7ms 마다 따로 fsync 하므로 이보다 넓히면 안 돼요.
 
 **WA 정하기:** 뒤에서부터 훑어, 같은 (tid, ino) 의 다음 FS/FA 가 **1초(`FSYNC_WIN`) 안**에 있으면 `WB`(그 fsync 가 FA 면 `WX`), 없으면 `W` 예요.
+
+**atomic commit 의 Data Write:** kworker flag 가 붙어 앱 몫이 아닌 `W` 로 분류되므로, 같은 (tid, ino) 의 다음 동작이 20ms(`ATOMIC_WIN`) 안의 `FA` 인 `W` 는 `WX` 로 바꿔요. 실제로 0.5~4ms 앞서 나와요.
 
 ### 3.3 지워진 파일 (`UNLINK`)
 trace 에는 unlink 가 없어요. 대신 이렇게 추정해요.
@@ -355,6 +357,18 @@ reqs    t_us u64 | op u8 | file u32 | off u64 | len u32   × nreq   (25바이트
 ### 4.6 화면
 앱 사용 구간 앞에는 `SCREEN 1`, 대기 앞에는 `SCREEN 0` 을 넣어요. 원본 앱 시나리오는 화면을 켜고, 대기 시나리오는 끄고 쟀기 때문이에요.
 
+### 4.7 `cat`: 유형 하나만
+```bash
+python3 gen_tc.py cat --name cat-sns --cat sns --sec 600 --seed 1
+```
+`mix.json` 의 유형 하나(또는 `launch`, `daily`, `standby`)로 재생 시간 `--sec` 만큼 TC 를 만들어요. 시나리오 가중치대로 나누고, 조각은 되도록 통째로 쓰며, 할당보다 길면 잘라요(화면 꺼짐은 무작위 위치, 앱은 앞에서부터). `daily` 는 시간 대신 횟수를 따라요. 순서는 섞고 조각 사이 20초 쉬어요. 이 명령을 넣어도 `day` 의 tc.bin 은 바이트까지 같아요.
+
+### 4.8 `idle`: 대조군
+```bash
+python3 gen_tc.py idle --name idle-ctl --sec 600
+```
+request 를 재생하지 않고 화면 켬·끔 구간만 둬요. 비교 필터를 지나 TC 측정에 섞이는 폰 자체 I/O 를 재요. 재생기나 기기 조건을 바꾸면 먼저 이걸 돌려요. v3 까지의 깨우기 키 버그(10절)도 이걸로 찾았어요.
+
 ---
 
 ## 5. 재생기 (`replay/main.go`, uxwl)
@@ -393,13 +407,14 @@ uxwl trim  --root /data/local/tmp/uxwl          # FITRIM (v1 실행 흐름에서
 | CP, DS | `<root>/f` 디렉터리를 열어 fsync → f2fs 가 Checkpoint 를 냄 |
 | UNLINK | 그 파일 fd 를 닫고 unlink |
 | TRUNC | ftruncate(off) |
-| SCREEN | `input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard`, 켜 있는 동안 10초마다 WAKEUP / 끌 때 `KEYCODE_SLEEP`. 시스템 설정은 바꾸지 않아요 |
+| SCREEN | 켤 때 `input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard`, 켜 있는 동안 10초마다 `input keyevent 0` / 끌 때 `KEYCODE_SLEEP`. 시스템 설정은 바꾸지 않아요. 켜진 화면에 WAKEUP 을 보내면 안 돼요(10절) |
 
 파일마다 fd 를 두 개(buffered, O_DIRECT) 열어 두고 다시 써요. request 하나는 최대 16MB 예요.
 
 ### 5.4 동시성 규칙
 열린 루프라 request 마다 goroutine 을 띄우되(전체 `--max-qd` 256 제한), 원본 앱의 순서 관계를 지키려고 아래 규칙을 둬요. 하나하나가 실측으로 찾은 규칙이에요.
 
+0. **파일별 순서(v2):** goroutine 은 시작 순서가 정해져 있지 않아, 잠금만으로는 뒤 request 가 먼저 잠금을 잡을 수 있어요. 그래서 발행 전에 파일마다 순서를 정해요. 독점 op(FS·FA·WX·UNLINK·TRUNC·WD)는 앞 request 를 모두 기다리고, 공유 op 는 앞 독점 op 만 기다려요. CP·DS·TRIM 은 빼요. v1 은 이게 없어 `UNLINK: no such file` 이 8~25% 났어요.
 1. **파일 잠금:** 파일마다 RWMutex. FS·FA·WX·UNLINK·TRUNC·**WD** 는 그 파일을 독점하고, 나머지는 공유 잠금이에요. fsync·unlink 는 그 파일의 진행 중 request 가 끝난 뒤에 돼요.
 2. **WD 는 파일마다 하나씩, 전체 동시 3개(`--max-wd`):** 앱은 파일 하나를 스레드 하나가 순서대로 써요. 동시에 쓰면 f2fs 가 파일끼리 블록을 섞어 할당해 Write 가 4KB 로 쪼개졌어요.
 3. **같은 파일·같은 op(R/W/WD)가 0.2ms 안에 이어지면 한 goroutine 이 순서대로** 내요. 따로 띄우면 장치에 닿는 순서가 섞여 readahead·카메라 저장 같은 Sequential request 가 Random 처럼 보이고 QD 가 부풀었어요. WD 는 앞 request 와 0.2ms 안이면 계속 이어요.
@@ -445,7 +460,7 @@ uxwl 의 시작 boottime(안 맞으면 monotonic) 중 trace 범위에 드는 것
 
 ### 7.2 TC 쪽 거르기 (`TC_ONLY`)
 TC trace 에서는 `comm = 'uxwl'` 이거나 커널 문맥(`kworker%`, `f2fs%`, `jbd2%`)인 request 만 세요. 화면 꺼진 TC 동안 폰의 다른 앱(systemui SharedPreferences fsync 약 1/s, 설정, 제조사 서비스 DB)이 낸 I/O 는 원본 조각에도 이미 들어 있고 uxwl 이 그것까지 재생하므로, 그대로 두면 두 번 세요. 원본 쪽은 거르지 않아요.
-Flush·Checkpoint·Discard 는 누구 몫인지 나눌 수 없어 남아요. `--all` 이면 다 세요.
+Flush·Checkpoint·Discard 는 누구 몫인지 나눌 수 없어 남아요. `--all` 이면 다 세요. 대조 TC(4.8) 기준으로 이렇게 남는 Flush/s 는 화면 켜짐 0.74, 꺼짐 0.77(5분씩 한 번)이에요. 원본이 낮은 유형에서 Flush/s 가 조금 넘치는 몫이에요.
 
 ### 7.3 구간과 SETTLE
 timeline 구간마다 원본 조각의 `[srcFrom, srcTo)` 와 TC trace 의 `[T0+tcStart, T0+tcStart+길이)` 를 같은 함수로 재요.
@@ -510,15 +525,22 @@ timeline 구간마다 원본 조각의 `[srcFrom, srcTo)` 와 TC trace 의 `[T0+
 
 ---
 
-## 9. 알려진 차이 (v1)
+## 9. 알려진 차이 (v4)
+
+- **I/O 가 많은 유형의 FS Write 가 원본의 0.6~0.8배예요** (SNS 0.79, 카메라 0.64, 지도 0.64, 앱 실행 0.61, 브라우저 0.55). v3 까지는 깨우기 키 몫이 더해져 가려졌어요. 대부분 Checkpoint 가 쓰는 node 양의 차이예요(카메라 node Write 68 vs 23MB). 그중 조각에 Data Write 가 없는 inode 몫이 일부(SNS 대부분, 카메라·지도·앱 실행은 3~4할)를 설명해요. 파일 내용 없이 메타데이터만 바꾸는 동작은 block trace 에서 볼 수 없어 재생하지 못해요. 나머지는 파일 offset 을 LBA 순서로 이어 붙여(3.5) 한 파일 안에서 건드리는 direct node 가 원본보다 적어서라고 추정하는데, 확인하지 않았어요. 둘 다 VFS trace 를 같이 재야 제대로 고칠 수 있어요. Write 를 더 넣어 양만 맞추지는 않아요.
+- **원본 값이 아주 작은 유형은 폰 배경 I/O 만으로 넘쳐요.** 갤러리 FS Write 0.9MB vs 12.2MB, 생산성·동영상·음악 Flush/s 원본의 1.3~1.5배.
+- **SNS Flush/s 는 원본의 0.76배예요.** 원인은 확인하지 않았어요.
+- **Read `operation not supported` 1건:** v3 부터 앱 실행, 하루 이벤트, 하루 TC 에서 1건씩 나와요. 양이 무시할 만해 원인은 보지 않았어요.
 
 - **대기 구간 Flush/s 가 원본의 60% 정도예요.** 원본 대기 Checkpoint 는 Flush 5개(파일 동기화 2 + Checkpoint 3), TC 는 3개예요. syncfs 로 재생하면 쌓인 Discard 가 다 나가 Flush·Discard 가 몇 배가 됐고, Flush 개수는 flush_merge 와 그때 dirty 양에 따라 4~7개로 흔들려 맞추지 못했어요.
-- **I/O 가 적은 구간(대기·홈·통화)은 FS Write 가 원본의 1.5배쯤이에요.** 지금 폰에서 도는 배경 앱이 node·quota 를 dirty 로 만들고, TC 가 원본 간격으로 일으키는 Checkpoint 가 그것까지 같이 써요. 원본의 배경 앱 I/O 는 uxwl 이 이미 재생하고 있어서 그만큼이 더해져요. 데이터를 하나도 쓰지 않고 2.6초마다 Checkpoint 만 낸 5분에도 Checkpoint Write 가 6.4MB 로 원본 대기 5분(5.0MB)보다 많았어요. Checkpoint 안 FS Write 는 누구 몫인지 나눌 수 없어 거를 수 없어요. 반대로 I/O 가 많은 구간은 0.6~0.8배라 전체로는 0.9배 안팎으로 맞아 보여요.
+- **대기·홈은 FS Write 가 원본보다 많아요 (v4: 대기 1.29, 홈 1.37배).** 지금 폰에서 도는 배경 앱이 node·quota 를 dirty 로 만들고, TC 가 원본 간격으로 일으키는 Checkpoint 가 그것까지 같이 써요. 원본의 배경 앱 I/O 는 uxwl 이 이미 재생하고 있어서 그만큼이 더해져요. 데이터를 하나도 쓰지 않고 2.6초마다 Checkpoint 만 낸 5분에도 Checkpoint Write 가 6.4MB 로 원본 대기 5분(5.0MB)보다 많았어요. Checkpoint 안 FS Write 는 누구 몫인지 나눌 수 없어 거를 수 없어요.
 - **readahead 체인의 QD 를 못 맞춰요** (원본 50, TC 26~31, 기준 ±50% 의 가장자리). 커널은 128KB 를 35µs 간격으로 내는데 io_submit 은 하나에 80µs 쯤 걸려요. readahead(2) + fadvise 로 커널에 맡겨 보면 request 크기와 양이 어긋났어요(음악 Read 67%).
 
 ---
 
 ## 10. 해 봤는데 안 된 것
+
+- **화면 유지에 `KEYCODE_WAKEUP` (v3 까지):** 켜진 화면의 꺼짐 시간을 늘리지 못해 화면이 약 30초마다 꺼졌다 켜졌어요. 켜질 때마다 다른 앱의 fsync·Flush, `/mnt/vendor/persist` journal Write 가 나왔고, 꺼질 때마다 Discard 가 나왔어요. 대조 TC 화면 켜짐 Flush/s 2.00 → 키코드 0 으로 0.74. 하루 TC 의 Flush/s 일치(v3 5.46 vs 5.51)에도 이 몫이 섞여 있었어요.
 
 다시 만들 때 같은 길로 가지 않도록 남겨요.
 
@@ -572,3 +594,36 @@ TC: request 약 24만 6천 개, 7379초, 파일 3만 7천 개, Read 8.3GB, Write
 
 지표별 구간 통과율(Run 3): Read Volume 94%, Request size 95~98%, Sequential Read 96%, Inter-arrival 97%, Idle% 98%, fsync/s 96%, Write Volume 72%, Checkpoint/s 70%, FS Write 66%, Sequential Write 65%, Wakeups 65%, QD p99 73%, FS Write 비율 47%, Flush/s 40%.
 앱이 직접 내는 I/O(Read, Data Write, fsync, 크기, 간격)는 거의 맞고, f2fs 가 스스로 정하는 I/O(Checkpoint 묶음, Flush, FS Write 비율)가 남은 차이예요. 이건 9절의 이유로 파일 동작 재생만으로는 더 맞추기 어려워요.
+
+## 13. v2~v4 결과
+
+판정 기준은 그대로이고 재생 쪽만 바뀌었어요. 모두 Run 한 번씩이라, 유형별 값은 9.2 의 Run 사이 흔들림(구간별 5%p, 항목 2개) 안이면 차이로 보지 않아요.
+
+| 버전 | 바뀐 것 | tc.bin | 하루 TC 구간별 | 전체 | Flush/s (원본 5.51) | FS Write MB (원본 720) |
+|---|---|---|---|---|---|---|
+| v1 | | day6 | 76~77% | 16/16 | 4.68~4.94 | 636~653 |
+| v2 | 파일별 순서 (5.4 의 0번) | day6 | 78.9% | 16/16 | 4.62 | 616 |
+| v3 | atomic commit 분류 (3.2) | day7 | 79.3% | 16/16 | 5.46 | 636 |
+| v4 | 화면 유지 키 (10절) | day7 | 80.9% | 16/16 | 4.91 | 578 |
+
+유형별 TC (`cat`, 600초):
+
+| 유형 | 구간별 v3 → v4 | 전체 v3 → v4 | Flush/s 원본 | v3 → v4 | FS Write MB 원본 | v3 → v4 |
+|---|---|---|---|---|---|---|
+| SNS | 77 → 84% | 15 → 13 | 13.44 | 11.19 → 10.21 | 171.0 | 141.7 → 135.4 |
+| 동영상 | 80 → 84% | 15 → 15 | 1.68 | 3.23 → 2.31 | 14.5 | 18.9 → 15.3 |
+| 브라우저 | 80 → 79% | 15 → 14 | 1.87 | 3.42 → 2.30 | 20.0 | 17.1 → 11.0 |
+| 음악 | 84 → 89% | 13 → 13 | 1.86 | 3.41 → 2.41 | 14.4 | 14.7 → 9.6 |
+| 지도 | 80 → 78% | 12 → 13 | 4.53 | 5.45 → 4.66 | 37.8 | 25.7 → 24.3 |
+| 카메라 | 79 → 82% | 12 → 13 | 6.33 | 7.26 → 6.57 | 116.4 | 83.1 → 74.8 |
+| 갤러리 | 74 → 77% | 12 → 13 | 2.11 | 3.56 → 2.57 | 0.9 | 9.8 → 12.2 |
+| 메일·스토어 | 85 → 88% | 14 → 15 | 2.04 | 3.61 → 2.50 | 13.3 | 13.4 → 11.3 |
+| 생산성 | 75 → 83% | 11 → 12 | 1.10 | 2.91 → 1.61 | 7.2 | 15.7 → 7.6 |
+| 홈 | 80 → 80% | 12 → 12 | 3.40 | 3.73 → 2.80 | 18.7 | 45.4 → 25.6 |
+| 앱 실행 | 83 → 76% | 14 → 13 | 6.60 | 7.08 → 6.64 | 70.7 | 50.8 → 43.4 |
+| 하루 이벤트 | 82 → 86% | 15 → 16 | 3.27 | 4.36 → 3.42 | 36.8 | 40.4 → 30.6 |
+| 대기 | 83 → 80% | 13 → 11 | 3.81 | 2.41 → 2.58 | 40.4 | 41.0 → 52.1 |
+| 평균·합 | 80.1 → 81.9% | 173 → 173 | | Flush/s 통과 유형 4 → 8 | | FS Write 통과 유형 7 → 4 |
+
+- 전체 항목 합이 그대로인 건 Flush/s 통과가 늘고 FS Write 통과가 줄어 서로 지워져서예요. FS Write 는 깨우기 키 몫이 빠지며 부족분이 드러났어요. 9절의 첫 항목이에요.
+- `discardMB` 는 구간 안만 세요. v4 는 화면이 켜져 있는 동안 Discard 가 거의 안 나오고 화면을 끈 직후에 몰려서, 하루 TC 의 값이 288MB 로 작아 보여요. trace 전체로는 2,740MB 로 원본 2,473MB 에 가까워요. 카메라처럼 앱 구간만 있는 유형은 구간 안 Discard 가 0 으로 원본과 같아졌어요(v3 은 1만 1천MB).

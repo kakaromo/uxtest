@@ -89,19 +89,16 @@
 	};
 	const runName = (i: number) => {
 		const r = doc!.runs[i];
-		return `Run ${i + 1} (${r.version === 'pre-v1' ? 'v1 이전' : r.version})`;
+		return `Run ${i + 1} (${r.version})`;
 	};
 
 	const last = $derived(doc ? doc.runs[doc.runs.length - 1] : null);
 	const judged = $derived(doc ? doc.metrics.filter((m) => !m.info) : []);
 	const infoKeys = $derived(doc ? doc.metrics.filter((m) => m.info).map((m) => m.key) : []);
-	const pre = $derived(doc?.runs.find((r) => r.version === 'pre-v1'));
-	const v1 = $derived(doc?.runs.filter((r) => r.version !== 'pre-v1') ?? []);
-	const allPass = $derived(doc ? doc.runs.every((r) => r.totalPass === r.totalOf) : false);
-	// 카테고리 ratio 범위 (세 Run)
-	const catRatio = (cats: string[], k: string) =>
-		doc!.runs.flatMap((r) => cats.map((c) => r.cats[c]?.ratio[k]).filter((v): v is number => v != null));
-	const tot = (k: string) => doc!.runs.map((r) => r.total[k]);
+	const first = $derived(doc ? doc.runs[0] : null);
+	// 해설은 마지막 Run(수정 후) 값으로
+	const catRatio = (cats: string[], k: string) => cats.map((c) => last!.cats[c]?.ratio[k]).filter((v): v is number => v != null);
+	const tot = (k: string) => [last!.total[k]];
 	const worst = $derived(
 		last ? judged.map((m) => ({ k: m.key, v: last.itemPct[m.key] ?? 100 })).sort((a, b) => a.v - b.v) : []
 	);
@@ -125,7 +122,7 @@
 
 {#if err}
 	<p class="text-destructive">{err}</p>
-{:else if !doc || !last}
+{:else if !doc || !last || !first}
 	<Skeleton class="h-10 w-2/3" />
 	<Skeleton class="mt-4 h-40 w-full" />
 	<Skeleton class="mt-4 h-80 w-full" />
@@ -149,37 +146,37 @@
 		<h2 id="summary" class="text-h2 font-bold">Summary</h2>
 		<div class="prose-ux summary">
 			<div class="stats">
-				<div><b>{span(doc.runs.map((r) => r.totalPass))}/{last.totalOf}</b><span>전체로 합친 지표 통과 ({doc.runs.length} Run)</span></div>
-				<div><b>{span(doc.runs.map((r) => r.itemPassPct))}%</b><span>구간별 통과</span></div>
-				<div><b>{span(doc.runs.map((r) => r.latePct), 2)}%</b><span>늦은 request (예정보다 5ms 넘게)</span></div>
+				<div><b>{last.totalPass}/{last.totalOf}</b><span>전체로 합친 지표 통과 ({last.version})</span></div>
+				<div><b>{f(last.itemPassPct, 0)}%</b><span>구간별 통과</span></div>
+				<div><b>{f(last.latePct, 2)}%</b><span>늦은 request (예정보다 5ms 넘게)</span></div>
 			</div>
 			<ul class="points">
 				<li>
-					<b>하루 TC를 같은 내용으로 {doc.runs.length}번 돌렸어요.</b> 하루 사용을 2시간으로 압축한 TC예요. tc.bin이 세 번 모두 같고, 첫 Run만 v1 이전 재생기(uxwl)로
-					돌렸어요. 나머지 두 Run은 v1과 같은 코드예요.
+					<b>같은 하루 TC를 재생기(uxwl)만 바꿔 {doc.runs.length}번 돌렸어요.</b> 하루 사용을 2시간으로 압축한 TC예요. {first.version} 재생기는 화면을 켜 두려고 <code>KEYCODE_WAKEUP</code>을
+					10초마다 보냈는데, 이 키는 꺼짐 시간을 늘리지 못해 화면이 약 30초마다 꺼졌다 켜졌어요. 그때마다 다른 앱의 fsync와 Flush가 나왔어요. {last.version}은 이 키를 고친 Run이고, 이 페이지의 해설은 {last.version} 값이에요.
 				</li>
 				<li>
-					<b>전체로 합치면 판정하는 {last.totalOf}개 지표가 {allPass ? '세 Run 모두' : ''} 통과했어요.</b> 구간으로 잘라 보면 {span(doc.runs.map((r) => r.itemPassPct), 0)}%가
-					통과해요. 구간은 TC 타임라인의 조각 하나(시나리오 조각, 앱 실행, 대기, 하루 이벤트)예요. Run 사이 차이 {f(Math.max(...doc.runs.map((r) => r.itemPassPct)) - Math.min(...doc.runs.map((r) => r.itemPassPct)), 1)}%p는 아래 흔들림 기준(5%p) 안이에요.
+					<b>전체로 합치면 판정하는 {last.totalOf}개 지표 중 {last.totalPass}개가 통과했어요.</b> 구간으로 잘라 보면 {f(last.itemPassPct, 0)}%가
+					통과해요. 구간은 TC 타임라인의 조각 하나(시나리오 조각, 앱 실행, 대기, 하루 이벤트)예요. 다만 FS-induced Write는 원본의 {f(last.total.fsWriteMB.d ?? 0, 2)}배, Flush/s는 {f(last.total.flushPerSec.d ?? 0, 2)}배로 통과 범위 안에서 모자라요.
 				</li>
 				<li>
 					<b>가장 덜 맞는 지표는 {mname(worst[0].k)}({f(worst[0].v, 0)}%), {mname(worst[1].k)}({f(worst[1].v, 0)}%), {mname(worst[2].k)}({f(worst[2].v, 0)}%)예요.</b> 원인과 남은 차이는
 					<a href="#known">알려진 차이</a>에 정리했어요.
 				</li>
 				<li>
-					<b>늦은 request는 {span(doc.runs.map((r) => r.latePct), 2)}%예요.</b> 재생기가 예정 시각보다 5ms 넘게 늦게 낸 request 비율이에요. 기기 Latency가 아니라 재생 시각이
+					<b>늦은 request는 {f(last.latePct, 2)}%예요.</b> 재생기가 예정 시각보다 5ms 넘게 늦게 낸 request 비율이에요. 기기 Latency가 아니라 재생 시각이
 					얼마나 정확한지 보는 값이에요.
 				</li>
 			</ul>
 		</div>
-		<CopyTable title="Run 요약" note="같은 tc.bin을 같은 기기에서 배터리·무선 adb 상태로 돌렸어요. 구간별 통과 = 모든 구간·지표 판정 중 통과한 비율이에요.">
+		<CopyTable title="Run 요약" note="같은 tc.bin을 같은 기기에서 배터리·무선 adb 상태로 돌렸어요. 버전마다 한 번씩이에요. 구간별 통과 = 모든 구간·지표 판정 중 통과한 비율이에요.">
 			<table>
 				<thead><tr><th>Run</th><th>uxwl</th><th class="num">구간별 통과 %</th><th class="num">전체 지표 통과</th><th class="num">늦은 request %</th><th>결과 폴더</th></tr></thead>
 				<tbody>
 					{#each doc.runs as r, i (r.id)}
 						<tr>
 							<td class="whitespace-nowrap">Run {i + 1}</td>
-							<td class="whitespace-nowrap">{r.version === 'pre-v1' ? 'v1 이전' : r.version}</td>
+							<td class="whitespace-nowrap">{r.version}</td>
 							<td class="num">{f(r.itemPassPct, 1)}</td>
 							<td class="num">{r.totalPass}/{r.totalOf}</td>
 							<td class="num">{f(r.latePct, 2)}</td>
@@ -236,15 +233,12 @@
 			뺐어요.
 		</p>
 		{#if itemSpec}<Chart spec={itemSpec} height={judged.length * 40 + 70} />{/if}
-		{#if pre && v1.length}
-			<div class="prose-ux">
-				<p class="sowhat">
-					<b>Sequential Read</b>v1 이전 Run은 {f(pre.itemPct.seqR, 0)}%, v1 Run은 {span(v1.map((r) => r.itemPct.seqR ?? 0), 0)}%예요. v1 재생기는 Read를 goroutine 하나가 시각
-					순서대로 io_submit 하고 완료만 따로 기다려요. 같은 파일에서 앞 Read에 바로 붙은 Read는 한 묶음에 넣지 않아요. 묶음마다 goroutine을 띄우던 때는 준비에 0.5ms 쯤 걸려 뒤
-					Read가 먼저 나가 순서가 섞였어요.
-				</p>
-			</div>
-		{/if}
+		<div class="prose-ux">
+			<p class="sowhat">
+				<b>Flush/s</b>{first.version} {f(first.itemPct.flushPerSec ?? 0, 0)}%, {last.version} {f(last.itemPct.flushPerSec ?? 0, 0)}%예요. 재생을 전혀 하지 않는 대조 TC의 화면 켜짐 Flush/s가 2.00에서 0.74로 줄었어요.
+				Run 사이 흔들림이 큰 지표라 Run 한 번의 차이로 크게 해석하지 않아요.
+			</p>
+		</div>
 	</section>
 
 	<section class="mb-12 space-y-4">
@@ -279,20 +273,20 @@
 
 	<section class="mb-12 space-y-4">
 		<h2 id="known" class="text-h2 font-bold">알려진 차이</h2>
-		<p class="text-body-2 text-muted-foreground">v1에서 아직 맞추지 못한 차이와, 판정하지 않고 값만 보여 주는 지표예요. 값은 {doc.runs.length} Run 범위예요.</p>
+		<p class="text-body-2 text-muted-foreground">{last.version}에서 아직 맞추지 못한 차이와, 판정하지 않고 값만 보여 주는 지표예요. 값은 {last.version} Run 값이에요.</p>
 		<div class="prose-ux">
 			<ul class="points">
 				<li>
 					<b>대기 구간 Flush/s는 원본의 {span(catRatio(['standby'], 'flushPerSec'), 2)}배예요.</b> 원본 대기 Checkpoint는 Flush 5개(앞에 파일 동기화 2개 + Checkpoint 3개)인데
 					TC는 3개예요. syncfs로 재생해 보면 쌓인 Discard가 다 나가 Flush·Discard가 몇 배가 됐어요. Flush 개수는 커널 flush_merge와 그때 dirty 양에 따라 4~7개로 흔들려
-					맞추지 못했어요. 마지막 Run에서 Flush/s는 {doc.cats.length}개 카테고리 중 {doc.cats.filter((c) => last.cats[c]?.fail.includes('flushPerSec')).length}개에서 미달이고, 구간 통과율도 {span(doc.runs.map((r) => r.itemPct.flushPerSec ?? 0), 0)}%로 가장 낮아요.
+					맞추지 못했어요. 마지막 Run에서 Flush/s는 {doc.cats.length}개 카테고리 중 {doc.cats.filter((c) => last.cats[c]?.fail.includes('flushPerSec')).length}개에서 미달이고, 구간 통과율은 {f(last.itemPct.flushPerSec ?? 0, 0)}%예요.
 				</li>
 				<li>
 					<b>I/O가 적은 구간(홈·통화·대기)은 FS-induced Write가 원본의 {span(catRatio(['home', 'call', 'standby'], 'fsWriteMB'), 2)}배예요.</b> 지금 폰에서 도는 배경 앱이
 					node·quota를 더럽히고, TC가 원본 간격으로 일으키는 Checkpoint가 그것까지 같이 써요. 앱 데이터 Write는 comm으로 거르지만 Checkpoint 안의 FS Write는 누구 몫인지
-					나눌 수 없어요. 반대로 I/O가 많은 웹 브라우저·SNS·음악·지도 구간은 원본의 {span(catRatio(['browser', 'sns', 'music', 'maps'], 'fsWriteMB'), 2)}배로 적어요. 두 쪽이
-					서로 지워져 전체로는 ×{span(tot('fsWriteMB').map((c) => c.d ?? 0), 2)}로 맞아 보여요.
-				</li>
+					나눌 수 없어요. 반대로 I/O가 많은 웹 브라우저·SNS·음악·지도 구간은 원본의 {span(catRatio(['browser', 'sns', 'music', 'maps'], 'fsWriteMB'), 2)}배예요. 대부분 Checkpoint가 쓰는 node 양의 차이로, 파일 내용 없이
+						메타데이터만 바꾸는 동작은 block trace에서 볼 수 없어 재생하지 못해요. 전체로는 ×{f(last.total.fsWriteMB.d ?? 0, 2)}예요.
+					</li>
 				<li>
 					<b>readahead 체인의 QD는 아직 못 맞춰요.</b> 전체 QD p99가 원본 {span(tot('qdP99').map((c) => +c.orig), 0)}, TC {span(tot('qdP99').map((c) => +c.tc), 0)}예요.
 					기준(±50%) 안이지만 가장자리예요. 원본은 커널 readahead가 128KB Read를 35µs 간격으로 이어 내 QD가 50 넘게 오르는데, 재생기의 io_submit은 한 번에 80µs 쯤 걸려요.
@@ -300,11 +294,10 @@
 				</li>
 				<li>
 					<b>Discard는 값만 보여 줘요 (원본의 {span(tot('discardMB').map((c) => c.d ?? 0), 2)}배).</b> f2fs가 idle 때 알아서 내므로 언제 나올지 TC가 정할 수 없어요. 원본
-					Discard는 재생하지 않고, TC가 지우는 파일에서 f2fs가 내는 Discard만 세요.
+					Discard는 재생하지 않고, TC가 지우는 파일에서 f2fs가 내는 Discard만 세요. 이 값은 구간 안만 세는데, 화면을 끈 직후에 몰려 작게 보여요. trace 전체로는 2,740MB로 원본 2,473MB에 가까워요.
 				</li>
 				<li>
-					<b>GC Read·Write는 값만 보여 줘요 (원본의 {span(tot('gcMB').map((c) => c.d ?? 0), 2)}배).</b> 얼마나 할지는 파일 시스템이 얼마나 차고 조각났는지에 달려요. 같은 TC인데도
-					Run마다 이만큼 달라요.
+					<b>GC Read·Write는 값만 보여 줘요 (원본의 {span(tot('gcMB').map((c) => c.d ?? 0), 2)}배).</b> 얼마나 할지는 파일 시스템이 얼마나 차고 조각났는지에 달려요. 같은 TC인데도 Run마다 많이 달라요.
 				</li>
 				<li>
 					<b>Hibern8은 값만 보여 줘요 (Hibern8/min 원본의 {span(tot('h8PerMin').map((c) => c.d ?? 0), 2)}배, Hibern8 time 원본보다 {span(tot('h8Pct').map((c) => -(c.d ?? 0)), 1)}%p 짧음).</b> UFS mgmt
@@ -345,7 +338,7 @@
 		<h2 id="method" class="mb-3 text-h2 font-bold">비교 방법</h2>
 		<div class="prose-ux">
 			<ul class="points">
-				<li>판정 기준은 <code>wl/metrics.py</code>의 <code>CHECKS</code>예요. ratio는 TC/원본 비율, diff는 차이(%p), dist는 분포 차이(%p)로 봐요. 기준과 재생 방식은 git 태그 <code>wl-v1</code>로 고정했어요.</li>
+				<li>판정 기준은 <code>wl/metrics.py</code>의 <code>CHECKS</code>예요. ratio는 TC/원본 비율, diff는 차이(%p), dist는 분포 차이(%p)로 봐요. 기준은 git 태그 <code>wl-v1</code>부터 그대로이고, 지금 재생 방식은 <code>wl-v4</code>예요. 버전별 값은 <code>wl/TC_SPEC.md</code> 13절이에요.</li>
 				<li>원본이나 TC 값이 아주 작으면(<code>FLOOR</code> 미만) 그 구간은 판정하지 않아요. request가 20개보다 적은 구간은 Request size를 판정하지 않아요.</li>
 				<li>화면 켜진 구간 바로 뒤 대기 구간은 처음 10초를 판정에서 빼요. 앞 구간이 남긴 writeback·Checkpoint·Discard가 몰리는데, 원본 대기는 쉰 뒤에 쟀기 때문이에요.</li>
 				<li>측정 전에 앞 TC 파일을 지우고 <code>pending_discard</code>가 0이 될 때까지 기다린 뒤 trace를 시작해요.</li>

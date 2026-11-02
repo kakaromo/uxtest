@@ -11,7 +11,7 @@
   Read                                        R   O_DIRECT pread (원본은 page cache 뒤 요청이라 크기 그대로)
   앱 스레드 node Write (fsync 안에서 나옴)      FS  그 파일 fsync  → node 를 f2fs 가 냄 (fsync_mode=nobarrier 라 Flush 없음)
     └ 바로 뒤(1ms) Checkpoint                  FS  (+ CP) Flush 는 Checkpoint 가 냄. 예: SQLite 가 새 journal 을 fsync 할 때마다
-    └ Checkpoint 없이 바로 뒤(3ms) Flush        FA  atomic commit (F2FS_IOC_COMMIT_ATOMIC_WRITE) → node + PREFLUSH|FUA → Flush
+  atomic commit 의 node Write (아래 ATOMIC)     FA  F2FS_IOC_COMMIT_ATOMIC_WRITE → node + Flush. fsync 를 거치지 않아 fsync flag 가 없다
   앱 스레드 Data Write, 1초 안에 같은 파일 FS   WB  buffered pwrite (sync 없음, 뒤 fsync 가 내보냄)
     └ 그 fsync 가 FA                           WX  atomic write 안의 pwrite (처음이면 F2FS_IOC_START_ATOMIC_WRITE)
   앱 스레드 Data Write, O_DIRECT               WD  O_DIRECT pwrite
@@ -53,6 +53,10 @@ FSYNC_WIN = 1.0   # 앱 스레드 Data Write 뒤 이 시간 안에 같은 파일
 FLUSH_WIN = 0.003  # fsync node write 뒤 이 안에 Flush 가 오면 atomic commit (PREFLUSH|FUA 를 앞뒤 Flush 로 처리)
 REWRITE_GAP = 1.0   # 같은 파일 Write 사이가 이보다 벌어지면 다른 묶음
 REWRITE_MAX = 256   # 묶음 하나가 이 블록(1MB) 이하인 파일만 덮어쓰기로 본다 (영상 캐시 같은 큰 append 는 그대로)
+# atomic commit 의 node Write: writeback 처럼 kworker flag 가 붙지만 fsync flag 도 SAW_FS(bit 41)도 없다. uxwl 의 FA 도 같은 값을 낸다 (93개 중 93개).
+# 예전 판별(fsync node + 3ms 안 Flush)은 진짜 atomic commit 을 "writeback node" 로 버리고 fsync 를 FA 로 잘못 봤다 (카메라 Flush 부족의 원인)
+ATOMIC = "(coalesce(is_f2fs_node_write, false) and not coalesce(is_fsync_triggered, false) and (io_flags >> 41) & 1 = 0 and (io_flags >> 35) & 1 = 1)"
+ATOMIC_WIN = 0.02  # atomic commit 이 자기 data 를 node 바로 앞(수 ms)에 같은 스레드로 내보낸다. kworker flag 가 붙어 앱 몫이 아닌 W 로 분류되므로 WX 로 되돌린다
 CKPT_WIN = 0.001   # fsync node write 뒤 이 안에 f2fs_ckpt Write 가 오면 그 fsync 가 Checkpoint 를 부른 것 (새 journal 파일 fsync 등)
 APP = "not (comm like 'kworker%' or comm like 'f2fs%' or comm like 'jbd2%')"
 TEMP = re.compile(r"(-journal|\.tmp|\.temp)$")
@@ -88,7 +92,7 @@ def build(pq):
         select time - {t0} t, {extract.DIR} dir, lba, size, coalesce(ino, 0) ino, coalesce(tid, 0) tid,
                {app} app, coalesce(is_direct_io, false) dio,
                coalesce(is_journal or is_checkpoint or is_f2fs_meta_write or is_gc or is_f2fs_node_gc or is_f2fs_data_gc, false) fsw,
-               coalesce(is_f2fs_node_write, false) node, comm, name, {fsn} fsn, coalesce(is_checkpoint, false) ck
+               coalesce(is_f2fs_node_write, false) node, comm, name, {fsn} fsn, coalesce(is_checkpoint, false) ck, {ATOMIC if has_flag else "false"} atomic
         from read_parquet('{pq}')
         where action = 'send_req' and coalesce(is_mgmt, false) = false
         order by time""").fetchall()
@@ -98,7 +102,7 @@ def build(pq):
     flush = [t for t, d, *_ in rows if d == "F"]
     ckpt = [r[0] for r in rows if (r[10] or "").startswith("f2fs_ckpt") or r[13]]
     names, lastck = {}, -1.0
-    for t, d, lba, size, ino, tid, app, dio, fsw, node, comm, name, fsn, ck in rows:
+    for t, d, lba, size, ino, tid, app, dio, fsw, node, comm, name, fsn, ck, atomic in rows:
         ino = ino if ino and ino > 1 else 0
         if ino and name and ino not in names:
             names[ino] = os.path.basename(name)
@@ -114,11 +118,17 @@ def build(pq):
         elif d == "W":
             if fsw:
                 continue                       # f2fs 몫
+            if atomic:
+                if ino:
+                    ev.append([t, "FA", ino, 0, 0, tid])
+                continue
             if node and not fsn:
                 continue                       # f2fs 몫 (writeback node)
             if node:                           # fsync 안 node write
-                if ino:
-                    # 바로 뒤 Checkpoint 가 오면 그 Flush 는 Checkpoint 몫 → 일반 fsync (+ CP). 아니고 Flush 만 따라오면 atomic commit
+                if has_flag:
+                    if ino:
+                        ev.append([t, "FS", ino, 0, 0, tid])
+                elif ino:                      # flag 없는 옛 trace: 바로 뒤 Checkpoint 없이 Flush 만 오면 atomic commit
                     j = bisect.bisect_left(flush, t)
                     k = bisect.bisect_left(ckpt, t)
                     cp_next = k < len(ckpt) and ckpt[k] - t <= CKPT_WIN
@@ -150,6 +160,8 @@ def build(pq):
                 e[1] = "WX" if nxt[k][1] == "FA" else "WB"
             else:
                 e[1] = "W"
+        elif e[1] == "W" and k in nxt and nxt[k][1] == "FA" and nxt[k][0] - e[0] <= ATOMIC_WIN:
+            e[1] = "WX"
 
     # 잠깐 쓰고 지워진 파일 → 마지막 접근 직후 UL
     span = {}
