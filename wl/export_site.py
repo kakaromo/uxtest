@@ -20,11 +20,10 @@ import metrics as M  # noqa: E402
 
 RES = HERE / ".private" / "results"
 OUT = HERE.parent / "web" / ".private" / "data" / "tc.json"
-# 사이트에 싣는 Run. version: compare.json 에 없으면 여기 값 (041017 은 v1 과 같은 코드, 011053 은 v1 이전 uxwl)
+# 사이트에 싣는 Run. 같은 tc.bin(day7). v3 은 화면 유지 키 버그가 있던 Run 으로, 전후를 보여 주려고 함께 싣는다
 RUNS = [
-    ("day6-20261030-011053", "pre-v1", "v1 이전 uxwl"),
-    ("day6-20261030-041017", "v1", ""),
-    ("day6-20261030-064621", "v1", ""),
+    ("day7-20261102-164037", "v3", "화면 유지 키 수정 전"),
+    ("day7-20261102-224025", "v4", ""),
 ]
 # 카테고리 순서는 고정 (compare.json 의 순서는 하루 TC 안 순서라 쓰지 않음)
 CATS = ["launch", "browser", "sns", "video", "music", "maps", "camera", "gallery", "mail_store", "productivity",
@@ -73,7 +72,7 @@ def export(out=OUT):
         return
     shas = {r["tcSha"] for r in runs if r["tcSha"]}
     doc = {
-        "version": M.VERSION, "tc": "day6", "tcSha": shas.pop() if len(shas) == 1 else None,
+        "version": M.VERSION, "tc": "day7", "tcSha": shas.pop() if len(shas) == 1 else None,
         "metrics": [{"key": k, "kind": kind, "th": th, "info": k in M.INFO,
                      **({"buckets": SIZE_B} if k in ("sizeR", "sizeW") else {"buckets": GAP_B} if k == "gap" else {})}
                     for k, kind, th in M.CHECKS],

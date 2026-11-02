@@ -5,6 +5,7 @@
   python3 wl/gen_tc.py seq --name cal --rest 20 A1-1 B7t-2 C1-1
   python3 wl/gen_tc.py day --name day1 --seed 1                # 하루: 카테고리 가중치 × 사용 패턴
   python3 wl/gen_tc.py day --name sns --seed 1 --set sns=0.5 --hours 2
+  python3 wl/gen_tc.py cat --name cat-sns --cat sns --sec 600  # 유형 하나만: 그 유형의 시나리오를 mix.json 비중대로 (앱 실행·하루 이벤트·대기 안 섞음)
 
 TC 형식은 wl/replay/main.go 머리 주석과 같다. manifest.timeline 의 각 구간은
   {i, seg, tcStart, srcFrom, srcTo} : TC 의 tcStart 초부터 조각 seg 의 [srcFrom, srcTo) 초를 재생
@@ -330,6 +331,78 @@ def cmd_day(a):
     print(f"세션 {len(kept)}/{len(sess)} 개 사용, 화면 켜짐 {sum(d for _, d in kept) / 60:.0f}분, 압축된 화면 꺼짐 {got.get('standby', 0) / 60:.0f}분")
 
 
+# ---------------- 유형별 TC ----------------
+def cat_pool(mix, c):
+    """유형의 시나리오 비중. launch·standby·daily 는 mix.json 에서 자리가 달라 따로 푼다"""
+    if c == "launch":
+        ratio = mix["launch"]["coldRatio"]
+        return {k: v["w"] * (ratio if p == "cold" else 1 - ratio) for p in ("cold", "warm") for k, v in mix["launch"][p].items()}
+    if c == "standby":                         # 길이 구간끼리는 같은 비중
+        bands = mix["standby"]
+        return {k: v / sum(b["scenarios"].values()) / len(bands) for b in bands for k, v in b["scenarios"].items()}
+    if c == "daily":
+        return mix["daily"]
+    return mix["categories"][c].get("scenarios", {})
+
+
+def cmd_cat(a):
+    rng = random.Random(a.seed)
+    mix = json.loads((HERE / a.mix).read_text())
+    idx = json.loads((SEG / "index.json").read_text())
+    reps = {}
+    for k, v in idx.items():
+        reps.setdefault(v["sid"], []).append(k)
+    pool = {k: w for k, w in cat_pool(mix, a.cat).items() if k in reps and w > 0}
+    if not pool:
+        raise SystemExit(f"{a.cat}: 측정 조각이 있는 시나리오가 없어요")
+    tot = sum(pool.values())
+    chunks = []
+    for sid, w in pool.items():
+        names = reps[sid][:]
+        rng.shuffle(names)
+        if a.cat == "daily":                   # 하루 이벤트의 비중은 횟수: 소수는 올려서 적어도 한 번
+            chunks += [(names[i % len(names)], 0.0, None) for i in range(math.ceil(w))]
+            continue
+        left, i = a.sec * w / tot, 0
+        while i == 0 or left > 0.5 * idx[names[0]]["durSec"]:  # 적어도 한 번, 조각은 되도록 통째로
+            name = names[i % len(names)]
+            dur = idx[name]["durSec"]
+            if left >= dur:
+                chunks.append((name, 0.0, None))
+            else:                              # 조각이 할당보다 길면 잘라 씀. 화면 꺼짐은 day 처럼 무작위 위치, 앱은 앞에서부터
+                f0 = rng.uniform(0, dur - left) if sid.startswith(SCREEN_OFF) else 0.0
+                chunks.append((name, f0, f0 + left))
+            left -= dur
+            i += 1
+    rng.shuffle(chunks)
+    b = Builder()
+    t = a.lead
+    for name, f0, f1 in chunks:
+        b.screen(t - a.rest / 2 if t > a.lead else 0, not name.startswith(SCREEN_OFF))
+        t += b.add_segment(name, t, f0, f1, cat=a.cat) + a.rest
+    sec = {}
+    for it in b.timeline:
+        sid = idx[it["seg"]]["sid"]
+        sec[sid] = round(sec.get(sid, 0) + it["srcTo"] - it["srcFrom"], 1)
+    b.write(a.name, {"mode": "cat", "cat": a.cat, "seed": a.seed, "mix": a.mix, "sec": a.sec, "rest": a.rest, "secByScenario": sec})
+    print(f"  {a.cat}: 조각 {len(chunks)}개, 시나리오별 초 {sec}")
+
+
+def cmd_idle(a):
+    """대조군: 아무 요청도 재생하지 않고 화면 켬·끔 구간만 둔다. TC 측정에 섞이는 폰 자체 I/O(다른 앱, 커널)를 잰다"""
+    b = Builder()
+    t = 0.0
+    for on in (True, False):
+        b.screen(t, on)
+        i = len(b.timeline)
+        name = f"synth-idle-{'on' if on else 'off'}"
+        b.timeline.append({"i": i, "seg": name, "tcStart": round(t, 6), "srcFrom": 0.0, "srcTo": a.sec, "cat": "idle", "synth": {"screen": on}})
+        b.reqs.append((int(t * 1e6), MARK, i, 0, 0))
+        t += a.sec
+    b.reqs.append((int(t * 1e6), MARK, 0, 0, 0))
+    b.write(a.name, {"mode": "idle", "sec": a.sec})
+
+
 # ---------------- DB 동작 (SQLite transaction 합성) ----------------
 class SqlTx:
     """SQLite 가 transaction 마다 내는 파일 동작을 그대로 만든다. 측정 안 한 앱(메시지 등)을 흉내 낼 때와
@@ -425,6 +498,19 @@ def main():
     d.add_argument("--standby-scale", type=float, default=0.02, help="화면 꺼짐 압축 비율")
     d.add_argument("--on-min", type=float, help="하루 화면 켜짐 분 (기본: 데이터셋 중앙값)")
     d.add_argument("--verbose", action="store_true")
+    c = sub.add_parser("cat", help="유형 하나만")
+    c.add_argument("--name", required=True)
+    c.add_argument("--cat", required=True, help="mix.json 카테고리 또는 launch, daily, standby")
+    c.add_argument("--seed", type=int, default=1)
+    c.add_argument("--mix", default="mix.json")
+    c.add_argument("--sec", type=float, default=600, help="재생 길이(초, 쉬는 시간 뺌). daily 는 mix.json 횟수를 따름")
+    c.add_argument("--rest", type=float, default=20, help="조각 사이 쉬는 초")
+    c.add_argument("--lead", type=float, default=5, help="처음 쉬는 초")
+    c.set_defaults(fn=cmd_cat)
+    n = sub.add_parser("idle", help="대조군: 재생 없이 화면 켬·끔 구간만")
+    n.add_argument("--name", required=True)
+    n.add_argument("--sec", type=float, default=600, help="화면 상태별 초")
+    n.set_defaults(fn=cmd_idle)
     x = sub.add_parser("dbtx", help="SQLite transaction 만 (DB 동작 검증용)")
     x.add_argument("--name", required=True)
     x.add_argument("--mode", choices=["journal", "wal"], default="journal")

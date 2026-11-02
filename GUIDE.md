@@ -289,20 +289,26 @@ UX_SERIAL=<IP>:5555 python3 run_tc.py day1   # push → 재생 + trace → compa
   - 많이 흔들리는 항목: FS Write(p90 x2.1), Checkpoint/s(p90 x3.0), Flush/s(p90 x1.6), Wakeups/분(p90 x2.0), QD p99(p90 x1.9), Sequential Write(p90 13%p). 구간 판정이 Run 마다 10~25% 뒤집혀요.
   - 그래서 항목별 통과율은 5%p, 카테고리 통과 수는 2개 안의 차이를 흔들림으로 봐요. 그보다 큰 차이가 나거나 여러 카테고리에서 같은 쪽으로 움직일 때만 고친 효과로 봐요.
 
-### 9.3 버전 (v1)
+### 9.3 버전 (v4)
 
-v1 은 git 태그 `wl-v1` 의 `wl/` 코드예요. 판정 기준(`metrics.py` 의 `CHECKS`·`INFO`·`SLACK`·`FLOOR`, `compare.py` 의 `SETTLE`)과 uxwl 재생 방식을 이 태그로 고정해요.
+지금은 v4, git 태그 `wl-v4` 예요. 판정 기준(`metrics.py` 의 `CHECKS`·`INFO`·`SLACK`·`FLOOR`, `compare.py` 의 `SETTLE`)은 `wl-v1` 부터 그대로이고 재생 쪽만 바뀌었어요.
+
+- v2: uxwl 파일별 순서. UNLINK 오류 8~25% → 0 (tc.bin 그대로)
+- v3: `segments.py` atomic commit 분류. tc.bin 이 바뀌어 하루 TC 이름이 day7 이에요
+- v4: 화면 유지 키를 `KEYCODE_WAKEUP` 에서 키코드 0 으로. 화면이 30초마다 꺼졌다 켜지던 버그예요 (tc.bin 그대로)
 
 ```bash
 cd wl
 python3 segments.py                                   # 기준 측정이 바뀌었을 때만
-python3 gen_tc.py day --name day6 --seed 1 --hours 2  # 같은 조각·같은 seed 면 tc.bin 이 바이트까지 같아요
-python3 run_tc.py day6
+python3 gen_tc.py day --name day7 --seed 1 --hours 2  # 같은 조각·같은 seed 면 tc.bin 이 바이트까지 같아요
+python3 run_tc.py day7
+python3 gen_tc.py cat --name cat-sns --cat sns        # 유형 하나만
+python3 gen_tc.py idle --name idle-ctl                # 대조군: 재생 없이 폰 자체 I/O 만
 ```
 
-- `compare.json` 과 `history.jsonl` 에 `version`(지금 `v1`)과 `tcSha`(tc.bin sha256 앞 12자리)가 남아요. 결과를 견줄 때 둘이 같은지 먼저 봐요. 조각은 각자 측정에서 만들므로 `tcSha` 는 기기·측정 세트마다 달라요.
+- `compare.json` 과 `history.jsonl` 에 `version`(지금 `v4`)과 `tcSha`(tc.bin sha256 앞 12자리)가 남아요. 결과를 견줄 때 둘이 같은지 먼저 봐요. 조각은 각자 측정에서 만들므로 `tcSha` 는 기기·측정 세트마다 달라요.
 - 판정 기준이나 재생 방식을 바꾸면 `metrics.VERSION` 을 올리고 여기에 무엇이 바뀌었는지 적어요.
-- v1 기준 결과(day6, 세 번): 구간별 통과 76~77%, 전체 16/16, 늦은 요청(>5ms) 0.13~0.18%. 남은 차이는 9.2 의 대기 Flush/s, I/O 가 적은 구간의 FS Write, readahead 체인 QD 예요.
+- v4 결과(day7, 한 번): 구간별 통과 80.9%, 전체 16/16, Flush/s 4.91(원본 5.51), 늦은 요청(>5ms) 0.18%. 유형별 13개는 구간별 평균 81.9%, 전체 173/204. 남은 차이와 버전별 값은 `wl/TC_SPEC.md` 9절·13절이에요.
 
 ## 10. 자주 생기는 문제
 
