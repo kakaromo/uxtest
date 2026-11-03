@@ -244,6 +244,8 @@ def tc_export():
     sys.path.insert(0, str(X.ROOT / "wl"))
     import export_site
     export_site.export(OUT / "tc.json")
+    import export_func_site  # 시나리오 함수 TC (tcfunc.json)
+    export_func_site.export()
 
 
 if __name__ == "__main__":

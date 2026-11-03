@@ -87,6 +87,13 @@
 						{/snippet}
 					</Sidebar.MenuButton>
 				</Sidebar.MenuItem>
+				<Sidebar.MenuItem>
+					<Sidebar.MenuButton isActive={page.route.id === '/tc/func'}>
+						{#snippet child({ props })}
+							<a href={resolve('/tc/func')} onclick={close} {...props}><FlaskConical />시나리오 함수 TC</a>
+						{/snippet}
+					</Sidebar.MenuButton>
+				</Sidebar.MenuItem>
 				{#each types as t (t)}
 					<Collapsible.Root open={curType === t} class="group/collapsible">
 						<Sidebar.MenuItem>
