@@ -627,3 +627,71 @@ TC: request 약 24만 6천 개, 7379초, 파일 3만 7천 개, Read 8.3GB, Write
 
 - 전체 항목 합이 그대로인 건 Flush/s 통과가 늘고 FS Write 통과가 줄어 서로 지워져서예요. FS Write 는 깨우기 키 몫이 빠지며 부족분이 드러났어요. 9절의 첫 항목이에요.
 - `discardMB` 는 구간 안만 세요. v4 는 화면이 켜져 있는 동안 Discard 가 거의 안 나오고 화면을 끈 직후에 몰려서, 하루 TC 의 값이 288MB 로 작아 보여요. trace 전체로는 2,740MB 로 원본 2,473MB 에 가까워요. 카메라처럼 앱 구간만 있는 유형은 구간 안 Discard 가 0 으로 원본과 같아졌어요(v3 은 1만 1천MB).
+
+## 14. 시나리오 함수 TC (v5 후보, 검증 중)
+
+하루 TC 는 Mac 에서 가중치를 적용해 tc.bin 을 만들었어요. v5 후보는 시나리오 pattern 을 **함수**로 두고, 함수를 **유형**으로 묶고, 실행할 때 **유형 가중치**를 줘서 TC 하나 안에서 돌려요. 사용 로그 데이터셋은 쓰지 않아요. 최종 목표는 회사 framework 용 C++ 이고, 지금은 `uxwl` 로 구조와 일치도를 검증하는 단계예요.
+
+### 14.1 구성
+
+| 파일 | 하는 일 |
+|---|---|
+| `gen_funcs.py` | 조각(`seg/*.npz`) → 함수 묶음 `funcs.bin` (`UXFN0001`). 함수 61개, 회차 181개, 유형 13개 |
+| `groups.json` | 유형 → 함수와 유형 안 비중. 데이터셋 값은 없어요 |
+| `collect_db.py` | 앱 DB 의 테이블 구조와 행 동작 비율을 기기에서 재요. 결과는 `.private/dbinfo` |
+| `replay/mix.go` | `uxwl plan`: 함수 하나(`--func`) 또는 가중치(`--weight`)로 tc.bin 과 실행 순서를 만들어요 |
+| `replay/sqlite.go` | DB 파일 Write 를 실제 SQLite 로 내요 (14.2) |
+| `run_func.py` | `matrix`: 함수 하나씩 실행·비교, `mix`: 가중치 TC |
+
+- 가중치는 실행 시간 비중이에요. 함수는 끝까지 실행하고, 목표 비중보다 가장 모자란 유형에서 다음 함수를 골라요. 같은 seed 면 순서가 같아요.
+- 함수 사이에는 20초 쉬어요(`rest`). 비중은 함수 실행 시간만으로 세요.
+
+### 14.2 DB I/O 는 실제 SQLite
+
+- DB 파일(WAL·rollback journal 포함)은 request 를 재생하지 않고 같은 구조의 테이블에 INSERT·UPDATE·DELETE 를 내요. 비율은 앱 DB 를 잰 값이에요. 행 값은 가짜예요.
+- 행 동작만으로는 양이 맞지 않아요. 그래서 WAL frame 수를 재며 맞춰요(closed loop). 원본 조각의 WAL page 수를 목표로 두고, 작은 transaction(원본 ops/commit)을 반복하며 `-shm` 의 mxFrame 을 읽어요. 모자라거나 넘친 양은 다음 transaction 으로 넘겨요. 그래도 모자라면 채움 테이블 `_uxpad` (한 행 = page 하나)를 UPDATE 해요. C++ 에서는 `sqlite3_wal_hook` 의 nFrame 을 쓰면 돼요.
+- Checkpoint 는 원본이 DB 본체에 쓴 page 수를 쌓아 두고, WAL 의 서로 다른 page 수가 그 1.5배 안일 때만 PASSIVE 로 해요. 아니면 DB 본체 Write 가 원본보다 몇 배 많아졌어요(YouTube 0.3 → 4.3MB).
+- 재생 전에 WAL 을 256 frame 채우고 12초 쉬어요. 준비 Write 가 비교 시각 맞추기(±10초)에 걸리지 않게 해요.
+- 끝에 DB 연결을 닫지 않아요. 닫으면 SQLite 가 Checkpoint 하고 WAL 을 지워 원본에 없는 Write 가 나와요.
+- 앱 전용 CHECK 제약은 `ignore_check_constraints` 로 꺼요. 다른 제약에 3번 걸린 테이블은 빼고, 남은 테이블이 없으면 채움 테이블로 써요.
+- 앱 DB 의 행 내용은 기기 밖으로 나가지 않아요. 구조·SQL 은 `.private/` 에만 둬요.
+
+### 14.3 f2fs Checkpoint 를 일으키지 않아요
+
+v4 는 원본 시각에 Checkpoint op 을 냈어요. v5 후보는 빼고 f2fs 가 정하게 둬요. 그 결과 FS Write 와 Checkpoint/s 가 원본보다 적게 나오는 함수가 많아요. 특히 화면을 끈 대기 함수에서 커요(화면 끈 직후 5분 FS Write 원본 12.8 vs 1.0MB).
+
+### 14.4 함수 하나씩 결과 (2026-11-03, Run 한 번)
+
+61개 함수, 판정 항목 927개 중 717개 통과(77%). 대기 함수 5개는 앞 Run 값이에요. 같은 build 로 다시 잰 10개는 함수마다 1~3개씩 흔들렸어요.
+
+| 유형 | 함수 | 통과 |
+|---|---|---|
+| SNS | 3 | 95% |
+| 음악 | 1 | 88% |
+| 메일·스토어 | 2 | 84% |
+| 브라우저 | 4 | 83% |
+| 생산성 | 4 | 81% |
+| 동영상 | 10 | 80% |
+| 카메라 | 8 | 80% |
+| 갤러리 | 7 | 77% |
+| 앱 실행 | 8 | 75% |
+| 저장소 | 8 | 74% |
+| 지도 | 1 | 69% |
+| 홈 | 1 | 60% |
+| 대기 | 4 | 56% |
+
+- 가장 많이 틀린 항목: FS Write, FS Write 비율, Flush/s, Sequential Write, Checkpoint/s. 14.3 과 같은 방향이에요.
+- 채움 테이블 비중은 DB WAL frame 의 28% 예요. 함수마다 달라서 Instagram·갤러리는 절반 가까이예요. 행 동작만으로 원본 양을 다 못 내는 DB 가 많다는 뜻이에요.
+- 원본의 일부 DB Write(`ttm_strategy.db`, `gphotos0.db`)에는 fsync flag 가 없어요. 어떤 호출인지 확인하지 않았어요. TC 는 SQLite 가 fsync 를 불러서 fsync/s 가 원본보다 많게 나와요.
+
+### 14.5 가중치 TC 결과 (2시간, Run 한 번씩)
+
+| TC | 가중치 | 실제 비중 | 구간별 통과 | 같은 함수 단독 | 전체 |
+|---|---|---|---|---|---|
+| m1 | sns 0.4, video 0.3, camera 0.2, standby 0.1 | 모두 목표 ±1%p | 76.3% | 85.9% | 13/16 |
+| m1w (DB warm-up) | 같음, 같은 seed | 같음 | 78.9% | 85.9% | 13/16 |
+| m2 | browser·sns·video 0.2, camera·launch·home·gallery 0.1 | 모두 목표 ±1%p | 74.2% | 83.3% | 13/16 |
+| m2w (DB warm-up) | 같음, 같은 seed | 같음 | 77.6% | 83.3% | 12/16 |
+
+- **DB page cache.** 가중치 TC 는 모든 DB 를 재생 전에 열고 채워요. 1~2시간 뒤에 도는 함수의 DB page 는 cache 에서 밀려나 있어서 함수 첫 5초에 DB 본체·WAL Read 가 원본보다 수 MB 많았어요(Instagram 피드 0.6 vs 12MB). 같은 구간이 두 번째 나올 때는 원본과 같았어요. 그래서 DB 를 60초 넘게 안 쓰다가 다시 쓰는 함수는 시작 10초 전(함수 사이 쉬는 구간)에 DB 파일을 한 번 읽어 둬요(`sqlWarms`). 구간 판정에서 Read Volume 실패가 39% → 거의 0, Request size Read 가 36% → 거의 0 이 됐어요. 함수 단독 실행은 시작이 60초 안이라 바뀌지 않아요.
+- **남은 차이.** Checkpoint/s 는 원본보다 적어요(14.3). QD p99 는 원본보다 높은 구간이 많아요. 앞 함수의 writeback 이 다음 함수 구간에 이어지는 것으로 보는데 확인하지 않았어요. 함수를 이어 돌리면 생기는 차이라 고치지 않았어요.
