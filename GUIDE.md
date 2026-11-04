@@ -310,6 +310,23 @@ python3 gen_tc.py idle --name idle-ctl                # 대조군: 재생 없이
 - 판정 기준이나 재생 방식을 바꾸면 `metrics.VERSION` 을 올리고 여기에 무엇이 바뀌었는지 적어요.
 - v4 결과(day7, 한 번): 구간별 통과 80.9%, 전체 16/16, Flush/s 4.91(원본 5.51), 늦은 요청(>5ms) 0.18%. 유형별 13개는 구간별 평균 81.9%, 전체 173/204. 남은 차이와 버전별 값은 `wl/TC_SPEC.md` 9절·13절이에요.
 
+### 9.4 시나리오 함수 TC (`run_func.py`, 검증 중)
+
+시나리오 하나의 pattern 을 함수 하나로 두고, 함수를 유형(`wl/groups.json`)으로 묶어, 실행할 때 유형 가중치를 줘요. 하루 TC 와 달리 사용 로그 데이터셋이 필요 없어요. 설계와 결과는 `wl/TC_SPEC.md` 14절이에요.
+
+```bash
+cd uxtest
+python3 wl/collect_db.py            # 앱 DB 의 테이블 구조와 행 동작 비율 (기기에서 한 번, 결과는 wl/.private/dbinfo)
+python3 wl/gen_funcs.py             # 조각 → 함수 묶음 wl/.private/funcs/funcs.bin
+python3 wl/run_func.py matrix       # 함수 하나씩 실행·비교 → wl/.private/results/func-matrix.json (끊겨도 이어서)
+python3 wl/run_func.py matrix --redo --only C1,B7
+python3 wl/run_func.py mix --name m1 --weight sns=0.4,video=0.3,camera=0.2,standby=0.1 --sec 7200 --seed 1
+```
+
+- `mix` 는 실행 순서를 기기의 `uxwl plan` 이 정해요. 목표 비중보다 가장 모자란 유형에서 함수를 골라 끝까지 돌려요. 실제 비중은 `manifest.json` 의 `actual`, 함수별 순서는 `timeline` 이에요.
+- DB 파일은 request 를 그대로 재생하지 않고 실제 SQLite 로 써요. 테이블 구조는 앱 DB 와 같고, 행 값은 가짜예요. 앱 DB 의 행 내용은 기기 밖으로 나가지 않고, 구조·SQL 은 `wl/.private/` 에만 있어요.
+- `collect_db.py` 는 폰에서 앱 DB 를 `/dev` 에 복사해 읽고 지워요. 측정 중에는 돌리지 않아요.
+
 ## 10. 자주 생기는 문제
 
 | 증상 | 원인·해결 |

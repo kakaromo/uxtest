@@ -7,7 +7,7 @@
 // TC 형식 (little endian, gen_tc.py 가 만든다)
 //
 //	header  "UXWL0001" | nfiles u32 | 0 u32 | nreq u64
-//	files   size u64 | flags u8 (1 = prefill)
+//	files   size u64 | flags u8 (1 = prefill, 2 = SQLite DB, 4 = rollback journal DB)
 //	reqs    t_us u64 | op u8 | file u32 | off u64 | len u32
 //
 // op: 0 R(O_DIRECT pread) 1 W(pwrite+sync_file_range) 2 WB(pwrite) 3 WD(O_DIRECT pwrite)
@@ -17,6 +17,7 @@
 //	11 CP(디렉터리 fsync → f2fs Checkpoint) 12 TRIM(FITRIM: 지운 파일의 블록을 f2fs 가 Discard 로 반납)
 //	13 DS(fsync 뒤 디렉터리 fsync: SQLite 새 journal·AtomicFile 이 하는 것. 동작은 CP 와 같고 원인이 있는 쪽)
 //	14 SCREEN(file=1 켜기: 깨우고 잠금 해제, 켜 있는 동안 10초마다 깨우기 / 0 끄기)
+//	15 SQL(실제 SQLite transaction. file=DB, off=page 수 | 서로 다른 page 수<<32, len=sqlite.go 의 동작)
 package main
 
 import (
@@ -57,6 +58,7 @@ const (
 	opTrim
 	opDS
 	opScreen
+	opSQL
 	nOps
 )
 
@@ -66,7 +68,7 @@ const (
 	f2fsCommitAtomic = 0xf502
 )
 
-var opName = [nOps]string{"R", "W", "WB", "WD", "FS", "", "UNLINK", "TRUNC", "MARK", "FA", "WX", "CP", "TRIM", "DS", "SCREEN"}
+var opName = [nOps]string{"R", "W", "WB", "WD", "FS", "", "UNLINK", "TRUNC", "MARK", "FA", "WX", "CP", "TRIM", "DS", "SCREEN", "SQL"}
 
 type req struct {
 	t    uint64
@@ -79,6 +81,7 @@ type req struct {
 type tcFile struct {
 	size    uint64
 	prefill bool
+	flags   uint8
 }
 
 func load(path string) ([]tcFile, []req) {
@@ -102,7 +105,7 @@ func load(path string) ([]tcFile, []req) {
 	for i := range files {
 		_, err = io.ReadFull(r, b[:9])
 		must(err)
-		files[i] = tcFile{binary.LittleEndian.Uint64(b), b[8]&1 != 0}
+		files[i] = tcFile{binary.LittleEndian.Uint64(b), b[8]&1 != 0, b[8]}
 	}
 	reqs := make([]req, nr)
 	for i := range reqs {
@@ -149,6 +152,15 @@ func prep(root string, files []tcFile) {
 	start := time.Now()
 	for id, f := range files {
 		p := fpath(root, uint32(id))
+		if f.flags&dbFlagSQLite != 0 {
+			if f.flags&dbFlagReal != 0 {
+				prepRealDB(p, dbSpecs[fmt.Sprint(id)], f.flags&dbFlagRollback != 0, f.size/4096)
+			} else {
+				prepDB(p, f.size/4096, f.flags&dbFlagRollback != 0)
+			}
+			need += f.size
+			continue
+		}
 		if !f.prefill {
 			os.Remove(p) // 새로 만들 파일은 없는 상태로 시작
 			continue
@@ -339,6 +351,7 @@ func aioOK() bool {
 
 func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out string) {
 	s := &store{root: root, m: map[uint32]*ofile{}}
+	sqlE := newSQLEngine(root, files, reqs)
 	var ops [nOps]stat
 	var lag hist
 	var late, lateMax int64
@@ -365,6 +378,7 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 	unix.ClockGettime(unix.CLOCK_MONOTONIC, &mono)
 	unix.ClockGettime(unix.CLOCK_BOOTTIME, &boot)
 	t0 := time.Now()
+	sqlE.warm(t0, reqs)
 	record := func(r req, sg *segStat, ns int64, err error) {
 		for _, o := range []*stat{&ops[r.op], &sg.ops[r.op]} {
 			atomic.AddUint64(&o.n, 1)
@@ -640,6 +654,16 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 			i++
 			continue
 		}
+		if r.op == opSQL {
+			lg := int64(time.Since(t0) - due)
+			lag.add(lg)
+			lateMax = max(lateMax, lg)
+			sqlE.submit(r)
+			atomic.AddUint64(&ops[opSQL].n, 1)
+			atomic.AddUint64(&segs[seg].ops[opSQL].n, 1)
+			i++
+			continue
+		}
 		j := i + 1
 		if r.op == opR && useAIO {
 			// 같은 파일에서 앞 Read 에 붙은 Read 가 오면 묶음을 끊는다. io_submit 한 번은 plug 하나라 커널이
@@ -728,6 +752,7 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 		i = j
 	}
 	wg.Wait()
+	sqlE.wait()
 	elapsed := time.Since(t0)
 
 	sum := func(a *[nOps]stat) map[string]any {
@@ -753,6 +778,8 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 		"speed": speed, "maxQD": maxQD, "qdMax": qdMax, "requests": len(reqs),
 		"lateOver5ms": late, "lagMs": map[string]float64{"p50": lag.pct(0.5), "p99": lag.pct(0.99), "max": float64(lateMax) / 1e6},
 		"ops": sum(&ops), "segments": ss, "errorKinds": errKinds,
+		"sqlFrames": map[string]int64{"real": sqlFramesReal.Load(), "pad": sqlFramesPad.Load()},
+		"sqlWarms":  sqlWarms.Load(),
 	}
 	b, _ := json.MarshalIndent(res, "", " ")
 	must(os.WriteFile(out, b, 0o644))
@@ -804,7 +831,7 @@ func screen(on bool) {
 
 func main() {
 	if len(os.Args) < 2 {
-		fatal("usage: uxwl prep|run|clean --root DIR [tc.bin]")
+		fatal("usage: uxwl prep|run|clean|plan|mix|dbinfo|dbwatch --root DIR [tc.bin]")
 	}
 	cmd := os.Args[1]
 	fs := flag.NewFlagSet(cmd, flag.ExitOnError)
@@ -814,13 +841,51 @@ func main() {
 	fs.IntVar(&maxWD, "max-wd", 3, "동시에 O_DIRECT 로 쓰는 파일 수 (앱의 쓰기 스레드 수). 많으면 f2fs 가 파일끼리 블록을 섞어 할당해 Write 가 4KB 로 쪼개진다")
 	out := fs.String("out", "", "결과 JSON (기본 <root>/result.json)")
 	fs.BoolVar(&wakelock, "wakelock", true, "재생하는 동안 suspend 막기")
+	var po planOpt
+	packPath := fs.String("pack", "", "시나리오 함수 묶음 funcs.bin (plan, mix)")
+	fs.StringVar(&po.weight, "weight", "", "유형 가중치 (실행 시간 비중), 예: sns=0.4,video=0.6")
+	fs.StringVar(&po.fn, "func", "", "함수 하나만 실행 (plan 검증용)")
+	fs.IntVar(&po.rep, "rep", 0, "--func 의 회차 (0부터)")
+	fs.Float64Var(&po.sec, "sec", 7200, "TC 길이(초). 함수는 자르지 않아서 이보다 짧게 끝날 수 있다")
+	fs.Float64Var(&po.rest, "rest", 20, "함수 사이 쉬는 초")
+	fs.Float64Var(&po.lead, "lead", 5, "처음 쉬는 초")
+	fs.Int64Var(&po.seed, "seed", 1, "같은 seed 면 같은 실행 순서")
+	fs.StringVar(&po.out, "tc", "", "plan 이 쓸 tc.bin (기본 <root>/tc.bin)")
+	fs.StringVar(&po.manifest, "manifest", "", "plan 이 쓸 실행 순서 JSON (기본 <root>/plan.json)")
 	fs.Parse(os.Args[2:])
+	if po.out == "" {
+		po.out = filepath.Join(*root, "tc.bin")
+	}
+	if po.manifest == "" {
+		po.manifest = filepath.Join(*root, "plan.json")
+	}
 	if *out == "" {
 		*out = filepath.Join(*root, "result.json")
 	}
 	wbuf = aligned(maxIO)
 	rand.New(rand.NewSource(1)).Read(wbuf)
 	switch cmd {
+	case "plan", "mix":
+		if *packPath == "" {
+			fatal("--pack 을 주세요")
+		}
+		must(os.MkdirAll(*root, 0o755))
+		plan(loadPack(*packPath), po)
+		if cmd == "mix" {
+			files, reqs := load(po.out)
+			loadSpecs(*root)
+			must(os.RemoveAll(filepath.Join(*root, "f")))
+			prep(*root, files)
+			waitDiscard()
+			run(*root, files, reqs, *speed, *maxQD, *out)
+		}
+	case "dbwatch":
+		dbwatch(po.sec, po.out, fs.Args())
+	case "dbinfo":
+		if fs.NArg() < 1 {
+			fatal("DB 파일을 주세요")
+		}
+		dbinfo(fs.Arg(0))
 	case "trim":
 		dfd, err := unix.Open(*root, unix.O_RDONLY|unix.O_DIRECTORY, 0)
 		must(err)
@@ -835,6 +900,7 @@ func main() {
 			fatal("TC 파일을 주세요")
 		}
 		files, reqs := load(fs.Arg(0))
+		loadSpecs(*root)
 		if cmd == "prep" {
 			prep(*root, files)
 		} else {
