@@ -32,7 +32,8 @@ REQ = np.dtype([("t", "<u8"), ("op", "u1"), ("f", "<u4"), ("off", "<u8"), ("len"
 def load_tc(path):
     b = Path(path).read_bytes()
     nf, _, nr = np.frombuffer(b[8:24], np.dtype([("a", "<u4"), ("b", "<u4"), ("c", "<u8")]))[0]
-    return np.frombuffer(b, REQ, count=int(nr), offset=24 + 9 * int(nf))
+    rec = 13 if b[:8] == b"UXWL0002" else 9     # 0002: 파일마다 폴더 번호 u32 가 붙는다
+    return np.frombuffer(b, REQ, count=int(nr), offset=24 + rec * int(nf))
 
 
 def align(pq, res, reqs):

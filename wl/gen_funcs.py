@@ -8,9 +8,18 @@
 
 형식 (little endian, wl/replay/mix.go 가 읽는다)
   "UXFN0001" | json 길이 u32 | json | 회차 데이터
-  json: {groups: {유형: {함수: 비중}}, funcs: {함수: {name, reps: [{seg, durSec, off, nfiles, nreq}]}}}
+  json: {groups: {유형: {함수: 비중}}, funcs: {함수: {name, reps: [{seg, durSec, off, nfiles, nreq, dirs}]}}}
+  dirs: 파일마다 원본 상위 폴더 번호 (회차 안에서 1부터, 0 = 경로 모름). uxwl 은 같은 번호 파일을 같은 폴더 f/g<번호>/ 에 둔다.
+    앱은 파일을 수백 개 폴더에 나눠 둔다. 파일을 만들고 지울 때 dirty 가 되는 폴더 inode·dentry page 가 Checkpoint 때 같이 쓰이므로
+    폴더 하나에 모으면 Checkpoint 한 번의 크기가 원본의 절반쯤으로 줄었다 (--flat 이 예전 방식). 경로 문자열은 넣지 않는다.
   회차 데이터 (off 는 파일 처음부터): files(size u64, flags u8) × nfiles, reqs(t_us u64, op u8, file u32, off u64, len u32) × nreq
-  files flags: 1 = 원래 있던 파일, 2 = SQLite DB, 4 = rollback journal DB
+  files flags: 1 = 원래 있던 파일, 2 = SQLite DB, 4 = rollback journal DB, 8 = 실제 구조 DB, 16 = 새 폴더 안 파일
+새 폴더 안 파일: 원본 Checkpoint 바로 앞(CAUSE_WIN)의 마지막 request 가 새 파일의 Write·unlink 이면, 앱이 폴더를 새로 만들고
+  그 안에 파일을 써서 fsync 한 것이다 (ftrace 로 확인: Shorts 의 Checkpoint 대부분이 cp_reason "node needs cp", 폴더는 모두
+  측정 중 새로 만든 것). 이런 fsync 는 node 를 쓰지 않고 바로 Checkpoint 로 가서 UFS trace 에 fsync 로 남지 않는다.
+  그래서 그 파일에 flag 16 을 주고 마지막 Write 직후에 FS 를 넣는다. Checkpoint 는 uxwl 이 부르지 않고 f2fs 가 정한다.
+시나리오 단계의 sync: cold start 시나리오는 측정 구간 안에서 "sync; echo 3 > drop_caches" 를 부르고, 그 sync 가 Checkpoint 를 낸다
+  (Chrome cold start 는 원본 Checkpoint 17번 중 4번). 앱 동작은 아니지만 원본 trace 에 들어 있으므로 op 16(SYNC)으로 같은 시각에 sync() 를 부른다.
 Discard(DB) 는 넣지 않는다. f2fs 가 지운 파일의 블록을 스스로 반납한다 (gen_tc.py Builder 와 같음).
 
 DB 파일의 Write 는 파일 동작으로 재생하지 않고 실제 SQLite transaction 으로 바꾼다 (--no-sqlite 면 그대로 재생).
@@ -36,7 +45,7 @@ SEG = HERE / ".private" / "seg"
 OUT = HERE / ".private" / "funcs"
 sys.path.insert(0, str(HERE))
 DB_OP = 5
-FS, WX, FA, CP, DS, SQL = 4, 10, 9, 11, 13, 15
+FS, WX, FA, CP, DS, SQL, SYNC = 4, 10, 9, 11, 13, 15, 16
 CAUSE_WIN = 0.01             # fsync 뒤 이 시간 안의 Checkpoint 는 그 fsync 때문으로 본다
 WRITES = (1, 2, 3)            # W WB WD
 UL = 6
@@ -94,6 +103,7 @@ def load_specs():
 
 
 SPECS = {}
+SYNC_SIDS = set()
 
 
 walprefill = 256              # sqlite.go walPrefill 와 같다. 채움 테이블은 이만큼 이상
@@ -169,22 +179,119 @@ def dbmodel(con, pq, a):
         size = max([int(a["file_size"][f]) for f in fs.get("main", [])] + [0])
         uniq = max(x[2] for x in tx)
         nrows = max(walprefill, 2 * uniq) if b in SPECS and not rollback else max(256, size // 4096, 2 * uniq)
-        out.append((b, 2 | (4 if rollback else 0) | (8 if b in SPECS else 0), nrows, tx))
+        home = (fs.get("main") or fs.get("wal") or fs.get("journal"))[0]   # 이 DB 가 있던 폴더를 줄 파일
+        out.append((b, 2 | (4 if rollback else 0) | (8 if b in SPECS else 0), nrows, tx, home))
         stat["dbs"] += 1
         stat["writeBytes"] += sum(s for _, _, s, _ in rows)
     return drop, out, stat
 
 
+
+def sync_scenarios():
+    """측정 구간 안에서 "sync; echo 3 > drop_caches" 단계를 부르는 시나리오 (cold start 계열)"""
+    out = set()
+    for p in glob.glob(str(HERE.parent / "scenarios" / "*" / "*.scenario.json")):
+        on = False
+        for st in json.loads(Path(p).read_text()).get("steps", []):
+            t, cmd = st.get("type"), st.get("params", {}).get("cmd", "")
+            on = True if t == "trace_start" else False if t == "trace_stop" else on
+            if on and t == "shell" and re.search(r"\bsync\b", cmd) and "drop_caches" in cmd:
+                out.add(Path(p).name.split(".")[0])
+    return out
+
+
+def scenario_syncs(con, pq):
+    """그 단계의 sync 시각. drop_caches 뒤라 sh 가 실행 파일을 다시 읽는 Read 묶음(20개 넘게)으로 보이고,
+    Checkpoint 가 그 0.2초쯤 뒤에 온다 (Chrome cold start 4/4, 무거운 앱 cold start 2/2). 묶음 시작에 sync 를 부른다"""
+    t0 = con.execute(f"select min(time) from read_parquet('{pq}')").fetchone()[0]
+    rows = con.execute(f"""select time - {t0} from read_parquet('{pq}')
+        where action = 'send_req' and comm = 'sh' and opcode in (40, 136) order by time""").fetchall()
+    b = []
+    for (t,) in rows:
+        if not b or t - b[-1][1] > 0.3:
+            b.append([t, t, 0])
+        b[-1][1] = t
+        b[-1][2] += 1
+    return [x[0] for x in b if x[2] >= 20]
+
+
+WD_OP, WD_GAP, WD_MAX = 3, 1000, 16 << 20   # direct Write, 조각 사이 1ms, uxwl maxIO
+
+
+def merge_wd(r):
+    """앱이 한 번 부른 큰 direct pwrite 는 커널에서 bio 여러 개로 나뉘어 trace 에 따로 찍힌다. 같은 파일에서 offset 이
+    이어지고 앞 조각에서 1ms 안에 온 WD 를 하나로 합친다(16MB 까지). 따로 재생하면 동시에 쓰는 다른 파일과
+    번갈아 pwrite 돼 f2fs 가 미리 할당하지 못하고(i_size 안쪽 쓰기) block 이 4KB 씩 섞여 놓인다(버스트샷 3초).
+    uxwl 도 이어진 WD 를 합치지만 전체 순서에서 바로 붙은 것만 봐서, 파일 여러 개가 섞이면 못 합친다"""
+    keep = np.ones(len(r), bool)
+    open_ = {}                                   # 파일 → [합치는 중인 index, 마지막 조각 시각]
+    n = 0
+    wd = r["op"] == WD_OP
+    for i in np.flatnonzero(wd | np.isin(r["op"], [FS, FA, WX, 0, 1, 2, 6, 7])):
+        f = int(r["f"][i])
+        if not wd[i]:                            # 같은 파일의 다른 동작(fsync, Read, unlink...)이 끼면 끊는다
+            open_.pop(f, None)
+            continue
+        h = open_.get(f)
+        if h is not None:
+            j, last = h
+            if (int(r["t"][i]) - last <= WD_GAP and int(r["off"][i]) == int(r["off"][j]) + int(r["len"][j])
+                    and int(r["len"][j]) + int(r["len"][i]) <= WD_MAX):
+                r["len"][j] += r["len"][i]
+                keep[i] = False
+                h[1] = int(r["t"][i])
+                n += 1
+                continue
+        open_[f] = [i, int(r["t"][i])]
+    return r[keep], n
+
+
+def file_dirs(con, pq, a):
+    """파일마다 원본 상위 폴더 번호 (1부터, 회차 안에서 경로 순). 경로를 모르면 0. 경로 자체는 내보내지 않는다"""
+    rows = con.execute(f"""select ino, max(case when name like '/%' then name end) from read_parquet('{pq}')
+        where ino > 1 and name is not null group by 1""").fetchall()
+    path = {int(i): n for i, n in rows if n}
+    par = [os.path.dirname(path[int(i)]) if int(i) in path else "" for i in a["file_ino"]]
+    num = {d: k + 1 for k, d in enumerate(sorted({d for d in par if d}))}
+    return np.array([num.get(d, 0) for d in par], np.uint32)
+
+
+def new_dir_files(a, drop):
+    """원본 Checkpoint 바로 앞이 새 파일의 Write·unlink 인 파일 → (새 폴더에 둘 파일, 그 파일의 마지막 Write 직후 FS)"""
+    t, op, f = a["t"], a["op"], a["f"]
+    cp = t[op == CP]
+    if not len(cp):
+        return set(), []
+    cp = cp[np.r_[True, np.diff(cp) > 0.001]]          # 한 Checkpoint 의 Write 묶음은 한 번
+    nm = op != CP
+    tt, oo, ff = t[nm], op[nm], f[nm]
+    files, extra = set(), []
+    for c in cp:
+        j = int(np.searchsorted(tt, c)) - 1
+        if j < 0 or c - tt[j] >= CAUSE_WIN or int(oo[j]) not in (1, 2, UL):
+            continue
+        x = int(ff[j])
+        if a["file_existing"][x] & 1 or x in drop or x in files:   # 같은 폴더는 처음 fsync 때만 Checkpoint 가 난다
+            continue
+        w = (f == x) & np.isin(op, (1, 2)) & (t <= c)
+        if not w.any():
+            continue
+        files.add(x)
+        extra.append((int((float(t[w].max()) + 0.0001) * 1e6), FS, x, 0, 0))
+    return files, extra
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--no-sqlite", action="store_true", help="DB Write 도 파일 동작으로 재생")
     ap.add_argument("--no-real", action="store_true", help="실제 테이블 구조(real.json)를 쓰지 않고 공용 테이블 UPDATE 로")
+    ap.add_argument("--no-sync", action="store_true", help="시나리오 단계의 sync(cold start 전 drop_caches)를 넣지 않는다")
+    ap.add_argument("--no-merge-wd", action="store_true", help="같은 파일의 이어진 direct Write 조각을 합치지 않는다 (11-05 까지의 방식)")
+    ap.add_argument("--flat", action="store_true", help="원본 폴더 구조를 쓰지 않고 모든 파일을 f/ 하나에 둔다 (v5 후보 2 까지의 방식)")
     ap.add_argument("--keep-cp", action="store_true", help="f2fs Checkpoint 를 원본 시각에 일으키는 CP op 를 남김. 기본은 뺀다: Checkpoint 는 FS 몫이라 앱 동작의 결과로만 나와야 한다")
     args = ap.parse_args()
-    con = None
-    if not args.no_sqlite:
-        import duckdb
-        con = duckdb.connect()
+    import duckdb
+    dcon = duckdb.connect()
+    con = None if args.no_sqlite else dcon
     total = collections.Counter()
     groups = json.loads((HERE / "groups.json").read_text())["groups"]
     idx = json.loads((SEG / "index.json").read_text())
@@ -202,6 +309,8 @@ def main():
     global extract
     import extract
     nm = names()
+    global SYNC_SIDS
+    SYNC_SIDS = sync_scenarios()
     global SPECS
     if not args.no_real:
         SPECS = load_specs()
@@ -223,8 +332,9 @@ def main():
                     _i = np.searchsorted(_fs, _cp) - 1
                     ds_t = sorted({float(_fs[j]) + 0.0002 for j, c in zip(_i, _cp) if j >= 0 and c - _fs[j] <= CAUSE_WIN})
             dbs, drop = [], set()
+            pq = extract.parquet_of(idx[seg]["traceJobId"]) or idx[seg]["pq"]
+            dirs = file_dirs(dcon, pq, a) if not args.flat else np.zeros(len(a["file_size"]), np.uint32)
             if con is not None:
-                pq = extract.parquet_of(idx[seg]["traceJobId"]) or idx[seg]["pq"]
                 drop, dbs, st = dbmodel(con, pq, a)
                 total.update(st)
                 if drop:
@@ -233,7 +343,13 @@ def main():
                     keep = (a["op"] == 0) | (a["op"] == WX) | (a["op"] == FA)
                     sel = sel & ~(infile & ~keep)
             ds_extra = [(int(t * 1e6), DS, 0, 0, 0) for t in (ds_t if not args.keep_cp else [])]
-            extra = ds_extra + [(int(t * 1e6), SQL, len(a["file_size"]) + k, p | (u << 32), act) for k, d in enumerate(dbs) for t, p, u, act in d[3]]
+            nd_files, nd_extra = set(), []
+            if not args.keep_cp:
+                nd_files, nd_extra = new_dir_files(a, drop)
+                total["newDirFiles"] += len(nd_files)
+            sy_extra = [(int(t * 1e6), SYNC, 0, 0, 0) for t in scenario_syncs(dcon, pq)] if sid in SYNC_SIDS and not args.no_sync else []
+            total["scenarioSync"] += len(sy_extra)
+            extra = ds_extra + nd_extra + sy_extra + [(int(t * 1e6), SQL, len(a["file_size"]) + k, p | (u << 32), act) for k, d in enumerate(dbs) for t, p, u, act in d[3]]
             r = np.zeros(int(sel.sum()) + len(extra), REQ)
             n0 = int(sel.sum())
             r["t"][:n0] = (a["t"][sel] * 1e6).astype(np.uint64)
@@ -242,6 +358,9 @@ def main():
             if extra:
                 r[n0:] = np.array(extra, REQ)
                 r = r[np.argsort(r["t"], kind="stable")]
+            if not args.no_merge_wd:
+                r, n_wd = merge_wd(r)
+                total["wdMerged"] += n_wd
             f = np.zeros(len(a["file_size"]) + len(dbs), FILE)
             n1 = len(a["file_size"])
             f["size"][:n1], f["existing"][:n1] = a["file_size"], a["file_existing"]
@@ -251,12 +370,16 @@ def main():
                 for x in np.unique(a["f"][rd]):
                     f["existing"][x] = 1
                     f["size"][x] = max(int(f["size"][x]), int((a["off"][a["f"] == x] + a["len"][a["f"] == x]).max()))
+            for x in nd_files:
+                f["existing"][x] |= 16
             for k, d in enumerate(dbs):
                 f[n1 + k] = (d[2] * 4096, d[1] | 1)   # 1: 같은 회차를 다시 쓰면 같은 DB
             real = {str(n1 + k): d[0] for k, d in enumerate(dbs) if d[0] in SPECS}
+            dirs = [int(x) for x in dirs] + [int(dirs[d[4]]) for d in dbs]
+            total["dirs"] += len(set(dirs) - {0})
             blob = f.tobytes() + r.tobytes()
             last = float(a["t"][-1]) if len(a["t"]) else 0.0
-            fn["reps"].append({"seg": seg, "durSec": round(max(last, idx[seg]["durSec"]), 6), "off": pos, "nfiles": len(f), "nreq": len(r), **({"dbs": real} if real else {})})
+            fn["reps"].append({"seg": seg, "durSec": round(max(last, idx[seg]["durSec"]), 6), "off": pos, "nfiles": len(f), "nreq": len(r), **({"dbs": real} if real else {}), **({"dirs": dirs} if any(dirs) else {})})
             blobs.append(blob)
             pos += len(blob)
         meta["funcs"][sid] = fn
