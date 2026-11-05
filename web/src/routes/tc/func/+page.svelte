@@ -18,7 +18,7 @@
 		name: string; label: string; weight: string; seed: number; dur: number; n: number;
 		target: Record<string, number>; actual: Record<string, number>;
 		ip: number; io: number; solo: number; tp: number; to: number; late: number; req: number | null; warms: number | null;
-		cats: Record<string, [number, number]>; total: { k: string; o: string; t: string; ok: boolean | null }[];
+		cats: Record<string, [number, number]>; fail: Record<string, number>; total: { k: string; o: string; t: string; ok: boolean | null }[];
 		comp: Record<string, [string, number, number][]>; tl: Tl[];
 	};
 	type Doc = {
@@ -90,9 +90,10 @@
 	{@const m2w = mix('m2w')}
 	{@const m1 = mix('m1')}
 	{@const m2 = mix('m2')}
+	{@const m2d = mix('m2d')}
 	<div class="tcf">
 		<header class="mb-8">
-			<p class="text-label-s font-semibold text-primary">UFS workload TC · 검증 중 · 2026-11-04</p>
+			<p class="text-label-s font-semibold text-primary">UFS workload TC · 검증 중 · 2026-11-05</p>
 			<h1 class="mt-2 text-h1 font-bold">시나리오 함수 TC</h1>
 			<p class="mt-3 max-w-[760px] text-body-2 text-muted-foreground">
 				측정한 시나리오 하나를 함수 하나로 두고, 함수를 유형으로 묶고, 실행할 때 유형 가중치를 줘서 TC 하나 안에서 돌리는 구조예요. 함수 61개를 하나씩 원본과 비교하고,
@@ -112,14 +113,17 @@
 				<div class="stats">
 					<div><b>{f(pct(doc.allp, doc.alln), 0)}%</b><span>함수 단독 판정 통과 ({doc.allp}/{doc.alln})</span></div>
 					{#if m1w}<div><b>{f(pct(m1w.ip, m1w.io), 1)}%</b><span>가중치 TC m1 구간별 통과</span></div>{/if}
-					{#if m2w}<div><b>{f(pct(m2w.ip, m2w.io), 1)}%</b><span>가중치 TC m2 구간별 통과</span></div>{/if}
-					<div><b>±1%p</b><span>유형 비중 오차 (네 번 모두)</span></div>
+					{#if m2d}<div><b>{f(pct(m2d.ip, m2d.io), 1)}%</b><span>가중치 TC m2 구간별 통과 (폴더·sync)</span></div>{:else if m2w}<div><b>{f(pct(m2w.ip, m2w.io), 1)}%</b><span>가중치 TC m2 구간별 통과</span></div>{/if}
+					<div><b>±1%p</b><span>유형 비중 오차 (다섯 번 모두)</span></div>
 				</div>
 				<ul class="points">
 					<li><b>함수 하나씩 돌리면 판정 항목의 {f(pct(doc.allp, doc.alln), 0)}%를 통과해요.</b> {sortedGroups[0].gk}·{sortedGroups[1].gk}·{sortedGroups[2].gk}는 {f(pct(sortedGroups[2].p, sortedGroups[2].n), 0)}~{f(pct(sortedGroups[0].p, sortedGroups[0].n), 0)}%, 대기·홈은 가장 낮아요.</li>
 					<li><b>가중치 TC는 유형 비중이 목표의 ±1%p 안에 들어와요.</b> 구간별 통과는 같은 함수를 혼자 돌릴 때보다 6~7%p 낮아요.</li>
 					{#if m1 && m1w && m2 && m2w}
 						<li><b>가중치 TC에서 DB page cache가 식어 Read가 원본보다 많던 문제를 고쳤어요.</b> 구간별 통과가 m1 {f(pct(m1.ip, m1.io), 1)} → {f(pct(m1w.ip, m1w.io), 1)}%, m2 {f(pct(m2.ip, m2.io), 1)} → {f(pct(m2w.ip, m2w.io), 1)}%로 올랐어요.</li>
+					{/if}
+					{#if m2w && m2d}
+						<li><b>원본 앱의 폴더 구조와 cold start 시나리오의 sync step을 재생에 넣었어요.</b> m2 구간별 통과가 {f(pct(m2w.ip, m2w.io), 1)} → {f(pct(m2d.ip, m2d.io), 1)}%로 올랐고, 구간 FS Write 실패가 {m2w.fail.fsWriteMB}% → {m2d.fail.fsWriteMB}%로 줄었어요. 대신 2시간 전체의 Sequential Write가 원본보다 낮아졌어요.</li>
 					{/if}
 					<li><b>DB I/O는 앱 DB와 같은 구조의 SQLite 테이블로 내요.</b> 행 동작만으로는 양이 모자라 WAL frame의 {doc.padPct}%는 채움 테이블로 채웠어요.</li>
 					<li><b>남은 차이는 주로 f2fs가 정하는 쪽이에요.</b> FS-induced Write, Checkpoint/s, Flush/s예요. f2fs Checkpoint를 원본 시각에 일으키지 않아서, 대기 함수에서 차이가 가장 커요.</li>

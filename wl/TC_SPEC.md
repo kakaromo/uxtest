@@ -658,29 +658,93 @@ TC: request 약 24만 6천 개, 7379초, 파일 3만 7천 개, Read 8.3GB, Write
 
 ### 14.3 f2fs Checkpoint 를 일으키지 않아요
 
-v4 는 원본 시각에 Checkpoint op 을 냈어요. v5 후보는 빼고 f2fs 가 정하게 둬요. 그 결과 FS Write 와 Checkpoint/s 가 원본보다 적게 나오는 함수가 많아요. 특히 화면을 끈 대기 함수에서 커요(화면 끈 직후 5분 FS Write 원본 12.8 vs 1.0MB).
+v4 는 원본 시각에 Checkpoint op 을 냈어요. v5 후보는 빼고 f2fs 가 정하게 둬요. 그 결과 FS Write 와 Checkpoint/s 가 원본보다 적게 나오는 함수가 많았어요. 특히 화면을 끈 대기 함수에서 커요(화면 끈 직후 5분 FS Write 원본 12.8 vs 1.0MB).
 
-### 14.4 함수 하나씩 결과 (2026-11-03, Run 한 번)
+**원인 (2026-11-04, f2fs ftrace).** FS Write 부족분은 거의 다 Checkpoint Write 였어요. Shorts 를 돌리며 `f2fs_sync_file_exit`(cp_reason), `f2fs_sync_fs`, `f2fs_write_checkpoint`, `f2fs_new_inode` 를 보니 Checkpoint 는 두 갈래에서 나와요.
 
-61개 함수, 판정 항목 927개 중 717개 통과(77%). 대기 함수 5개는 앞 Run 값이에요. 같은 build 로 다시 잰 10개는 함수마다 1~3개씩 흔들렸어요.
+| 원인 | 원본 Shorts (230초) | 고치기 전 TC (125초) |
+|---|---|---|
+| 앱 fsync, cp_reason "node needs cp" | 56 | 1 |
+| 폴더 fsync, "non regular" | 5 | 32 |
+| `autosuspend` 의 sync (superblock dirty 일 때만) | 68 | 14 |
+| 측정 중 새로 만든 폴더 | 96 | 4 |
+
+- "node needs cp" 56번은 모두 측정 중 새로 만든 폴더 안 파일의 첫 fsync 였어요. 앱이 폴더를 만들고 그 안에 파일을 써서 fsync 하면, 아직 Checkpoint 되지 않은 폴더라 f2fs 가 Checkpoint 를 해요.
+- 이런 fsync 는 node 를 쓰지 않고 바로 Checkpoint 로 가요. 그래서 UFS trace 에 fsync 로 남지 않고, 조각을 만들 때 "쓰고 지운 파일"(UL)로 보였어요. TC 는 모든 파일을 폴더 하나(`f/`)에 둬서 이 조건이 거의 생기지 않았어요.
+- 원본 Checkpoint 바로 앞(10ms 안) request 를 보면, 앱 시나리오는 대부분 새 파일의 Write·unlink 예요(Shorts 63/65, YouTube 홈피드 93/104, TikTok 508/569). 대기 시나리오는 대부분 원래 있던 파일의 Write 예요(화면 꺼짐 30분 605/787). 대기 쪽은 시스템 sync 로 보여요.
+- `cp_interval` 은 200초라 주기 Checkpoint 는 아니에요.
+
+**고친 것 (v5 후보 2).** `gen_funcs.py` 는 원본 Checkpoint 바로 앞이 새 파일의 Write·unlink 이면 그 파일에 flag 16(새 폴더 안 파일)을 주고 마지막 Write 직후에 FS 를 넣어요(회차 전체 894개 파일). `uxwl` 은 이 파일을 `f/d<번호>/` 에 두고 처음 만들 때 폴더도 만들어요. Checkpoint 는 여전히 부르지 않고 f2fs 가 정해요. 같은 ftrace 로 TC Shorts 를 다시 보니 새 폴더 70개, "node needs cp" 62번이에요.
+
+| 함수 (단독) | 통과 | FS Write MB 원본 / 전 → 후 | Checkpoint/s 원본 / 전 → 후 |
+|---|---|---|---|
+| Shorts 30회 넘기기 | 9 → 12 / 15 | 16.8 / 3.8 → 11.1 | 0.69 / 0.19 → 0.80 |
+| YouTube 홈피드 40회 | 10 → 11 / 15 | 18.9 / 2.6 → 11.2 | 1.79 / 0.21 → 1.79 |
+| 3앱 왕복 전환 ×6 | 13 → 15 / 16 | 5.7 / 1.3 → 3.8 | 0.35 / 0.09 → 0.38 |
+| YouTube Shorts 20개 | 15 → 14 / 16 | 8.3 / 2.8 → 5.3 | 0.23 / 0.07 → 0.28 |
+| TikTok 추천 영상 20개 | 15 → 14 / 16 | 84.8 / 81.8 → 73.5 | 5.55 / 4.49 → 4.15 |
+
+- Checkpoint 횟수는 맞아졌어요. FS Write 는 아직 60~70% 예요. Checkpoint 한 번에 같이 쓰는 node 가 원본의 절반이에요(Shorts node 8.9 vs 4.3MB, meta 는 비슷). 원본 앱은 230초에 rename 639번을 하는데 TC 는 rename 을 재생하지 않아요. 다음 후보예요.
+- 대기 시나리오의 시스템 sync Checkpoint 는 이 수정으로 바뀌지 않아요.
+- 같은 build 로 나머지 52개를 다시 돌리니 판정 717 → 737 이에요. 바뀐 함수 40개 중 Flush/s 13개, FS Write 10개, Checkpoint/s 7개가 새로 맞았어요. 나빠진 항목(Flush/s 8, QD p99 6)은 새 폴더 파일이 없는 회차에서도 나와 Run 사이 흔들림으로 봐요.
+
+**원본 폴더 구조 (v5 후보 3, 2026-11-05).** 원본 앱은 파일을 회차마다 수백 개 폴더에 나눠 둬요(Chrome cold start 209개, 경로를 아는 파일 96%). TC 는 `f/` 하나에 모아서 Checkpoint 때 같이 쓰이는 폴더 inode·dentry page 가 적었어요. `gen_funcs.py` 가 파일마다 원본 상위 폴더 번호(경로 문자열은 넣지 않음)를 `dirs` 로 남기고, `uxwl` 이 같은 번호를 `f/g<번호>/` 에 둬요. 폴더는 prep 에서 만들고 재생 전 sync 로 Checkpoint 돼요. `tc.bin` 은 `UXWL0002`(파일마다 dir u32)이고 `UXWL0001` 도 그대로 읽어요. `--flat` 이 예전 방식이에요.
+
+| 함수 (단독) | 통과 전 → 후 | FS Write MB 원본 / 전 → 후 | Checkpoint 묶음(50ms) 원본 / 후 |
+|---|---|---|---|
+| Chrome cold start ×5 | 12 → 12 / 16 | 12.0 / 4.2 → 5.1 | 17 / 11 |
+| cold start 순회 6앱 | 12 → 13 / 16 | 12.8 / 4.2 → 5.9 | |
+| 무거운 앱 cold start | 13 → 12 / 16 | 19.0 / 5.1 → 6.5 | 17 / 8 |
+| YouTube 홈피드 40회 | 11 → 13 / 15 | 18.9 / 11.2 → 14.3 | 68 / 67 |
+| 버스트샷 3초 | 11 → 10 / 16 | 10.4 / 4.1 → 3.7 | 4 / 1 |
+| Chrome 100MB 다운로드 | 13 → 13 / 15 | 10.5 / 5.9 → 6.6 | |
+
+- FS Write 는 15~40% 늘었지만 아직 원본의 30~75% 예요. 남은 차이는 두 가지예요. (1) 앱 실행·버스트샷은 Checkpoint 횟수가 원본의 절반이에요. 원본 Checkpoint 바로 앞 request 가 원래 있던 파일의 Read·Write 라 원인을 trace 만으로 모르고, ftrace 로 원본 시나리오를 다시 봐야 해요. (2) 횟수가 맞는 YouTube 홈피드도 Checkpoint 한 번의 node 가 원본의 60% 예요(10.1 vs 5.9MB). meta(NAT·SIT)는 횟수만 맞으면 같아요.
+
+**시나리오 step 의 sync (v5 후보 4, 2026-11-05).** "Chrome cold start ×5", "cold start 순회 6앱", "무거운 앱 cold start" 는 앱을 띄우기 전마다 shell step 으로 `sync; echo 3 > /proc/sys/vm/drop_caches` 를 해요. 앱 동작이 아니라 측정 절차지만 trace 구간 안에 있어서 원본 Checkpoint 의 일부가 여기서 나와요. trace 에서는 drop_caches 뒤 `sh` 가 실행 파일을 다시 읽는 Read burst(0.3초 안 20개 넘게)로 보이고, Checkpoint 가 0.2초쯤 뒤에 와요. `gen_funcs.py` 는 시나리오 JSON 에서 trace 구간 안에 이 step 이 있는 시나리오만 골라, burst 시작 시각에 `SYNC`(op 16)를 넣어요(42번: 회차마다 5·6·3번). `uxwl` 은 그 시각에 `sync()` 를 불러요. `--no-sync` 로 끌 수 있어요.
+
+| 함수 (단독) | 통과 폴더만 → sync | Checkpoint/s 원본 / 폴더만 / sync | FS Write MB 원본 / 폴더만 / sync |
+|---|---|---|---|
+| Chrome cold start ×5 | 12 → 13 / 16 | 0.45 / 0.40 / 0.74 | 12.0 / 5.0 / 9.7 |
+| cold start 순회 6앱 | 13 → 14 / 16 | 0.47 / 0.36 / 0.36 | 12.8 / 5.9 / 6.9 |
+| 무거운 앱 cold start | 12 → 12 / 16 | 0.68 / 0.43 / 0.50 | 19.0 / 6.5 / 7.1 |
+
+- Chrome cold start 는 Checkpoint 시각이 원본과 거의 겹쳐요(50ms 묶음 원본 17, TC 20). Checkpoint/s 가 넘치는 것은 TC Checkpoint Write 가 1ms 넘게 끊기는 일이 많아서예요(1ms 묶음 30 vs 39, request 864 vs 858). 첫 sync 가 TC 앞부분의 다른 앱 dirty data 까지 내려 1.6MB Checkpoint 가 하나 더 생기기도 해요. 세는 방식과 배경 상태 차이라 고치지 않았어요.
+- 무거운 앱 cold start 는 횟수가 맞아도 FS Write 가 원본의 37% 예요. Checkpoint 한 번의 node 가 작은 문제(위 (2))가 남아 있어요. 원본 YouTube 홈피드의 Checkpoint node Write 9.8MB 는 Read 만 한 inode 에 붙어 있고, 그중 6.5MB 가 ino 4 하나라 귀속 오류일 수 있어요. 확인 중이에요.
+
+**direct Write 를 하나씩 (v5 후보 5, 2026-11-05).** 카메라 사진 함수는 direct Write 가 원본에서 512KB 이어진 request 로 나가는데 TC 는 4KB 로 쪼개졌어요(버스트샷 3초 1.6GB 가 4KB request 3만 5천 개). 이 커널(6.12, `mode=adaptive`)은 새 block 을 할당하는 direct pwrite 두 개가 겹치면 두 파일에 block 을 하나씩 번갈아 할당해요. 폰에서 파일 5개에 2MB direct pwrite 를 동시에 내면 16MB 파일이 extent 700~2,700개, 하나씩 내면 8개(2MB 마다 하나)였어요. fallocate, 확장자(.jpg), `/data/media`, FUSE, AIO 로는 바뀌지 않았어요(할당하는 direct Write 는 `io_submit` 안에서 끝까지 기다려요). 원본 앱이 어떻게 겹침을 피하는지는 모르지만 배치는 하나씩 낸 것과 같아요. 그래서 `uxwl` 의 `--max-wd` 기본값을 3 → 1 로 바꿨어요. 하나씩이 동시보다 빨랐어요(80MB 48ms vs 93ms). `gen_funcs.py` 는 같은 파일에서 offset 이 이어지고 1ms 안에 온 WD 조각을 pwrite 하나로 합쳐요(16MB 까지, `--no-merge-wd` 로 끔). 합치기만으로는 바뀌지 않았어요.
+
+| 함수 (단독) | 통과 전 → 후 | Request size W ≤4KB % 원본 / 전 → 후 | Sequential Write % 원본 / 전 → 후 | QD p99 원본 / 전 → 후 |
+|---|---|---|---|---|
+| 사진 10장 | 12 → 14 / 16 | 37 / 79 → 38 | 89.7 / 78.1 → 94.2 | 47 / 63 → 27 |
+| 버스트샷 3초 | 10 → 12 / 16 | 34 / 86 → 31 | 86.6 / 72.5 → 93.1 | 23 / 63 → 59 |
+| 사진 5장 → 바로 갤러리 | 11 → 13 / 16 | 62 / 82 → 68 | 80.4 / 68.3 → 85.7 | 43 / 63 → 27 |
+| 전면 카메라 사진 5장 | 12 / 12 → 11 / 11 | 28 / 33 → 21 | 96.2 / 96.8 → 98.2 | 8 / 7 → 5 |
+
+- 함수 단독 합계는 744/920 → 749/918 이에요(전면 카메라는 원본 FS Write 가 작아 판정에서 빠졌어요). 결과 보관: 전 `func-matrix-sync.json`, 합치기만 한 것 `func-matrix-wdmerge.json`.
+- 버스트샷 QD p99 는 여전히 원본보다 높아요. FS Write 는 그대로라 이 수정과 상관없어요.
+
+### 14.4 함수 하나씩 결과 (2026-11-05, Run 한 번)
+
+61개 함수, 판정 항목 920개 중 744개 통과(81%). 11-03 은 927개 중 717개(77%)였어요. 그 뒤 새 폴더 flag, 원본 폴더 구조, 시나리오 sync(14.3)를 넣고 모두 다시 돌렸어요. 결과는 `.private/results/func-matrix.json`, sync 전은 `func-matrix-dirs.json` 이에요. 같은 build 로 다시 잰 10개는 함수마다 1~3개씩 흔들렸어요.
 
 | 유형 | 함수 | 통과 |
 |---|---|---|
-| SNS | 3 | 95% |
+| 메일·스토어 | 2 | 94% |
+| 브라우저 | 4 | 88% |
+| SNS | 3 | 88% |
 | 음악 | 1 | 88% |
-| 메일·스토어 | 2 | 84% |
-| 브라우저 | 4 | 83% |
+| 앱 실행 | 8 | 87% |
+| 동영상 | 10 | 86% |
+| 갤러리 | 7 | 81% |
 | 생산성 | 4 | 81% |
-| 동영상 | 10 | 80% |
 | 카메라 | 8 | 80% |
-| 갤러리 | 7 | 77% |
-| 앱 실행 | 8 | 75% |
-| 저장소 | 8 | 74% |
+| 저장소 | 8 | 76% |
 | 지도 | 1 | 69% |
-| 홈 | 1 | 60% |
-| 대기 | 4 | 56% |
+| 대기 | 4 | 57% |
+| 홈 | 1 | 53% |
 
-- 가장 많이 틀린 항목: FS Write, FS Write 비율, Flush/s, Sequential Write, Checkpoint/s. 14.3 과 같은 방향이에요.
+- 가장 많이 틀린 항목(틀린 함수 수): FS Write 31, FS Write 비율 22, Flush/s 20, QD p99 19, Sequential Write 18, fsync/s 13. 14.3 과 같은 방향이에요.
 - 채움 테이블 비중은 DB WAL frame 의 28% 예요. 함수마다 달라서 Instagram·갤러리는 절반 가까이예요. 행 동작만으로 원본 양을 다 못 내는 DB 가 많다는 뜻이에요.
 - 원본의 일부 DB Write(`ttm_strategy.db`, `gphotos0.db`)에는 fsync flag 가 없어요. 어떤 호출인지 확인하지 않았어요. TC 는 SQLite 가 fsync 를 불러서 fsync/s 가 원본보다 많게 나와요.
 
@@ -692,6 +756,9 @@ v4 는 원본 시각에 Checkpoint op 을 냈어요. v5 후보는 빼고 f2fs �
 | m1w (DB warm-up) | 같음, 같은 seed | 같음 | 78.9% | 85.9% | 13/16 |
 | m2 | browser·sns·video 0.2, camera·launch·home·gallery 0.1 | 모두 목표 ±1%p | 74.2% | 83.3% | 13/16 |
 | m2w (DB warm-up) | 같음, 같은 seed | 같음 | 77.6% | 83.3% | 12/16 |
+| m2d (원본 폴더 구조, 시나리오 sync) | 같음, 같은 seed | 같음 | 80.3% | 86.2% | 12/16 |
+
+- **m2d (11-05).** m2w 에 원본 폴더 구조와 cold start 시나리오의 `sync` 재생(14.3)을 더했어요. 구간별 통과가 77.6% → 80.3% 예요. 구간 실패율은 FS Write 54% → 46%, FS Write 비율 36% → 22%, Checkpoint/s 30% → 18%, Flush/s 30% → 22% 로 줄었어요. 앱 실행 유형은 14/16 → 16/16 이에요. 전체 판정에서 FS Write 는 통과(원본 767 MB, TC 614 MB)로 바뀌었고, 대신 Sequential Write 가 틀렸어요(원본 79.6%, TC 67.9%). 2시간 동안 "R: operation not supported" 가 40번 나왔어요.
 
 - **DB page cache.** 가중치 TC 는 모든 DB 를 재생 전에 열고 채워요. 1~2시간 뒤에 도는 함수의 DB page 는 cache 에서 밀려나 있어서 함수 첫 5초에 DB 본체·WAL Read 가 원본보다 수 MB 많았어요(Instagram 피드 0.6 vs 12MB). 같은 구간이 두 번째 나올 때는 원본과 같았어요. 그래서 DB 를 60초 넘게 안 쓰다가 다시 쓰는 함수는 시작 10초 전(함수 사이 쉬는 구간)에 DB 파일을 한 번 읽어 둬요(`sqlWarms`). 구간 판정에서 Read Volume 실패가 39% → 거의 0, Request size Read 가 36% → 거의 0 이 됐어요. 함수 단독 실행은 시작이 60초 안이라 바뀌지 않아요.
 - **남은 차이.** Checkpoint/s 는 원본보다 적어요(14.3). QD p99 는 원본보다 높은 구간이 많아요. 앞 함수의 writeback 이 다음 함수 구간에 이어지는 것으로 보는데 확인하지 않았어요. 함수를 이어 돌리면 생기는 차이라 고치지 않았어요.

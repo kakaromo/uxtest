@@ -32,6 +32,7 @@ type packRep struct {
 	NFiles int               `json:"nfiles"`
 	NReq   int               `json:"nreq"`
 	Dbs    map[string]string `json:"dbs,omitempty"` // 파일 번호 → 실제 테이블 구조 이름
+	Dirs   []uint32          `json:"dirs,omitempty"` // 파일마다 원본 상위 폴더 번호 (회차 안에서, 0 = 모름)
 }
 
 type packFunc struct {
@@ -106,12 +107,27 @@ type planner struct {
 	items  []planItem
 	specs  map[string]*dbSpec
 	shared map[string]uint32 // 원래 있던 파일은 같은 회차를 다시 써도 같은 파일 (미리 채우는 양을 줄임)
+	dirs   map[string]uint32 // "회차/폴더 번호" → TC 폴더 번호
 }
 
-func (b *planner) addFile(size uint64, flags uint8) uint32 {
+func (b *planner) addFile(size uint64, flags uint8, dir uint32) uint32 {
 	prefill := flags&1 != 0 && flags&dbFlagSQLite == 0
-	b.files = append(b.files, tcFile{size, prefill, flags&^1 | map[bool]uint8{true: 1, false: 0}[prefill]})
+	b.files = append(b.files, tcFile{size, prefill, flags&^1 | map[bool]uint8{true: 1, false: 0}[prefill], dir})
 	return uint32(len(b.files) - 1)
+}
+
+// 회차의 폴더 번호 → TC 폴더 번호 (1부터). 같은 회차를 다시 쓰면 같은 폴더
+func (b *planner) dir(seg string, dirs []uint32, k uint32) uint32 {
+	if int(k) >= len(dirs) || dirs[k] == 0 {
+		return 0
+	}
+	key := fmt.Sprintf("%s/%d", seg, dirs[k])
+	id, ok := b.dirs[key]
+	if !ok {
+		id = uint32(len(b.dirs) + 1)
+		b.dirs[key] = id
+	}
+	return id
 }
 
 // 함수 하나를 tc 초부터 넣고 길이(초)를 돌려준다
@@ -125,7 +141,7 @@ func (b *planner) add(fn, cat string, r packRep, tc float64) float64 {
 	seen := map[uint32]bool{}
 	var used []uint32
 	for _, x := range reqs {
-		if x.op != opCP && x.op != opDS && !seen[x.file] {
+		if x.op != opCP && x.op != opDS && x.op != opSync && !seen[x.file] {
 			seen[x.file] = true
 			used = append(used, x.file)
 		}
@@ -138,7 +154,7 @@ func (b *planner) add(fn, cat string, r packRep, tc float64) float64 {
 			key := fmt.Sprintf("%s/%d", r.Seg, k)
 			id, ok := b.shared[key]
 			if !ok {
-				id = b.addFile(f.size, f.flags)
+				id = b.addFile(f.size, f.flags, b.dir(r.Seg, r.Dirs, k))
 				b.shared[key] = id
 			}
 			gid[k] = id
@@ -146,7 +162,7 @@ func (b *planner) add(fn, cat string, r packRep, tc float64) float64 {
 				b.specs[fmt.Sprint(id)] = b.p.Specs[name]
 			}
 		} else {
-			gid[k] = b.addFile(f.size, f.flags)
+			gid[k] = b.addFile(f.size, f.flags, b.dir(r.Seg, r.Dirs, k))
 		}
 	}
 	for _, x := range reqs {
@@ -262,7 +278,7 @@ func choose(p *pack, w map[string]float64, tot, budget float64, o planOpt) []pic
 
 // 실행 계획을 tc.bin 과 manifest 로 쓴다
 func plan(p *pack, o planOpt) {
-	b := &planner{p: p, shared: map[string]uint32{}, specs: map[string]*dbSpec{}}
+	b := &planner{p: p, shared: map[string]uint32{}, dirs: map[string]uint32{}, specs: map[string]*dbSpec{}}
 	meta := map[string]any{"mode": "func", "seed": o.seed, "rest": o.rest, "lead": o.lead}
 	t := o.lead
 	end := t
@@ -364,14 +380,15 @@ func minDur(f packFunc) float64 {
 }
 
 func writeTC(path string, files []tcFile, reqs []req) error {
-	b := make([]byte, 0, 24+len(files)*9+len(reqs)*25)
-	b = append(b, "UXWL0001"...)
+	b := make([]byte, 0, 24+len(files)*13+len(reqs)*25)
+	b = append(b, "UXWL0002"...)
 	b = binary.LittleEndian.AppendUint32(b, uint32(len(files)))
 	b = binary.LittleEndian.AppendUint32(b, 0)
 	b = binary.LittleEndian.AppendUint64(b, uint64(len(reqs)))
 	for _, f := range files {
 		b = binary.LittleEndian.AppendUint64(b, f.size)
 		b = append(b, f.flags)
+		b = binary.LittleEndian.AppendUint32(b, f.dir)
 	}
 	for _, r := range reqs {
 		b = binary.LittleEndian.AppendUint64(b, r.t)

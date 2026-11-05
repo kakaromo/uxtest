@@ -6,8 +6,8 @@
 //
 // TC 형식 (little endian, gen_tc.py 가 만든다)
 //
-//	header  "UXWL0001" | nfiles u32 | 0 u32 | nreq u64
-//	files   size u64 | flags u8 (1 = prefill, 2 = SQLite DB, 4 = rollback journal DB)
+//	header  "UXWL0002" | nfiles u32 | 0 u32 | nreq u64       ("UXWL0001" 은 파일에 dir 이 없다)
+//	files   size u64 | flags u8 (1 = prefill, 2 = SQLite DB, 4 = rollback journal DB, 8 = 실제 구조 DB, 16 = 새 폴더 안 파일) | dir u32 (0 = f/ 바로 아래)
 //	reqs    t_us u64 | op u8 | file u32 | off u64 | len u32
 //
 // op: 0 R(O_DIRECT pread) 1 W(pwrite+sync_file_range) 2 WB(pwrite) 3 WD(O_DIRECT pwrite)
@@ -59,6 +59,7 @@ const (
 	opDS
 	opScreen
 	opSQL
+	opSync // 시나리오 단계의 sync (예: cold start 전 "sync; drop_caches"). 앱 동작이 아니라 측정 절차지만 원본 trace 에 들어 있다
 	nOps
 )
 
@@ -68,7 +69,7 @@ const (
 	f2fsCommitAtomic = 0xf502
 )
 
-var opName = [nOps]string{"R", "W", "WB", "WD", "FS", "", "UNLINK", "TRUNC", "MARK", "FA", "WX", "CP", "TRIM", "DS", "SCREEN", "SQL"}
+var opName = [nOps]string{"R", "W", "WB", "WD", "FS", "", "UNLINK", "TRUNC", "MARK", "FA", "WX", "CP", "TRIM", "DS", "SCREEN", "SQL", "SYNC"}
 
 type req struct {
 	t    uint64
@@ -82,6 +83,7 @@ type tcFile struct {
 	size    uint64
 	prefill bool
 	flags   uint8
+	dir     uint32 // 원본 상위 폴더 (f/g<번호>/). 0 = f/ 바로 아래
 }
 
 func load(path string) ([]tcFile, []req) {
@@ -92,7 +94,12 @@ func load(path string) ([]tcFile, []req) {
 	var magic [8]byte
 	_, err = io.ReadFull(r, magic[:])
 	must(err)
-	if string(magic[:]) != "UXWL0001" {
+	rec := 9
+	switch string(magic[:]) {
+	case "UXWL0001":
+	case "UXWL0002":
+		rec = 13
+	default:
 		fatal("TC 형식이 아니에요: %s", path)
 	}
 	var nf, pad uint32
@@ -103,9 +110,18 @@ func load(path string) ([]tcFile, []req) {
 	files := make([]tcFile, nf)
 	b := make([]byte, 25)
 	for i := range files {
-		_, err = io.ReadFull(r, b[:9])
+		_, err = io.ReadFull(r, b[:rec])
 		must(err)
-		files[i] = tcFile{binary.LittleEndian.Uint64(b), b[8]&1 != 0, b[8]}
+		files[i] = tcFile{binary.LittleEndian.Uint64(b), b[8]&1 != 0, b[8], 0}
+		if rec == 13 {
+			files[i].dir = binary.LittleEndian.Uint32(b[9:])
+		}
+	}
+	fileFlags = make([]uint8, nf)
+	fileDirs = make([]uint32, nf)
+	for i, f := range files {
+		fileFlags[i] = f.flags
+		fileDirs[i] = f.dir
 	}
 	reqs := make([]req, nr)
 	for i := range reqs {
@@ -126,7 +142,11 @@ func aligned(n int) []byte {
 
 const maxIO = 16 << 20
 
-var maxWD = 3
+// 동시에 내는 O_DIRECT Write 수. 이 커널(6.12, mode=adaptive)은 새 block 을 할당하는 direct pwrite 둘이 겹치면
+// 파일끼리 block 을 하나씩 번갈아 할당해 Write 가 4KB 로 쪼개진다(파일 5개 동시 16MB → extent 1000개 넘게).
+// 원본 카메라 앱은 스레드 3개가 써도 2MB 마다 extent 하나라, 하나씩 내야 원본 배치가 나온다(하나씩이 오히려 빠르다).
+// AIO 는 도움이 안 된다: 할당하는 direct Write 는 io_submit 안에서 끝까지 기다린다
+var maxWD = 1
 
 var wbuf []byte // Write 내용 (난수, 읽기 전용으로 공유)
 
@@ -139,10 +159,37 @@ func isExcl(op uint8) bool {
 	return op == opFS || op == opUnlink || op == opTrunc || op == opFA || op == opWX || op == opWD
 }
 
-func fpath(root string, id uint32) string { return filepath.Join(root, "f", fmt.Sprintf("%06d", id)) }
+// 새 폴더 안 파일 (flags 16): 원본 앱은 폴더를 새로 만들고 그 안에 파일을 써서 fsync 했다. 아직 Checkpoint 되지 않은
+// 폴더 안 파일의 fsync 는 f2fs 가 Checkpoint 로 처리한다 (cp_reason "node needs cp"). 폴더는 파일을 처음 만들 때 만든다
+const flagNewDir = 16
+
+var fileFlags []uint8 // load 가 채운다
+
+// 원본 폴더 구조: 원본에서 같은 폴더에 있던 파일은 TC 에서도 같은 폴더(f/g<번호>/)에 둔다. 앱은 파일을 수백 개 폴더에 나눠 두므로
+// 파일을 만들고 지울 때 dirty 가 되는 폴더 inode·dentry page 가 많고, Checkpoint 가 그만큼 더 쓴다. 폴더 하나에 모으면 그 몫이 빠진다
+var fileDirs []uint32
+
+func dirPath(root string, d uint32) string { return filepath.Join(root, "f", fmt.Sprintf("g%05d", d)) }
+
+func newDir(id uint32) bool { return int(id) < len(fileFlags) && fileFlags[id]&flagNewDir != 0 }
+
+func fpath(root string, id uint32) string {
+	if newDir(id) {
+		return filepath.Join(root, "f", fmt.Sprintf("d%06d", id), fmt.Sprintf("%06d", id))
+	}
+	if int(id) < len(fileDirs) && fileDirs[id] != 0 {
+		return filepath.Join(dirPath(root, fileDirs[id]), fmt.Sprintf("%06d", id))
+	}
+	return filepath.Join(root, "f", fmt.Sprintf("%06d", id))
+}
 
 func prep(root string, files []tcFile) {
 	must(os.MkdirAll(filepath.Join(root, "f"), 0o755))
+	for _, f := range files {
+		if f.dir != 0 {
+			must(os.MkdirAll(dirPath(root, f.dir), 0o755)) // 원래 있던 폴더: 재생 전 Discard 대기의 sync 로 Checkpoint 된다
+		}
+	}
 	var need, done uint64
 	for _, f := range files {
 		if f.prefill {
@@ -163,6 +210,9 @@ func prep(root string, files []tcFile) {
 		}
 		if !f.prefill {
 			os.Remove(p) // 새로 만들 파일은 없는 상태로 시작
+			if newDir(uint32(id)) {
+				os.RemoveAll(filepath.Dir(p)) // 폴더도 없는 상태로 (남아 있으면 이미 Checkpoint 된 폴더라 원본과 달라진다)
+			}
 			continue
 		}
 		// 크기가 같아도 지우고 새로 쓴다: 앞 실행이 덮어써 블록 배치가 섞인 파일을 다시 쓰면 실행마다 Write 가 다르게 쪼개진다
@@ -235,7 +285,12 @@ func (s *store) fd(id uint32, f *ofile, direct bool) int {
 		p, fl = &f.dio, fl|unix.O_DIRECT
 	}
 	if *p < 0 {
-		fd, err := unix.Open(fpath(s.root, id), fl, 0o644)
+		fp := fpath(s.root, id)
+		fd, err := unix.Open(fp, fl, 0o644)
+		if err == unix.ENOENT && newDir(id) {
+			unix.Mkdir(filepath.Dir(fp), 0o755)
+			fd, err = unix.Open(fp, fl, 0o644)
+		}
 		if err != nil {
 			return -1
 		}
@@ -654,6 +709,13 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 			i++
 			continue
 		}
+		if r.op == opSync { // 다른 동작을 막지 않게 따로 부른다 (원본도 sh 가 따로 불렀다)
+			go unix.Sync()
+			atomic.AddUint64(&ops[opSync].n, 1)
+			atomic.AddUint64(&segs[seg].ops[opSync].n, 1)
+			i++
+			continue
+		}
 		if r.op == opSQL {
 			lg := int64(time.Since(t0) - due)
 			lag.add(lg)
@@ -838,7 +900,7 @@ func main() {
 	root := fs.String("root", "/data/local/tmp/uxwl", "재생 디렉터리")
 	speed := fs.Float64("speed", 1, "재생 속도 배수")
 	maxQD := fs.Int("max-qd", 256, "동시에 진행할 최대 요청 수")
-	fs.IntVar(&maxWD, "max-wd", 3, "동시에 O_DIRECT 로 쓰는 파일 수 (앱의 쓰기 스레드 수). 많으면 f2fs 가 파일끼리 블록을 섞어 할당해 Write 가 4KB 로 쪼개진다")
+	fs.IntVar(&maxWD, "max-wd", 1, "동시에 내는 O_DIRECT Write 수. 2 이상이면 f2fs 가 파일끼리 block 을 섞어 할당해 Write 가 4KB 로 쪼개진다 (11-05 까지 3)")
 	out := fs.String("out", "", "결과 JSON (기본 <root>/result.json)")
 	fs.BoolVar(&wakelock, "wakelock", true, "재생하는 동안 suspend 막기")
 	var po planOpt

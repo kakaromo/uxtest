@@ -75,7 +75,7 @@ def plan(name, *opts):
 
 def run(name):
     before = set(RES.glob(f"{name}-*"))
-    p = subprocess.run([sys.executable, str(HERE / "run_tc.py"), name], env=os.environ | {"UX_SERIAL": SERIAL})
+    p = subprocess.run([sys.executable, str(HERE / "run_tc.py"), name], env={"UX_DEVICE": SERIAL} | os.environ | {"UX_SERIAL": SERIAL})  # agent 기본값은 USB 주소라 무선 측정이면 못 찾는다
     new = sorted(set(RES.glob(f"{name}-*")) - before)
     return p.returncode, new[-1] if new else None
 
