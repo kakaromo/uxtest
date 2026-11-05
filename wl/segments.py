@@ -21,6 +21,7 @@
                                                   디렉터리를 fsync 하고, AtomicFile(.tmp → rename) 도 같은 결과를 낸다
   그 밖의 f2fs_ckpt Checkpoint 묶음 시작        CP  원인을 모르는 Checkpoint (sync·배경). 디렉터리 fsync 로 같은 시각에 일으킴
   잠깐 쓰고 지워진 파일 (아래)                 UL  마지막 접근 직후 unlink → 디렉터리 변경·Discard 를 f2fs 가 만듦
+    └ 이름이 .tmp·.temp                         RN  마지막 접근 직후 rename (지우지 않음). 원본 Checkpoint 가 이 inode 의 node 를 썼다
   kworker·f2fs node/meta/Checkpoint/GC, Flush  -   재생 안 함 (f2fs 가 만듦, compare 에서 비교)
 
 파일 offset: f2fs 는 덮어쓰기도 새 LBA 에 쓰므로 LBA 로 offset 을 알 수 없다. inode 별로 건드린 LBA 구간을
@@ -48,7 +49,7 @@ sys.path.insert(0, str(ROOT / "report"))
 import extract  # noqa: E402
 
 SEG = HERE / ".private" / "seg"
-OPS = {"R": 0, "W": 1, "WB": 2, "WD": 3, "FS": 4, "DB": 5, "UL": 6, "FA": 9, "WX": 10, "CP": 11, "DS": 13}
+OPS = {"R": 0, "W": 1, "WB": 2, "WD": 3, "FS": 4, "DB": 5, "UL": 6, "RN": 17, "FA": 9, "WX": 10, "CP": 11, "DS": 13}
 FSYNC_WIN = 1.0   # 앱 스레드 Data Write 뒤 이 시간 안에 같은 파일 fsync 가 오면 그 fsync 의 일부
 FLUSH_WIN = 0.003  # fsync node write 뒤 이 안에 Flush 가 오면 atomic commit (PREFLUSH|FUA 를 앞뒤 Flush 로 처리)
 REWRITE_GAP = 1.0   # 같은 파일 Write 사이가 이보다 벌어지면 다른 묶음
@@ -60,6 +61,8 @@ ATOMIC_WIN = 0.02  # atomic commit 이 자기 data 를 node 바로 앞(수 ms)�
 CKPT_WIN = 0.001   # fsync node write 뒤 이 안에 f2fs_ckpt Write 가 오면 그 fsync 가 Checkpoint 를 부른 것 (새 journal 파일 fsync 등)
 APP = "not (comm like 'kworker%' or comm like 'f2fs%' or comm like 'jbd2%')"
 TEMP = re.compile(r"(-journal|\.tmp|\.temp)$")
+RENAMED = re.compile(r"\.(tmp|temp)$")   # 다 쓰고 이름을 바꿔 남기는 임시 파일 (AtomicFile, cache, 카메라 사진). UX_TMP_UNLINK=1 이면 예전처럼 지운다
+TMP_UNLINK = os.environ.get("UX_TMP_UNLINK") == "1"
 
 con = duckdb.connect()
 
@@ -176,8 +179,9 @@ def build(pq):
     for nm, lst in byname.items():
         lst.sort()
         dead = lst if TEMP.search(nm) else lst[:-1]
+        rn = RENAMED.search(nm) and not TMP_UNLINK
         for _, ino in dead:
-            ev.append([span[ino][1] + 0.0005, "UL", ino, 0, 0, 0])
+            ev.append([span[ino][1] + 0.0005, "RN" if rn else "UL", ino, 0, 0, 0])
     ev.sort(key=lambda e: e[0])
 
     # DB 동작: SQLite rollback journal transaction. 새 journal 의 첫 fsync 뒤 디렉터리 fsync(DS) 를 넣고,
@@ -251,7 +255,7 @@ def build(pq):
     # 파일 번호 = 원본에서 처음 쓰인 LBA 순서. uxwl prep 이 이 순서로 미리 채우므로 f2fs 가 원본처럼 붙여 배치하고,
     # 서로 다른 파일을 이어 읽던 Sequential Read 가 살아난다. 파일 0 = scratch
     inos = sorted(fmap, key=lambda i: (i != 0, fmap[i][0][0] if fmap[i][0] else float("inf")))
-    for i in {e[2] for e in ev if e[1] in ("FS", "FA", "UL")} - set(fmap):
+    for i in {e[2] for e in ev if e[1] in ("FS", "FA", "UL", "RN")} - set(fmap):
         inos.append(i)                                    # fsync 만 있는 파일
         fmap[i] = ([], [], 1)
     fid = {ino: k for k, ino in enumerate(inos)}
@@ -262,7 +266,7 @@ def build(pq):
 
     # 덮어쓰던 파일: 크기 = 가장 큰 Write 묶음 (블록)
     WOPS = ("W", "WB", "WD", "WX")
-    ul = {e[2] for e in ev if e[1] in ("UL", "FS", "FA")}   # 지우거나 fsync 하는 파일은 빼기 (fsync 덮어쓰기는 f2fs 가 IPU 로 node 를 안 써서 fsync I/O 가 사라진다)
+    ul = {e[2] for e in ev if e[1] in ("UL", "RN", "FS", "FA")}   # 지우거나 fsync 하는 파일은 빼기 (fsync 덮어쓰기는 f2fs 가 IPU 로 node 를 안 써서 fsync I/O 가 사라진다)
     bursts = {}
     for t, op, ino, lba, nb, _ in ev:
         if op in WOPS and ino and ino not in ul and first.get(ino) in WOPS:
@@ -288,7 +292,7 @@ def build(pq):
         if op in ("CP", "DS"):
             continue
         F[k] = fid[ino]
-        if op not in ("FS", "FA", "UL"):
+        if op not in ("FS", "FA", "UL", "RN"):
             st, base, _ = fmap[ino]
             j = bisect.bisect_right(st, lba) - 1
             OFF[k] = (base[j] + lba - st[j]) * 4096
@@ -321,7 +325,7 @@ def main():
         name = f"{sid}-{rep}"
         np.savez_compressed(SEG / f"{name}.npz", **a)
         c = {o: int((a["op"] == v).sum()) for o, v in OPS.items()}
-        mb = {o: round(float(a["len"][a["op"] == v].sum()) / 1e6, 1) for o, v in OPS.items() if o not in ("FS", "FA", "UL", "CP", "DS")}
+        mb = {o: round(float(a["len"][a["op"] == v].sum()) / 1e6, 1) for o, v in OPS.items() if o not in ("FS", "FA", "UL", "RN", "CP", "DS")}
         ex = a["file_existing"]
         idx[name] = {"sid": sid, "repeat": rep, "traceJobId": tj, "pq": pq, "durSec": round(dur, 2), "count": c, "MB": mb,
                      "files": int(len(ex)), "existingMB": round(float(a["file_size"][ex].sum()) / 1e6, 1),
