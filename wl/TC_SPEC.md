@@ -406,6 +406,7 @@ uxwl trim  --root /data/local/tmp/uxwl          # FITRIM (v1 실행 흐름에서
 | WX | (처음이면 START_ATOMIC) → pwrite |
 | CP, DS | `<root>/f` 디렉터리를 열어 fsync → f2fs 가 Checkpoint 를 냄 |
 | UNLINK | 그 파일 fd 를 닫고 unlink |
+| RENAME (17) | 그 파일 fd 를 닫고 `<이름>.r` 로 rename (지우지 않음, 14.3 v5 후보 6). prep 이 남은 `.r` 을 지워요 |
 | TRUNC | ftruncate(off) |
 | SCREEN | 켤 때 `input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard`, 켜 있는 동안 10초마다 `input keyevent 0` / 끌 때 `KEYCODE_SLEEP`. 시스템 설정은 바꾸지 않아요. 켜진 화면에 WAKEUP 을 보내면 안 돼요(10절) |
 
@@ -724,6 +725,24 @@ v4 는 원본 시각에 Checkpoint op 을 냈어요. v5 후보는 빼고 f2fs �
 - 함수 단독 합계는 744/920 → 749/918 이에요(전면 카메라는 원본 FS Write 가 작아 판정에서 빠졌어요). 결과 보관: 전 `func-matrix-sync.json`, 합치기만 한 것 `func-matrix-wdmerge.json`.
 - 버스트샷 QD p99 는 여전히 원본보다 높아요. FS Write 는 그대로라 이 수정과 상관없어요.
 
+**임시 파일은 지우지 않고 rename (v5 후보 6, 2026-11-06).** fsiotrace 가 Checkpoint node page 의 주인 inode 를 page 마다 남기게 됐어요(`result_fsio_cpnode.parquet`, GUIDE 8절). 새로 잰 "YouTube 홈피드 40회" 1회차에서 Checkpoint node 2,367 page 중 830 page 가 이름이 `.tmp` 로 끝나는 새 파일 523개의 것이었어요. TC 는 trace 에 unlink 가 안 보여서 이런 파일을 마지막 접근 직후 지웠고(`segments.py` UL), 지운 파일의 node 는 Checkpoint 에 나오지 않아 같은 자리가 242 page 였어요. 원본 `.tmp` inode 는 Checkpoint 두 번 넘게 나온 것이 305개라 몇 초 넘게 살아 있었어요. 지운 게 아니라 이름을 바꿔 남긴 것으로 봐요(AtomicFile, cache, 카메라 사진). 그래서 `segments.py` 는 이름이 `.tmp`·`.temp` 인 새 파일을 지우지 않고 rename 하고(RN), `uxwl` 은 op 17 `RENAME` 으로 `<이름>.r` 로 바꿔 둬요. `-journal` 과 같은 이름의 앞 inode 는 지금처럼 지워요. `UX_TMP_UNLINK=1` 이면 예전처럼 지워요.
+
+새로 잰 원본 16개(새 fsiotrace)로 두 방식을 한 번씩 돌린 결과예요.
+
+| 함수 (단독) | 바로 지우기 → rename | 원본 FS Write MB / 지우기 → rename | Checkpoint node page 원본 / 지우기 → rename |
+|---|---|---|---|
+| YouTube 홈피드 40회 | 12 → 13 / 15 | 21.8 / 14.5 → 15.6 | 2,367 / 1,475 → 2,020 |
+| Shorts 30회 넘기기 | 15 → 14 / 16 | 12.6 / 8.0 → 11.2 | 1,531 / 1,085 → 1,591 |
+| YouTube Shorts 20개 | 15 → 16 / 16 | 7.9 / 6.1 → 7.5 | 1,023 / 861 → 1,116 |
+| 백그라운드 5분 뒤 복귀 | 7 → 14 / 16 | 3.8 / 10.0 → 2.8 | |
+| 사진 5장 → 바로 갤러리 | 11 → 16 / 16 | 3.8 / 9.6 → 3.5 | |
+| 버스트샷 3초 | 11 → 12 / 15 | 7.4 / 0.3 → 0.3 | 845 / 435 → 979 |
+
+- 16개 합계 202 → 218 / 252, 함수 단독 전체 749/919 예요(원본 16개가 바뀌어 판정 수가 하나 늘었어요. 앞의 749/918 은 바뀌기 전 원본 기준). 결과 보관: `func-matrix-newmeas-unlink.json`, `func-matrix-newmeas-rename.json`.
+- "백그라운드 5분 뒤 복귀" 와 "사진 5장 → 바로 갤러리" 는 바로 지우면 Checkpoint/s 가 원본의 3배, 10배였어요(2.48 vs 0.8, 2.15 vs 0.2). 지우는 동작이 Checkpoint 를 더 부른 것으로 봐요.
+- "Shorts 30회 넘기기" 는 FS Write 가 맞게 됐지만 Flush/s·QD p99 가 새로 틀렸어요. Run 한 번이라 흔들림인지 아직 몰라요.
+- 버스트샷은 Checkpoint 크기가 원본과 같아졌지만 시각이 달라요. 원본은 3.9초에 한 번(845 page) 났고, TC 는 재생이 끝난 뒤(17.4초)에 나서 비교 구간 밖이에요. 원본 카메라 함수의 Checkpoint 는 거의 모두 Files 앱 DB(`files_master_database`)의 WAL fsync 1~2ms 뒤에 와요(사진 10장 17/19번, 버스트샷 13/14번). 이 WAL 은 회차마다 inode 가 4~8개로 바뀌어요(DB 를 닫으면 WAL 이 지워지고 다시 열면 새로 생겨요). TC 는 DB 를 재생 내내 열어 둬서 WAL 이 새로 생기지 않아요. 새로 생긴 WAL 의 fsync 바로 뒤 Checkpoint 는 화면 켜짐 시나리오 전체에서 278번이에요(`files_master_database` 97, `ns.db` 48, `phenotype.db` 15). f2fs 가 이 fsync 를 왜 Checkpoint 로 처리하는지(cp_reason)는 아직 확인하지 않았어요.
+
 ### 14.4 함수 하나씩 결과 (2026-11-05, Run 한 번)
 
 61개 함수, 판정 항목 920개 중 744개 통과(81%). 11-03 은 927개 중 717개(77%)였어요. 그 뒤 새 폴더 flag, 원본 폴더 구조, 시나리오 sync(14.3)를 넣고 모두 다시 돌렸어요. 결과는 `.private/results/func-matrix.json`, sync 전은 `func-matrix-dirs.json` 이에요. 같은 build 로 다시 잰 10개는 함수마다 1~3개씩 흔들렸어요.
@@ -757,8 +776,10 @@ v4 는 원본 시각에 Checkpoint op 을 냈어요. v5 후보는 빼고 f2fs �
 | m2 | browser·sns·video 0.2, camera·launch·home·gallery 0.1 | 모두 목표 ±1%p | 74.2% | 83.3% | 13/16 |
 | m2w (DB warm-up) | 같음, 같은 seed | 같음 | 77.6% | 83.3% | 12/16 |
 | m2d (원본 폴더 구조, 시나리오 sync) | 같음, 같은 seed | 같음 | 80.3% | 86.2% | 12/16 |
+| m2e (direct Write 하나씩) | 같음, 같은 seed | 같음 | 83.0% | 88.2% | 15/16 |
 
 - **m2d (11-05).** m2w 에 원본 폴더 구조와 cold start 시나리오의 `sync` 재생(14.3)을 더했어요. 구간별 통과가 77.6% → 80.3% 예요. 구간 실패율은 FS Write 54% → 46%, FS Write 비율 36% → 22%, Checkpoint/s 30% → 18%, Flush/s 30% → 22% 로 줄었어요. 앱 실행 유형은 14/16 → 16/16 이에요. 전체 판정에서 FS Write 는 통과(원본 767 MB, TC 614 MB)로 바뀌었고, 대신 Sequential Write 가 틀렸어요(원본 79.6%, TC 67.9%). 2시간 동안 "R: operation not supported" 가 40번 나왔어요.
+- **m2e (11-05).** m2d 에 direct Write 를 하나씩 내는 수정(14.3, `--max-wd 1`)을 더했어요. 구간별 통과가 80.3% → 83.0% 예요(905/1091). 구간 실패율은 Sequential Write 41% → 24%, Request size W 26% → 거의 0, QD p99 36% → 27% 로 줄었어요. 카메라 유형은 10/16 → 14/16 이에요. 전체 판정은 12/16 → 15/16 이고, Sequential Write(원본 79.6%, TC 84.1%), Request size W, QD p99 가 통과로 바뀌었어요. 남은 하나는 fsync/s(원본 1.66, TC 3.64)예요. 같은 함수 단독 값은 11-05 함수 단독 결과(749/918) 기준이에요. "R: operation not supported" 는 6번이에요.
 
 - **DB page cache.** 가중치 TC 는 모든 DB 를 재생 전에 열고 채워요. 1~2시간 뒤에 도는 함수의 DB page 는 cache 에서 밀려나 있어서 함수 첫 5초에 DB 본체·WAL Read 가 원본보다 수 MB 많았어요(Instagram 피드 0.6 vs 12MB). 같은 구간이 두 번째 나올 때는 원본과 같았어요. 그래서 DB 를 60초 넘게 안 쓰다가 다시 쓰는 함수는 시작 10초 전(함수 사이 쉬는 구간)에 DB 파일을 한 번 읽어 둬요(`sqlWarms`). 구간 판정에서 Read Volume 실패가 39% → 거의 0, Request size Read 가 36% → 거의 0 이 됐어요. 함수 단독 실행은 시작이 60초 안이라 바뀌지 않아요.
 - **남은 차이.** Checkpoint/s 는 원본보다 적어요(14.3). QD p99 는 원본보다 높은 구간이 많아요. 앞 함수의 writeback 이 다음 함수 구간에 이어지는 것으로 보는데 확인하지 않았어요. 함수를 이어 돌리면 생기는 차이라 고치지 않았어요.

@@ -48,7 +48,7 @@ DB_OP = 5
 FS, WX, FA, CP, DS, SQL, SYNC = 4, 10, 9, 11, 13, 15, 16
 CAUSE_WIN = 0.01             # fsync 뒤 이 시간 안의 Checkpoint 는 그 fsync 때문으로 본다
 WRITES = (1, 2, 3)            # W WB WD
-UL = 6
+UL, RN = 6, 17
 GAP = 0.05                    # 이 간격보다 벌어지면 다른 묶음 (checkpoint 하나의 WAL·DB Write 는 붙어 있다)
 SQL_WAL_CKPT, SQL_WAL_SYNC, SQL_WAL_LAZY, SQL_ROLLBACK = 1, 2, 3, 4
 DBNAME = re.compile(r"\.(db|sqlite3?)$", re.I)
@@ -227,7 +227,7 @@ def merge_wd(r):
     open_ = {}                                   # 파일 → [합치는 중인 index, 마지막 조각 시각]
     n = 0
     wd = r["op"] == WD_OP
-    for i in np.flatnonzero(wd | np.isin(r["op"], [FS, FA, WX, 0, 1, 2, 6, 7])):
+    for i in np.flatnonzero(wd | np.isin(r["op"], [FS, FA, WX, 0, 1, 2, 6, 7, RN])):
         f = int(r["f"][i])
         if not wd[i]:                            # 같은 파일의 다른 동작(fsync, Read, unlink...)이 끼면 끊는다
             open_.pop(f, None)
@@ -268,7 +268,7 @@ def new_dir_files(a, drop):
     files, extra = set(), []
     for c in cp:
         j = int(np.searchsorted(tt, c)) - 1
-        if j < 0 or c - tt[j] >= CAUSE_WIN or int(oo[j]) not in (1, 2, UL):
+        if j < 0 or c - tt[j] >= CAUSE_WIN or int(oo[j]) not in (1, 2, UL, RN):
             continue
         x = int(ff[j])
         if a["file_existing"][x] & 1 or x in drop or x in files:   # 같은 폴더는 처음 fsync 때만 Checkpoint 가 난다

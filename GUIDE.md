@@ -58,6 +58,7 @@ cp out/aarch64/fsiotrace ../agent/tools/fsiotrace
 
 - **2026-10-28 이후 버전(2b14f12 이상)을 쓰세요.** 그 전 버전은 writeback·공유 bio·kblockd 발급 request 에 다른 파일·앱 이름과 NODE/META/Checkpoint flag 를 붙였어요(Write 의 최대 38%). Volume·size·LBA·Latency 는 영향이 없지만 이름·flag 기반 분석은 틀려요.
 - 2b14f12 에서 더 고친 것: fsync 안에서 나간 request 에 `FSYNC_TRIGGERED` 가 붙어요(그 전에는 늘 0). `REQ_SYNC`·`REQ_PRIO` 도 이제 나와요. 다른 파일시스템(cgroup 등)의 같은 inode 번호 이름이 f2fs Write 에 붙던 문제도 막았어요.
+- 2026-11-05 이후 빌드는 f2fs checkpoint 가 쓴 node page 의 주인을 따로 남겨요: layer `CPNODE` 줄(같은 주인·연속 blkaddr 를 한 줄로 묶음)이 `--only ufs` 여도 출력되고, agent 는 이것을 `result_fsio_cpnode.parquet` 으로 만들어요. 기존 줄·컬럼·귀속은 그대로예요. 끄려면 `--no-cpnode`. 이 줄을 읽으려면 agent 도 같이 새로 빌드해야 하고, 옛 agent 는 이 줄을 조용히 건너뛰어요.
 - 빌드 확인: `adb shell /dev/fsiotrace --version`. 시작할 때 BPF load 가 `-EAGAIN` 이면 스스로 최대 4번 다시 시도해요.
 
 ## 3. agent 실행
@@ -230,7 +231,9 @@ fsiotrace 를 바꿨거나 다른 커널에서 쓸 때는 이름·flag 가 맞�
 2. **정답지 대조 (Write):** ftrace `f2fs/f2fs_submit_folio_write` 를 같이 켜고 버퍼 Write + `sync` 를 일으킨 뒤, ftrace 의 `newaddr`(+ userdata 시작 LBA)로 UFS Write request 의 주인 inode 와 fsiotrace 가 붙인 inode 를 비교해요. 2026-10-28 기준 결과는 오귀속 0% 예요.
 3. fsiotrace 를 두 개 동시에 붙이지 마세요. 둘 다 이벤트를 크게 놓쳐요. 그리고 fsiotrace 가 붙는 데 10~20초 걸리므로 출력 로그에 `writing events` 가 나온 뒤에 작업을 시작해요.
 
-남은 수집 한계: 여러 파일의 node 가 한 request 로 합쳐지면 첫 파일만 이름으로 남고, 측정 중 연 적 없는 파일의 node Write 는 경로 없이 `ino:N` 으로 나와요. f2fs GC 가 옮기는 데이터는 원래 파일을 알 수 없어 이름 없이 GC 로 표시돼요.
+4. **Checkpoint node 주인 (CPNODE):** checkpoint node Write request 는 UFS 줄에서 bio 첫 page 의 파일 하나로만 보여요. page 별 주인은 `result_fsio_cpnode.parquet` 에서 봐요(`cp_ver` 가 같으면 같은 checkpoint, `lba` = 파티션 시작 + `blkaddr`). `.summary` 의 `cpnode_pages`(본 page 수)·`cpnode_rows`·`cpnode_drop`(0 이어야 함)과 `rb_drop` 을 같이 확인해요. QEMU(6.6) 대조에서 ftrace 의 checkpoint 구간 NODE page 19개와 blkaddr·nid·온도가 모두 맞았어요.
+
+남은 수집 한계: 여러 파일의 node 가 한 request 로 합쳐지면 UFS 줄에는 첫 파일만 이름으로 남아요(checkpoint 가 쓴 것은 위 CPNODE 로 나눠 볼 수 있지만, fsync·writeback 이 쓴 node 는 아직 첫 파일만 보여요). CPNODE 의 `lba` 는 /data 가 dm(default-key)이면 offset 0 이라고 보고 그 아래 파티션 시작을 더한 값이에요. 측정 중 연 적 없는 파일의 node Write 는 경로 없이 `ino:N` 으로 나와요. f2fs GC 가 옮기는 데이터는 원래 파일을 알 수 없어 이름 없이 GC 로 표시돼요.
 
 ## 9. UFS workload TC (wl/)
 

@@ -21,7 +21,7 @@ RES = HERE / ".private" / "results"
 OUT = ROOT / "web" / ".private" / "data" / "tcfunc.json"
 # 싣는 가중치 TC (이름, 결과 폴더 접두어, 설명). 같은 이름의 가장 최근 결과를 쓴다
 MIXES = [("m1", "m1-", "고치기 전"), ("m1w", "m1w-", "DB warm-up"), ("m2", "m2-", "고치기 전"), ("m2w", "m2w-", "DB warm-up"),
-         ("m2d", "m2d-", "원본 폴더 구조·시나리오 sync")]
+         ("m2d", "m2d-", "원본 폴더 구조·시나리오 sync"), ("m2e", "m2e-", "direct Write 하나씩")]
 
 
 GROUP_KO = {"browser": "브라우저", "sns": "SNS", "video": "동영상", "music": "음악", "maps": "지도", "camera": "카메라",
@@ -48,7 +48,7 @@ def export():
     d = open(HERE / ".private/funcs/funcs.bin", "rb").read()
     L = struct.unpack("<I", d[8:12])[0]
     meta = json.loads(d[12:12 + L])
-    ON = ["R", "W", "WB", "WD", "FS", "", "UNLINK", "TRUNC", "MARK", "FA", "WX", "CP", "TRIM", "DS", "SCREEN", "SQL", "SYNC"]
+    ON = ["R", "W", "WB", "WD", "FS", "", "UNLINK", "TRUNC", "MARK", "FA", "WX", "CP", "TRIM", "DS", "SCREEN", "SQL", "SYNC", "RENAME"]
     ft = np.dtype([("size", "<u8"), ("flags", "u1")])
     rt = np.dtype([("t", "<u8"), ("op", "u1"), ("file", "<u4"), ("off", "<u8"), ("len", "<u4")])
     struct_rows = {}
@@ -71,7 +71,7 @@ def export():
         k = lambda x: round(agg[x] / n)
         struct_rows[f] = {"name": v["name"], "reps": n, "dur": round(dur / n), "files": round(nf / n), "rmb": round(rmb / n, 1),
                           "wmb": round(wmb / n, 1), "R": k("R"), "W": k("W") + k("WB"), "WD": k("WD"), "FS": k("FS"),
-                          "UN": k("UNLINK"), "AW": k("FA") + k("WX"), "SQL": k("SQL"), "db": len(dbs)}
+                          "UN": k("UNLINK"), "RN": k("RENAME"), "AW": k("FA") + k("WX"), "SQL": k("SQL"), "db": len(dbs)}
 
     # ---- 함수 단독 결과
     cur = json.load(open(RES / "func-matrix.json"))

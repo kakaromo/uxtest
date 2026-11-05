@@ -17,6 +17,7 @@
 //	11 CP(디렉터리 fsync → f2fs Checkpoint) 12 TRIM(FITRIM: 지운 파일의 블록을 f2fs 가 Discard 로 반납)
 //	13 DS(fsync 뒤 디렉터리 fsync: SQLite 새 journal·AtomicFile 이 하는 것. 동작은 CP 와 같고 원인이 있는 쪽)
 //	14 SCREEN(file=1 켜기: 깨우고 잠금 해제, 켜 있는 동안 10초마다 깨우기 / 0 끄기)
+//	17 RENAME(파일을 <이름>.r 로 rename. 지우지 않고 남긴다)
 //	15 SQL(실제 SQLite transaction. file=DB, off=page 수 | 서로 다른 page 수<<32, len=sqlite.go 의 동작)
 package main
 
@@ -60,6 +61,7 @@ const (
 	opScreen
 	opSQL
 	opSync // 시나리오 단계의 sync (예: cold start 전 "sync; drop_caches"). 앱 동작이 아니라 측정 절차지만 원본 trace 에 들어 있다
+	opRename // 다 쓴 임시 파일(.tmp)을 다른 이름으로 rename. 원본 앱은 .tmp 를 쓰고 이름을 바꿔 남겼다 (11-05 CPNODE: .tmp inode 의 node 가 Checkpoint 에 나옴)
 	nOps
 )
 
@@ -69,7 +71,7 @@ const (
 	f2fsCommitAtomic = 0xf502
 )
 
-var opName = [nOps]string{"R", "W", "WB", "WD", "FS", "", "UNLINK", "TRUNC", "MARK", "FA", "WX", "CP", "TRIM", "DS", "SCREEN", "SQL", "SYNC"}
+var opName = [nOps]string{"R", "W", "WB", "WD", "FS", "", "UNLINK", "TRUNC", "MARK", "FA", "WX", "CP", "TRIM", "DS", "SCREEN", "SQL", "SYNC", "RENAME"}
 
 type req struct {
 	t    uint64
@@ -148,6 +150,8 @@ const maxIO = 16 << 20
 // AIO 는 도움이 안 된다: 할당하는 direct Write 는 io_submit 안에서 끝까지 기다린다
 var maxWD = 1
 
+const renameSuffix = ".r" // opRename 이 붙이는 이름
+
 var wbuf []byte // Write 내용 (난수, 읽기 전용으로 공유)
 
 var (
@@ -156,7 +160,7 @@ var (
 )
 
 func isExcl(op uint8) bool {
-	return op == opFS || op == opUnlink || op == opTrunc || op == opFA || op == opWX || op == opWD
+	return op == opFS || op == opUnlink || op == opRename || op == opTrunc || op == opFA || op == opWX || op == opWD
 }
 
 // 새 폴더 안 파일 (flags 16): 원본 앱은 폴더를 새로 만들고 그 안에 파일을 써서 fsync 했다. 아직 Checkpoint 되지 않은
@@ -210,6 +214,7 @@ func prep(root string, files []tcFile) {
 		}
 		if !f.prefill {
 			os.Remove(p) // 새로 만들 파일은 없는 상태로 시작
+			os.Remove(p + renameSuffix)
 			if newDir(uint32(id)) {
 				os.RemoveAll(filepath.Dir(p)) // 폴더도 없는 상태로 (남아 있으면 이미 Checkpoint 된 폴더라 원본과 달라진다)
 			}
@@ -536,6 +541,15 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 				}
 			}
 			err = unix.Unlink(fpath(root, r.file))
+			f.gone = true
+		case opRename:
+			for _, p := range []*int{&f.buf, &f.dio} {
+				if *p >= 0 {
+					unix.Close(*p)
+					*p = -1
+				}
+			}
+			err = unix.Rename(fpath(root, r.file), fpath(root, r.file)+renameSuffix)
 			f.gone = true
 		}
 		record(r, sg, time.Since(st).Nanoseconds(), err)
