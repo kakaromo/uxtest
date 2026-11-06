@@ -60,7 +60,7 @@ const (
 	opDS
 	opScreen
 	opSQL
-	opSync // 시나리오 단계의 sync (예: cold start 전 "sync; drop_caches"). 앱 동작이 아니라 측정 절차지만 원본 trace 에 들어 있다
+	opSync   // 시나리오 단계의 sync (예: cold start 전 "sync; drop_caches"). 앱 동작이 아니라 측정 절차지만 원본 trace 에 들어 있다
 	opRename // 다 쓴 임시 파일(.tmp)을 다른 이름으로 rename. 원본 앱은 .tmp 를 쓰고 이름을 바꿔 남겼다 (11-05 CPNODE: .tmp inode 의 node 가 Checkpoint 에 나옴)
 	nOps
 )
@@ -854,8 +854,9 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 		"speed": speed, "maxQD": maxQD, "qdMax": qdMax, "requests": len(reqs),
 		"lateOver5ms": late, "lagMs": map[string]float64{"p50": lag.pct(0.5), "p99": lag.pct(0.99), "max": float64(lateMax) / 1e6},
 		"ops": sum(&ops), "segments": ss, "errorKinds": errKinds,
-		"sqlFrames": map[string]int64{"real": sqlFramesReal.Load(), "pad": sqlFramesPad.Load()},
-		"sqlWarms":  sqlWarms.Load(),
+		"sqlFrames":  map[string]int64{"real": sqlFramesReal.Load(), "pad": sqlFramesPad.Load()},
+		"sqlWarms":   sqlWarms.Load(),
+		"sqlReopens": sqlReopens.Load(),
 	}
 	b, _ := json.MarshalIndent(res, "", " ")
 	must(os.WriteFile(out, b, 0o644))
@@ -915,6 +916,7 @@ func main() {
 	speed := fs.Float64("speed", 1, "재생 속도 배수")
 	maxQD := fs.Int("max-qd", 256, "동시에 진행할 최대 요청 수")
 	fs.IntVar(&maxWD, "max-wd", 1, "동시에 내는 O_DIRECT Write 수. 2 이상이면 f2fs 가 파일끼리 block 을 섞어 할당해 Write 가 4KB 로 쪼개진다 (11-05 까지 3)")
+	fs.BoolVar(&freshDirSync, "fresh-dirsync", false, "새 WAL 의 첫 sync 뒤 폴더 fsync 를 직접 한다 (SQLite 가 이미 하므로 켜면 Checkpoint 가 두 번)")
 	out := fs.String("out", "", "결과 JSON (기본 <root>/result.json)")
 	fs.BoolVar(&wakelock, "wakelock", true, "재생하는 동안 suspend 막기")
 	var po planOpt

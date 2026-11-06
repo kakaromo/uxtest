@@ -27,10 +27,12 @@ const (
 	dbFlagSQLite   = 2
 	dbFlagRollback = 4
 
-	sqlWalCkpt  = 1 // WAL 에 쓰고 checkpoint: fsync(WAL) → DB 쓰기 → fsync(DB)
-	sqlWalSync  = 2 // WAL 에 쓰고 WAL fsync 만
-	sqlWalLazy  = 3 // WAL 에 쓰고 writeback 만 시작 (fsync 없음)
-	sqlRollback = 4 // rollback journal transaction: journal 생성·fsync → DB 쓰기·fsync → journal 삭제
+	sqlWalCkpt  = 1    // WAL 에 쓰고 checkpoint: fsync(WAL) → DB 쓰기 → fsync(DB)
+	sqlWalSync  = 2    // WAL 에 쓰고 WAL fsync 만
+	sqlWalLazy  = 3    // WAL 에 쓰고 writeback 만 시작 (fsync 없음)
+	sqlRollback = 4    // rollback journal transaction: journal 생성·fsync → DB 쓰기·fsync → journal 삭제
+	sqlFreshWal = 0x10 // (flag) 원본 앱이 DB 를 닫았다 다시 열어 WAL 이 새로 생긴 transaction. 앞에서 닫고 다시 열고,
+	// 첫 WAL sync 뒤 폴더를 fsync 한다 (SQLite 가 새 WAL 의 첫 sync 때 하는 것, UNIXFILE_DIRSYNC). f2fs 는 폴더 fsync 를 Checkpoint 로 처리한다
 
 	rowBytes = 3900 // 한 행이 page 하나 (4096 - page·cell header)
 
@@ -106,6 +108,53 @@ type dbConn struct {
 	ckptFrame uint32
 	txOps     int // transaction 하나의 행 동작 수 (dbwatch 의 행 동작 수 / commit 수)
 	mainDebt  int // 원본이 DB 본체에 쓴 page 중 아직 안 쓴 수
+	spec      *dbSpec
+	reopens   int
+}
+
+var sqlReopens atomic.Int64
+
+// 새 WAL 의 첫 sync 뒤 폴더 fsync 를 uxwl 이 직접 할지. SQLite 가 스스로 하므로 기본은 끔 (켜면 Checkpoint 가 두 번 난다, 11-06 ftrace)
+var freshDirSync = false
+
+// DB 를 닫고 다시 연다. 마지막 연결을 닫으면 SQLite 가 WAL 을 DB 로 옮기고 지우므로, 다음 transaction 이 WAL 을 새로 만든다
+func (c *dbConn) reopen() error {
+	if c.wal >= 0 {
+		unix.Close(c.wal)
+		c.wal = -1
+	}
+	if c.shm != nil {
+		c.shm.Close()
+		c.shm = nil
+	}
+	if err := c.d.Close(); err != nil {
+		return err
+	}
+	d, err := openDB(c.path, false)
+	if err != nil {
+		return err
+	}
+	c.d, c.ckptFrame = d, 0
+	if c.spec != nil {
+		c.tables = prepTables(d, c.spec, c.rng)
+		if c.pad != nil {
+			if c.pad, err = d.Prepare(`UPDATE ` + padTable + ` SET v = ? WHERE id = ?`); err != nil {
+				return err
+			}
+		}
+	} else if c.st, err = d.Prepare("UPDATE t SET v = ? WHERE id = ?"); err != nil {
+		return err
+	}
+	c.reopens++
+	sqlReopens.Add(1)
+	return nil
+}
+
+func (c *dbConn) syncDir() {
+	if fd, err := unix.Open(filepath.Dir(c.path), unix.O_RDONLY|unix.O_DIRECTORY, 0); err == nil {
+		unix.Fsync(fd)
+		unix.Close(fd)
+	}
 }
 
 // 양 맞추기 통계: 행 동작으로 쓴 frame, 채움 테이블로 쓴 frame
@@ -285,6 +334,13 @@ func (c *dbConn) walFd() int {
 
 func (c *dbConn) exec(r req) error {
 	pages, uniq := int(r.off&0xffffffff), int(r.off>>32)
+	fresh := r.ln&sqlFreshWal != 0
+	r.ln &^= sqlFreshWal
+	if fresh {
+		if err := c.reopen(); err != nil {
+			return err
+		}
+	}
 	if c.tables != nil && c.pad != nil { // 실제 테이블 WAL: off 는 WAL frame 목표와 checkpoint page 목표
 		if err := c.realWal(pages); err != nil {
 			return err
@@ -307,12 +363,24 @@ func (c *dbConn) exec(r req) error {
 	}
 	switch r.ln {
 	case sqlWalCkpt:
+		if fresh {
+			if fd := c.walFd(); fd >= 0 {
+				unix.Fdatasync(fd)
+			}
+			if freshDirSync {
+				c.syncDir()
+			}
+		}
 		_, err := c.d.Exec("PRAGMA wal_checkpoint(PASSIVE)")
 		c.ckptFrame = c.mxFrame()
 		return err
 	case sqlWalSync:
 		if fd := c.walFd(); fd >= 0 {
-			return unix.Fdatasync(fd)
+			err := unix.Fdatasync(fd)
+			if fresh && freshDirSync {
+				c.syncDir()
+			}
+			return err
 		}
 	case sqlWalLazy:
 		if fd := c.walFd(); fd >= 0 {
@@ -353,6 +421,7 @@ func newSQLEngine(root string, files []tcFile, reqs []req) *sqlEngine {
 		// 안 그러면 재생 중 새 파일 fsync 가 원본에 없는 node Write·f2fs Checkpoint 를 만든다
 		if f.flags&dbFlagReal != 0 {
 			sp := dbSpecs[fmt.Sprint(r.file)]
+			c.spec = sp
 			c.tables = prepTables(d, sp, c.rng)
 			c.ratio = max(sp.FramesPerOp, 0.2)
 			c.txOps = max(sp.OpsPerCommit, 1)

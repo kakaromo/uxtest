@@ -51,6 +51,7 @@ WRITES = (1, 2, 3)            # W WB WD
 UL, RN = 6, 17
 GAP = 0.05                    # 이 간격보다 벌어지면 다른 묶음 (checkpoint 하나의 WAL·DB Write 는 붙어 있다)
 SQL_WAL_CKPT, SQL_WAL_SYNC, SQL_WAL_LAZY, SQL_ROLLBACK = 1, 2, 3, 4
+SQL_FRESH_WAL = 0x10          # 앱이 DB 를 닫았다 다시 열어 WAL 이 새로 생긴 transaction (uxwl 이 닫고 다시 열고 폴더 fsync)
 DBNAME = re.compile(r"\.(db|sqlite3?)$", re.I)
 FILE = np.dtype([("size", "<u8"), ("existing", "u1")])
 REQ = np.dtype([("t", "<u8"), ("op", "u1"), ("f", "<u4"), ("off", "<u8"), ("len", "<u4")])
@@ -119,6 +120,12 @@ def dbmodel(con, pq, a):
         if nm:
             b = re.sub(r"-(wal|journal)$", "", nm)
             base[f] = (b, nm[len(b) + 1:] if nm != b else "main")
+    ck = np.array([x for (x,) in con.execute(f"""select time - {t0} from read_parquet('{pq}')
+        where action = 'send_req' and opcode in (42, 138) and comm like 'f2fs_ckpt%' order by time""").fetchall()])
+
+    def ck_after(t):
+        j = np.searchsorted(ck, t, side="right")
+        return j < len(ck) and ck[j] - t <= CAUSE_WIN
     per = collections.defaultdict(dict)
     for f, (b, k) in base.items():
         per[b].setdefault(k, []).append(f)
@@ -151,29 +158,37 @@ def dbmodel(con, pq, a):
             stat["rollbackTx"] += len(tx)
         else:
             burst = []
+            seen = set()
             for t, i, s, sy in rows:
-                if not burst or t - burst[-1]["end"] > GAP:
-                    burst.append({"t": t, "end": t, "wal": 0, "main": 0, "sync": 0, "n": 0})
+                # 새 WAL: 처음 보인 WAL inode 이고 그 첫 Write 10ms 안에 Checkpoint 가 왔다 (SQLite 가 새 WAL 의 첫 sync 뒤 폴더를 fsync).
+                # 원본은 70ms 안에 WAL 을 네 번 새로 만들기도 해서, 새 WAL 마다 transaction 을 나눈다
+                new = kind[i] == "wal" and i not in seen and ck_after(t)
+                if kind[i] == "wal":
+                    seen.add(i)
+                if not burst or t - burst[-1]["end"] > GAP or new:
+                    burst.append({"t": t, "end": t, "wal": 0, "main": 0, "sync": 0, "n": 0, "new": new})
                 c = burst[-1]
                 c["end"] = t
                 c["n"] += 1
                 c["sync"] += bool(sy)
                 c["wal" if kind[i] != "main" else "main"] += s
             for c in burst:
+                fresh = SQL_FRESH_WAL if c["new"] else 0
+                stat["freshWal"] += bool(fresh)
                 # WAL frame 은 4120 byte 라 block 경계를 넘는다. frame 1개도 Write 2 block 이므로 그만큼 뺀다
                 wal_p = max(1, round((c["wal"] - 4096) / 4120))
                 if b in SPECS:  # 실제 테이블: 목표 WAL frame 수와 checkpoint page 수. 행 동작 수는 재생기가 재면서 정한다
-                    tx.append((c["t"], wal_p if c["wal"] else 0, round(c["main"] / 4096), SQL_WAL_CKPT if c["main"] else (SQL_WAL_SYNC if c["sync"] * 2 >= c["n"] else SQL_WAL_LAZY)))
+                    tx.append((c["t"], wal_p if c["wal"] else 0, round(c["main"] / 4096), fresh | (SQL_WAL_CKPT if c["main"] else (SQL_WAL_SYNC if c["sync"] * 2 >= c["n"] else SQL_WAL_LAZY))))
                     continue
                 if c["main"]:
                     m = max(1, round(c["main"] / 4096))
-                    tx.append((c["t"], max(wal_p, m), m, SQL_WAL_CKPT))
+                    tx.append((c["t"], max(wal_p, m), m, fresh | SQL_WAL_CKPT))
                     stat["walCkpt"] += 1
                 elif c["sync"] * 2 >= c["n"]:
-                    tx.append((c["t"], wal_p, wal_p, SQL_WAL_SYNC))
+                    tx.append((c["t"], wal_p, wal_p, fresh | SQL_WAL_SYNC))
                     stat["walSync"] += 1
                 else:
-                    tx.append((c["t"], wal_p, wal_p, SQL_WAL_LAZY))
+                    tx.append((c["t"], wal_p, wal_p, fresh | SQL_WAL_LAZY))
                     stat["walLazy"] += 1
         drop |= {f for v in fs.values() for f in v}
         size = max([int(a["file_size"][f]) for f in fs.get("main", [])] + [0])
@@ -358,6 +373,15 @@ def main():
             if extra:
                 r[n0:] = np.array(extra, REQ)
                 r = r[np.argsort(r["t"], kind="stable")]
+            # 새 WAL 로 재생하는 Checkpoint 를 DS(fsync 뒤 폴더 fsync)로 한 번 더 내지 않는다
+            fr = r["t"][(r["op"] == SQL) & ((r["len"] & SQL_FRESH_WAL) != 0)]
+            if len(fr):
+                ds = np.flatnonzero(r["op"] == DS)
+                j = np.clip(np.searchsorted(fr, r["t"][ds]), 1, len(fr))
+                near = np.minimum(np.abs(fr[j - 1].astype(np.int64) - r["t"][ds].astype(np.int64)),
+                                  np.abs(fr[np.minimum(j, len(fr) - 1)].astype(np.int64) - r["t"][ds].astype(np.int64))) <= 20000
+                r = np.delete(r, ds[near])
+                total["dsDupFresh"] += int(near.sum())
             if not args.no_merge_wd:
                 r, n_wd = merge_wd(r)
                 total["wdMerged"] += n_wd

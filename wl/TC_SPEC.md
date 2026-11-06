@@ -743,6 +743,30 @@ v4 는 원본 시각에 Checkpoint op 을 냈어요. v5 후보는 빼고 f2fs �
 - "Shorts 30회 넘기기" 는 FS Write 가 맞게 됐지만 Flush/s·QD p99 가 새로 틀렸어요. Run 한 번이라 흔들림인지 아직 몰라요.
 - 버스트샷은 Checkpoint 크기가 원본과 같아졌지만 시각이 달라요. 원본은 3.9초에 한 번(845 page) 났고, TC 는 재생이 끝난 뒤(17.4초)에 나서 비교 구간 밖이에요. 원본 카메라 함수의 Checkpoint 는 거의 모두 Files 앱 DB(`files_master_database`)의 WAL fsync 1~2ms 뒤에 와요(사진 10장 17/19번, 버스트샷 13/14번). 이 WAL 은 회차마다 inode 가 4~8개로 바뀌어요(DB 를 닫으면 WAL 이 지워지고 다시 열면 새로 생겨요). TC 는 DB 를 재생 내내 열어 둬서 WAL 이 새로 생기지 않아요. 새로 생긴 WAL 의 fsync 바로 뒤 Checkpoint 는 화면 켜짐 시나리오 전체에서 278번이에요(`files_master_database` 97, `ns.db` 48, `phenotype.db` 15). f2fs 가 이 fsync 를 왜 Checkpoint 로 처리하는지(cp_reason)는 아직 확인하지 않았어요.
 
+**새 WAL 은 DB 를 다시 열어 만들어요 (v5 후보 7, 2026-11-06).** 원본 "버스트샷 3초" 를 f2fs ftrace(`f2fs_sync_file_exit`)로 다시 봤어요. 일반 파일 fsync 는 모두 cp_reason 이 "no needed" 였고, Checkpoint 를 부른 건 폴더 fsync("non regular")였어요. 3회에 60번이고 41번이 Files 앱 "BG Thread" 였어요. SQLite 는 새로 만든 WAL 을 처음 sync 할 때 그 폴더도 fsync 해요(UNIXFILE_DIRSYNC). 앱이 DB 를 닫았다 다시 열면 WAL 이 새 inode 로 생기고, 그 첫 sync 마다 Checkpoint 가 하나씩 나요.
+- `gen_funcs.py`: 원본에서 처음 보인 WAL inode 의 첫 Write 10 ms 안에 Checkpoint 가 왔으면 그 transaction 에 새 WAL flag(`0x10`)를 달아요. 새 WAL 마다 transaction 을 나눠요(원본은 70 ms 안에 WAL 을 네 번 새로 만들기도 해요). 61개 함수에 471번이에요.
+- 같은 Checkpoint 를 원본 폴더 fsync 재생(DS)으로도 내던 것이 152번이라, 새 WAL 20 ms 안의 DS 는 뺐어요.
+- `uxwl`: flag 가 달린 transaction 앞에서 DB 를 닫고 다시 열어요(`sqlReopens`). 폴더 fsync 는 SQLite 가 해요. 처음에는 `uxwl` 도 직접 폴더를 fsync 했는데 TC ftrace 에서 Checkpoint 가 두 번 나서, 그건 `--fresh-dirsync` 로만 켜요.
+
+고치기 전과 고친 뒤(같은 build 로 두 번) 14개 함수 결과예요. 함수 단독 전체는 749 → 753, 752 / 919 예요.
+
+| 함수 (단독) | 통과 전 → 1, 2 | FS Write MB 원본 / 전 → 1, 2 | Checkpoint/s 원본 / 전 → 1, 2 |
+|---|---|---|---|
+| 버스트샷 3초 | 12 → 14, 14 / 15 | 7.37 / 0.25 → 6.48, 6.32 | 0.25 / 0.00 → 0.16, 0.16 |
+| 20장 삭제 → 휴지통 비우기 | 11 → 12, 13 / 16 | 4.06 / 0.80 → 2.51, 2.81 | 0.35 / 0.09 → 0.35, 0.35 |
+| 동영상 2분 1080p | 14 → 16, 15 / 16 | 3.26 / 0.06 → 3.96, 2.95 | 0.07 / 0.00 → 0.06, 0.06 |
+| 녹음 1분 | 13 → 14, 14 / 16 | 3.47 / 1.46 → 2.31, 2.60 | 0.13 / 0.06 → 0.11, 0.14 |
+| 앱 재설치 (pm install) | 14 → 14, 14 / 16 | 7.36 / 4.26 → 5.61, 5.69 | 0.44 / 0.28 → 0.52, 0.56 |
+| 사진 10장 | 15 → 14, 12 / 16 | 4.24 / 3.53 → 3.59, 4.86 | 0.29 / 0.16 → 0.29, 0.86 |
+| 사진 5장 → 바로 갤러리 | 16 → 14, 15 / 16 | 3.78 / 3.49 → 3.15, 3.33 | 0.19 / 0.30 → 0.23, 0.26 |
+| 무거운 앱 cold start | 11 → 12, 11 / 16 | 29.80 / 13.05 → 13.03, 12.31 | 2.16 / 1.62 → 1.81, 1.71 |
+
+- 통과 열의 분모는 함수마다 판정 항목 수예요. 14개 함수 합은 187 → 191, 190 이고, 나머지 47개 함수는 다시 돌리지 않아 전체가 749 → 753, 752 예요.
+- Checkpoint 가 없거나 모자라던 "버스트샷 3초", "20장 삭제 → 휴지통 비우기", "동영상 2분 1080p" 에 Checkpoint 와 FS Write 가 원본 가까이 생겼어요. 표에 없는 6개(cold start 순회 6앱, YouTube Music 3분, Chrome 100MB 다운로드, Chrome cold start ×5, 뷰어 1→1000장, 백그라운드 5분 뒤 복귀)는 통과 수가 ±1 안에서 움직였어요.
+- "사진 10장" 2번째 Run 의 Checkpoint/s 0.86 은 같은 funcs.bin 1번째(0.29)의 3배라 Run 사이 흔들림으로 봐요. 배경 sync_fs(autosuspend) 같은 시스템 Checkpoint 가 섞였는지는 아직 몰라요.
+- fsync/s 는 여전히 원본보다 높아요(버스트샷 10.1 vs 3.5). "무거운 앱 cold start" FS Write 는 이 수정으로 바뀌지 않았어요.
+- 결과 보관: `func-matrix-pre-freshwal.json`, `func-matrix-freshwal3-1.json`, `func-matrix-freshwal3-2.json`.
+
 ### 14.4 함수 하나씩 결과 (2026-11-05, Run 한 번)
 
 61개 함수, 판정 항목 920개 중 744개 통과(81%). 11-03 은 927개 중 717개(77%)였어요. 그 뒤 새 폴더 flag, 원본 폴더 구조, 시나리오 sync(14.3)를 넣고 모두 다시 돌렸어요. 결과는 `.private/results/func-matrix.json`, sync 전은 `func-matrix-dirs.json` 이에요. 같은 build 로 다시 잰 10개는 함수마다 1~3개씩 흔들렸어요.
