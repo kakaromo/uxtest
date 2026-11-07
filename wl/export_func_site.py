@@ -48,7 +48,7 @@ def export():
     d = open(HERE / ".private/funcs/funcs.bin", "rb").read()
     L = struct.unpack("<I", d[8:12])[0]
     meta = json.loads(d[12:12 + L])
-    ON = ["R", "W", "WB", "WD", "FS", "", "UNLINK", "TRUNC", "MARK", "FA", "WX", "CP", "TRIM", "DS", "SCREEN", "SQL", "SYNC", "RENAME"]
+    ON = ["R", "W", "WB", "WD", "FS", "", "UNLINK", "TRUNC", "MARK", "FA", "WX", "CP", "TRIM", "DS", "SCREEN", "SQL", "SYNC", "RENAME", "TOUCH"]
     ft = np.dtype([("size", "<u8"), ("flags", "u1")])
     rt = np.dtype([("t", "<u8"), ("op", "u1"), ("file", "<u4"), ("off", "<u8"), ("len", "<u4")])
     struct_rows = {}

@@ -48,7 +48,7 @@ DB_OP = 5
 FS, WX, FA, CP, DS, SQL, SYNC = 4, 10, 9, 11, 13, 15, 16
 CAUSE_WIN = 0.01             # fsync 뒤 이 시간 안의 Checkpoint 는 그 fsync 때문으로 본다
 WRITES = (1, 2, 3)            # W WB WD
-UL, RN = 6, 17
+UL, RN, TOUCH = 6, 17, 18
 GAP = 0.05                    # 이 간격보다 벌어지면 다른 묶음 (checkpoint 하나의 WAL·DB Write 는 붙어 있다)
 SQL_WAL_CKPT, SQL_WAL_SYNC, SQL_WAL_LAZY, SQL_ROLLBACK = 1, 2, 3, 4
 SQL_FRESH_WAL = 0x10          # 앱이 DB 를 닫았다 다시 열어 WAL 이 새로 생긴 transaction (uxwl 이 닫고 다시 열고 폴더 fsync)
@@ -202,6 +202,55 @@ def dbmodel(con, pq, a):
 
 
 
+def touch_extra(con, pq, a, sel, drop):
+    """원본 Checkpoint 에 node 가 나왔는데 그 사이 TC 가 아무것도 쓰지 않는 파일 → Checkpoint 직전에 TOUCH (시각만 바꿔 inode 를 dirty 로).
+    원본은 Read 만 보이는 파일의 node 도 Checkpoint 에 실렸다 (무거운 앱 cold start 의 영상 cache 파일들). 앱이 파일 시각을 바꾸거나
+    (SimpleCache 의 touch) 이름을 바꾼 것으로 보지만 UFS trace 에는 그런 메타데이터 동작이 안 남는다. 이름이 없는 inode 는 TC 파일이 없어 넣지 못한다"""
+    cpq = os.path.join(os.path.dirname(pq), "result_fsio_cpnode.parquet")
+    if not os.path.exists(cpq):
+        return [], {}
+    t0 = con.execute(f"select min(time) from read_parquet('{pq}')").fetchone()[0]
+    of = {int(i): f for f, i in enumerate(a["file_ino"]) if int(i) > 10}
+    rows = con.execute(f"""select cp_ver, min(time) - {t0}, list(distinct ino) from read_parquet('{cpq}')
+        where ino > 10 group by 1 order by 2""").fetchall()
+    if not rows:
+        return [], {}
+    # 파일마다 TC 가 실제로 내는 Write 계열 동작 시각 (Read 는 inode 를 dirty 로 만들지 않는다)
+    w = sel & (a["op"] != 0)
+    by_f = collections.defaultdict(list)
+    for t, f in zip(a["t"][w], a["f"][w]):
+        by_f[int(f)].append(float(t))
+    gone = {}
+    for t, f in zip(a["t"][sel & np.isin(a["op"], [UL, RN])], a["f"][sel & np.isin(a["op"], [UL, RN])]):
+        gone.setdefault(int(f), float(t))
+    last_end = float(a["t"][-1]) if len(a["t"]) else 0.0
+    out, st, prev = [], collections.Counter(), -1e9
+    for _, tc, inos in rows:
+        if tc < 0 or tc > last_end + 1:
+            prev = tc
+            continue
+        for ino in inos:
+            f = of.get(int(ino))
+            if f is None:
+                st["touchNoFile"] += 1
+                continue
+            if f in drop:
+                continue
+            ts = by_f.get(f, [])
+            if any(prev < x <= tc for x in ts):
+                continue
+            if f in gone and gone[f] <= tc:     # 이미 지웠거나 이름을 바꾼 파일
+                continue
+            # 파일이 그 시각에 있어야 한다: 처음부터 있던 파일이거나 TC 가 그 전에 만든 파일
+            if not (a["file_existing"][f] & 1) and not any(x <= tc for x in ts):
+                st["touchNotYet"] += 1
+                continue
+            out.append((int(max(0.0, tc - 0.003) * 1e6), TOUCH, f, 0, 0))
+            st["touch"] += 1
+        prev = tc
+    return out, st
+
+
 def sync_scenarios():
     """측정 구간 안에서 "sync; echo 3 > drop_caches" 단계를 부르는 시나리오 (cold start 계열)"""
     out = set()
@@ -302,12 +351,14 @@ def main():
     ap.add_argument("--no-sync", action="store_true", help="시나리오 단계의 sync(cold start 전 drop_caches)를 넣지 않는다")
     ap.add_argument("--no-merge-wd", action="store_true", help="같은 파일의 이어진 direct Write 조각을 합치지 않는다 (11-05 까지의 방식)")
     ap.add_argument("--flat", action="store_true", help="원본 폴더 구조를 쓰지 않고 모든 파일을 f/ 하나에 둔다 (v5 후보 2 까지의 방식)")
+    ap.add_argument("--no-touch", action="store_true", help="원본 Checkpoint node 의 주인인데 TC 가 쓰지 않는 파일에 TOUCH 를 넣지 않는다 (v5 후보 8 전)")
     ap.add_argument("--keep-cp", action="store_true", help="f2fs Checkpoint 를 원본 시각에 일으키는 CP op 를 남김. 기본은 뺀다: Checkpoint 는 FS 몫이라 앱 동작의 결과로만 나와야 한다")
     args = ap.parse_args()
     import duckdb
     dcon = duckdb.connect()
     con = None if args.no_sqlite else dcon
     total = collections.Counter()
+    touch_by = collections.Counter()
     groups = json.loads((HERE / "groups.json").read_text())["groups"]
     idx = json.loads((SEG / "index.json").read_text())
     reps = {}
@@ -364,7 +415,12 @@ def main():
                 total["newDirFiles"] += len(nd_files)
             sy_extra = [(int(t * 1e6), SYNC, 0, 0, 0) for t in scenario_syncs(dcon, pq)] if sid in SYNC_SIDS and not args.no_sync else []
             total["scenarioSync"] += len(sy_extra)
-            extra = ds_extra + nd_extra + sy_extra + [(int(t * 1e6), SQL, len(a["file_size"]) + k, p | (u << 32), act) for k, d in enumerate(dbs) for t, p, u, act in d[3]]
+            tc_extra = []
+            if not args.no_touch:
+                tc_extra, st = touch_extra(dcon, pq, a, sel, drop)
+                total.update(st)
+                touch_by[sid] += st.get("touch", 0)
+            extra = ds_extra + nd_extra + sy_extra + tc_extra + [(int(t * 1e6), SQL, len(a["file_size"]) + k, p | (u << 32), act) for k, d in enumerate(dbs) for t, p, u, act in d[3]]
             r = np.zeros(int(sel.sum()) + len(extra), REQ)
             n0 = int(sel.sum())
             r["t"][:n0] = (a["t"][sel] * 1e6).astype(np.uint64)
@@ -429,6 +485,7 @@ def main():
         for b in blobs:
             fo.write(b)
     if con is not None:
+        print("TOUCH 회차 합:", dict(touch_by.most_common(15)))
         print("SQLite 로 바꾼 것:", dict(total), f"DB Write {total['writeBytes'] / 1e6:.0f}MB")
     print(f"wrote {OUT / 'funcs.bin'}: 함수 {len(meta['funcs'])}개, 회차 {len(blobs)}개, 유형 {len(groups)}개, {(base + pos) / 1e6:.1f}MB")
 

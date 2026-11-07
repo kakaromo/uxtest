@@ -18,6 +18,7 @@
 //	13 DS(fsync 뒤 디렉터리 fsync: SQLite 새 journal·AtomicFile 이 하는 것. 동작은 CP 와 같고 원인이 있는 쪽)
 //	14 SCREEN(file=1 켜기: 깨우고 잠금 해제, 켜 있는 동안 10초마다 깨우기 / 0 끄기)
 //	17 RENAME(파일을 <이름>.r 로 rename. 지우지 않고 남긴다)
+//	18 TOUCH(파일 시각을 지금으로. 없는 파일이면 건너뛴다)
 //	15 SQL(실제 SQLite transaction. file=DB, off=page 수 | 서로 다른 page 수<<32, len=sqlite.go 의 동작)
 package main
 
@@ -62,6 +63,7 @@ const (
 	opSQL
 	opSync   // 시나리오 단계의 sync (예: cold start 전 "sync; drop_caches"). 앱 동작이 아니라 측정 절차지만 원본 trace 에 들어 있다
 	opRename // 다 쓴 임시 파일(.tmp)을 다른 이름으로 rename. 원본 앱은 .tmp 를 쓰고 이름을 바꿔 남겼다 (11-05 CPNODE: .tmp inode 의 node 가 Checkpoint 에 나옴)
+	opTouch  // 파일 시각만 지금으로 바꿔 inode 를 dirty 로. 원본 Checkpoint 에 node 가 나왔는데 TC 가 그 사이 쓰지 않는 파일 (11-06)
 	nOps
 )
 
@@ -71,7 +73,7 @@ const (
 	f2fsCommitAtomic = 0xf502
 )
 
-var opName = [nOps]string{"R", "W", "WB", "WD", "FS", "", "UNLINK", "TRUNC", "MARK", "FA", "WX", "CP", "TRIM", "DS", "SCREEN", "SQL", "SYNC", "RENAME"}
+var opName = [nOps]string{"R", "W", "WB", "WD", "FS", "", "UNLINK", "TRUNC", "MARK", "FA", "WX", "CP", "TRIM", "DS", "SCREEN", "SQL", "SYNC", "RENAME", "TOUCH"}
 
 type req struct {
 	t    uint64
@@ -160,7 +162,7 @@ var (
 )
 
 func isExcl(op uint8) bool {
-	return op == opFS || op == opUnlink || op == opRename || op == opTrunc || op == opFA || op == opWX || op == opWD
+	return op == opFS || op == opUnlink || op == opRename || op == opTouch || op == opTrunc || op == opFA || op == opWX || op == opWD
 }
 
 // 새 폴더 안 파일 (flags 16): 원본 앱은 폴더를 새로 만들고 그 안에 파일을 써서 fsync 했다. 아직 Checkpoint 되지 않은
@@ -551,6 +553,12 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 			}
 			err = unix.Rename(fpath(root, r.file), fpath(root, r.file)+renameSuffix)
 			f.gone = true
+		case opTouch:
+			if !f.gone {
+				if err = unix.UtimesNano(fpath(root, r.file), nil); err == unix.ENOENT {
+					err = nil
+				}
+			}
 		}
 		record(r, sg, time.Since(st).Nanoseconds(), err)
 	}

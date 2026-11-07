@@ -245,15 +245,20 @@ st = [
 scenario("B3", "B", 1, "YouTube 홈피드 40회", "홈피드를 1.5초 간격으로 40번 스크롤. 썸네일·미리보기 캐시 write 가 이어진다.", st, [YT])
 
 # C1 / C2 / C3 --------------------------------------------------------
+# 재생할 영상: 검색 결과에서 고르지 않고 링크로 바로 연다. 2026-11 YouTube 업데이트 뒤 검색 결과 카드가 UI dump 에
+# 설명(content-desc) 없이 나와 select_video 가 영상을 못 찾았다. 예전 측정이 주로 고른 영상과 같은 것이고,
+# 검색 기록도 남지 않는다. 측정(trace_start)은 영상을 연 뒤에 시작하므로 trace 에는 차이가 없다
+YT_VIDEO = "0_0HJbNzGb8"  # Arctic Audio, James Webb Space Telescope - Real 4K Footage (7시간)
+YT_OPEN = [launch(YT, "YouTube 실행", wait=6),
+           sh(f'am start -a android.intent.action.VIEW -d "https://www.youtube.com/watch?v={YT_VIDEO}" -p {YT} >/dev/null', "영상 열기 (링크)"),
+           sleep(6, "영상 로딩")]
 st = [
-    launch(YT, "YouTube 실행", wait=6), tap_el("검색 열기", element_content_desc="검색"),
-    text("nasa 4k", "검색어 입력"), sleep(4, "결과 로딩"),
-    yt("일반 영상 선택", action="select_video"), yt("재생 준비 확인", action="watch", seconds=0),
+    *YT_OPEN, yt("재생 준비 확인", action="watch", seconds=0),
     trace_start(), yt("본영상 재생 3분", action="watch", seconds=180, ad_timeout=180),
     trace_stop(), FOCUS, stop(YT),
 ]
 scenario("C1", "C", 1, "YouTube 영상 3분",
-         "검색 결과의 일반 영상을 3분 재생. Premium 계정이라 광고가 없다. 재생 화질은 자동.", st, [YT])
+         "정해 둔 4K 영상(JWST, 7시간)을 링크로 열어 3분 재생. Premium 계정이라 광고가 없다. 재생 화질은 자동.", st, [YT])
 
 st = [
     launch(YT, "YouTube 실행", wait=6), tap_el("Shorts 탭", element_content_desc="Shorts"), sleep(4, "첫 Shorts 로딩"),
@@ -541,9 +546,7 @@ scenario("B9", "B", 2, "Play 스토어 둘러보기",
 # C4a / C4b -----------------------------------------------------------
 for sid, q in (("C4a", "360p"), ("C4b", "1080p")):
     st = [
-        launch(YT, "YouTube 실행", wait=6), tap_el("검색 열기", element_content_desc="검색"),
-        text("nasa 4k", "검색어 입력"), sleep(4, "결과 로딩"),
-        yt("일반 영상 선택", action="select_video"), yt("재생 준비 확인", action="watch", seconds=0),
+        *YT_OPEN, yt("재생 준비 확인", action="watch", seconds=0),
         yt(f"화질 {q} 고정", action="quality", quality=q),
         trace_start(), yt(f"{q} 재생 3분", action="watch", seconds=180, ad_timeout=180),
         trace_stop(), FOCUS, stop(YT),
@@ -554,17 +557,16 @@ for sid, q in (("C4a", "360p"), ("C4b", "1080p")):
 # C5 ------------------------------------------------------------------
 YT_PLAYER = (1000, 420)  # 세로 화면 인라인 플레이어 오른쪽 (왼쪽은 272)
 st = [
-    launch(YT, "YouTube 실행", wait=6), tap_el("검색 열기", element_content_desc="검색"),
-    text("nasa 4k", "검색어 입력"), sleep(4, "결과 로딩"),
-    yt("일반 영상 선택", action="select_video"), yt("재생 준비 확인", action="watch", seconds=0), sleep(20, "앞부분 버퍼링"),
+    *YT_OPEN, yt("재생 준비 확인", action="watch", seconds=0), sleep(20, "앞부분 버퍼링"),
     trace_start(),
-    dtap(*YT_PLAYER, "앞으로 40초", n=5), sleep(6, "재생"),          # 8 ┐ ×5
-    dtap(272, YT_PLAYER[1], "뒤로 20초", n=3), sleep(6, "재생"),     # 11┘
+    dtap(*YT_PLAYER, "앞으로 40초", n=5), sleep(6, "재생"),          # ┐ ×5
+    dtap(272, YT_PLAYER[1], "뒤로 20초", n=3), sleep(6, "재생"),     # ┘
     SETTLE, trace_stop(), FOCUS, stop(YT),
 ]
+_s = next(i for i, x in enumerate(st) if x["params"].get("label") == "앞으로 40초")  # step 수가 바뀌어도 loop 가 맞게
 scenario("C5", "C", 2, "YouTube 구간 이동 ×10",
          "재생 중 플레이어 오른쪽 연속 탭(+40초)과 왼쪽(-20초)을 번갈아 10번. 버퍼 밖으로 건너뛸 때 다시 받는 캐시 write 를 본다.",
-         st, [YT], loops=[loop_over(st, 8, 11, 5)], verify=["플레이어 좌표·연속 탭 이동량", "영상 길이 4분 이상"])
+         st, [YT], loops=[loop_over(st, _s, _s + 3, 5)], verify=["플레이어 좌표·연속 탭 이동량", "영상 길이 4분 이상"])
 
 # C6 ------------------------------------------------------------------
 st = [stop(YTM),

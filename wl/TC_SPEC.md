@@ -407,6 +407,7 @@ uxwl trim  --root /data/local/tmp/uxwl          # FITRIM (v1 실행 흐름에서
 | CP, DS | `<root>/f` 디렉터리를 열어 fsync → f2fs 가 Checkpoint 를 냄 |
 | UNLINK | 그 파일 fd 를 닫고 unlink |
 | RENAME (17) | 그 파일 fd 를 닫고 `<이름>.r` 로 rename (지우지 않음, 14.3 v5 후보 6). prep 이 남은 `.r` 을 지워요 |
+| TOUCH (18) | 파일 시각을 지금으로 바꿔요(`utimensat`, 내용은 안 바뀜). 없는 파일이면 건너뛰어요 (14.3 v5 후보 8) |
 | TRUNC | ftruncate(off) |
 | SCREEN | 켤 때 `input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard`, 켜 있는 동안 10초마다 `input keyevent 0` / 끌 때 `KEYCODE_SLEEP`. 시스템 설정은 바꾸지 않아요. 켜진 화면에 WAKEUP 을 보내면 안 돼요(10절) |
 
@@ -767,7 +768,27 @@ v4 는 원본 시각에 Checkpoint op 을 냈어요. v5 후보는 빼고 f2fs �
 - fsync/s 는 여전히 원본보다 높아요(버스트샷 10.1 vs 3.5). "무거운 앱 cold start" FS Write 는 이 수정으로 바뀌지 않았어요.
 - 결과 보관: `func-matrix-pre-freshwal.json`, `func-matrix-freshwal3-1.json`, `func-matrix-freshwal3-2.json`.
 
+**Write 없이 metadata 만 바뀐 파일 (v5 후보 8, 2026-11-06).** 원본 Checkpoint node page 주인(`result_fsio_cpnode.parquet`)을 보면, 그 Checkpoint 앞 구간에 UFS Write 가 하나도 없는 파일의 inode 도 많이 나와요. "무거운 앱 cold start" 에서는 Facebook 의 `.exo` cache 파일 103개처럼 trace 에 Read 만 보이는 파일이에요. 시각·크기 같은 metadata 만 바뀐 것으로 보는데, 그런 동작은 UFS trace 에 안 남아서 TC 가 재생하지 않았어요.
+- `gen_funcs.py`: 원본 Checkpoint 마다 node 가 나온 inode 중 TC 파일이 있고, 앞 Checkpoint 뒤로 TC 가 Write 하지 않았고, 아직 지우지 않은 파일에 Checkpoint 3 ms 앞 `TOUCH`(op 18)를 넣어요. 61개 함수에 3,569번이고, 가장 많은 함수는 "무거운 앱 cold start"(회차 합 1,584)예요. `--no-touch` 로 꺼요.
+- `uxwl`: `utimensat(path, NULL)` 로 시각만 바꿔요. 그 파일 inode 가 dirty 가 되어 다음 Checkpoint 에 node 로 나가요.
+- "무거운 앱 cold start" Checkpoint node 가 1,585 → 2,296 page(원본 2,433), FS Write 가 12.3 → 17.4MB(원본 29.8MB)예요. Checkpoint/s 는 1.71 → 2.04(원본 2.16)예요.
+- 바뀐 11개 함수 통과 합은 같았어요(단독 전체 752 → 751/919). 남은 FS Write 차이는 대부분 이 시나리오의 `sync; drop_caches` Checkpoint 세 번이에요(원본 한 번에 약 7.5MB, TC 약 4.5MB).
+
+**원본 fsync flag 가 fdatasync 를 놓쳤어요 (2026-11-07).** TC 의 fsync/s 가 원본보다 많은 함수가 13개였어요(TikTok 추천 영상 20개 5.3배). "사진 10장" 을 f2fs ftrace(`f2fs_sync_file_enter/exit`, `block_rq_issue`)와 같이 재서 맞춰 보니, 앱이 부른 fsync 안에서 나간 SQLite DB Write 1,808개 중 fsync flag 가 붙은 것이 0개였어요. 거의 다 `fdatasync`(datasync=1) 였고, fsiotrace 는 `vfs_fsync_range` kprobe 로 fsync 를 잡는데 이 커널의 fdatasync 경로에서는 그 kprobe 가 불리지 않았어요. `fsync`(datasync=0)는 247/249 개가 잡혔어요.
+- fsiotrace 를 `f2fs_sync_file_enter/exit`(ext4 는 `ext4_sync_file_enter/exit`) tracepoint 로도 잡게 고쳤어요(`../bpftrace`).
+- 같은 방법으로 다시 확인하니 앱 fsync 안 Write 는 987/1,069(92%), DB Write 는 767/803 에 flag 가 붙었어요. fsync 밖 Write 7,109개 중 flag 가 붙은 것은 0개예요. 회차당 fsync flag request 가 약 100 → 300~390 개예요.
+- 그래서 그 전에 잰 원본은 fsync/s 가 적게 잡혀 있어요. TC 는 `uxwl` 이 주로 fsync 를 불러서 대부분 잡혔어요. TC 의 fsync/s 가 넘치던 것은 상당 부분 측정 쪽 문제였어요. 위 14.4 의 `ttm_strategy.db`, `gphotos0.db` 도 같은 원인으로 봐요.
+- 원본을 다시 재면 시나리오마다 판정 항목 수(분모)도 바뀌어요. 값이 0 에 가까워 판정하지 않던 항목이 판정되기도 하고 반대도 있어요. 그래서 아래 단독 전체는 분모가 조금씩 달라요.
+- 다시 재기 전 출발점은 756/922 예요. TOUCH 뒤 751/919 에서, 예전 fsiotrace 로 다시 잰 대기 4개와 YouTube 재생(링크로 열기)을 돌린 값이에요(`.private/results/func-matrix-standby-new.json`).
+- 1단계: fsync/s 가 실패하던 13개 시나리오와 YouTube 3개(360p 3분, 1080p 3분, 구간 이동 ×10)를 새 fsiotrace 로 다시 재고 TC 를 다시 돌렸어요. 16개 함수 통과 합이 192/242 → 207/249, 단독 전체는 771/929 예요(`.private/results/func-matrix-fsynctp.json`). 이 단계의 fsync/s 실패는 2개였어요(중간 결과).
+- 2단계: 나머지 45개(대기 4개, YouTube 재생 포함)도 새 fsiotrace 로 다시 재서, 61개 원본이 모두 새 빌드로 잰 trace 예요(2026-11-07). 40개를 먼저 돌린 뒤 762/931, 마지막 5개까지 돌린 최종 단독 전체는 769/933 이에요(`.private/results/func-matrix-fsynctp-all.json`). 2단계에서 통과가 조금 줄어든 것은 주로 아래 Wakeups·QD p99 흔들림이에요.
+- 최종 fsync/s 실패는 13 → 5개예요. "최근 앱 화면 전환 ×6"(원본 5.76, TC 7.33), "TikTok 추천 영상 20개"(11.6, 14.6), "메모 작성·저장"(1.18, 1.79), "파일 관리자로 256MB 복사"(1.79, 2.31)는 TC 가 많고, "작은 파일 1000개 생성·삭제"(1.21, 0.59)는 TC 가 적어요.
+- 새로 잰 원본끼리 흔들려서 다른 항목도 움직였어요. Wakeups 실패가 5 → 16, QD p99 가 16 → 18 개로 늘었고, FS Write 비율 25 → 20, Flush/s 21 → 18 개로 줄었어요. QD p99 는 같은 시나리오 원본이 9 ↔ 62 로 오가기도 해요(7.6).
+- "1GB 파일 삭제" 는 새 원본 Wakeups 가 0 으로 나왔어요. trace 에 Hibern8 기록은 있어서 비교 구간 쪽 문제로 보고 아직 확인하지 않았어요.
+
 ### 14.4 함수 하나씩 결과 (2026-11-05, Run 한 번)
+
+아래는 11-05 기록이에요. 최신 값은 14.3 끝(2026-11-07, 61개 원본을 모두 새 fsiotrace 로 다시 잰 뒤 769/933)이에요.
 
 61개 함수, 판정 항목 920개 중 744개 통과(81%). 11-03 은 927개 중 717개(77%)였어요. 그 뒤 새 폴더 flag, 원본 폴더 구조, 시나리오 sync(14.3)를 넣고 모두 다시 돌렸어요. 결과는 `.private/results/func-matrix.json`, sync 전은 `func-matrix-dirs.json` 이에요. 같은 build 로 다시 잰 10개는 함수마다 1~3개씩 흔들렸어요.
 
@@ -789,7 +810,7 @@ v4 는 원본 시각에 Checkpoint op 을 냈어요. v5 후보는 빼고 f2fs �
 
 - 가장 많이 틀린 항목(틀린 함수 수): FS Write 31, FS Write 비율 22, Flush/s 20, QD p99 19, Sequential Write 18, fsync/s 13. 14.3 과 같은 방향이에요.
 - 채움 테이블 비중은 DB WAL frame 의 28% 예요. 함수마다 달라서 Instagram·갤러리는 절반 가까이예요. 행 동작만으로 원본 양을 다 못 내는 DB 가 많다는 뜻이에요.
-- 원본의 일부 DB Write(`ttm_strategy.db`, `gphotos0.db`)에는 fsync flag 가 없어요. 어떤 호출인지 확인하지 않았어요. TC 는 SQLite 가 fsync 를 불러서 fsync/s 가 원본보다 많게 나와요.
+- 원본의 일부 DB Write(`ttm_strategy.db`, `gphotos0.db`)에는 fsync flag 가 없어요. TC 는 SQLite 가 fsync 를 불러서 fsync/s 가 원본보다 많게 나와요. 원인은 fsiotrace 가 fdatasync 를 놓친 것이었어요(14.3, 2026-11-07).
 
 ### 14.5 가중치 TC 결과 (2시간, Run 한 번씩)
 

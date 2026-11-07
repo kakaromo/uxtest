@@ -1022,16 +1022,9 @@
     "schemaVersion": 1,
     "kind": "scenario",
     "name": "[UX-fsio] C1 YouTube 영상 3분",
-    "description": "[C1 · P1] 검색 결과의 일반 영상을 3분 재생. Premium 계정이라 광고가 없다. 재생 화질은 자동.",
+    "description": "[C1 · P1] 정해 둔 4K 영상(JWST, 7시간)을 링크로 열어 3분 재생. Premium 계정이라 광고가 없다. 재생 화질은 자동.",
     "repeatCount": 3,
     "steps": [
-      {
-        "type": "shell",
-        "params": {
-          "cmd": "settings put secure selected_input_method_subtype -1097284911; ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME >/dev/null; settings get secure selected_input_method_subtype",
-          "label": "키보드 영문(Alphabet)으로"
-        }
-      },
       {
         "type": "launch_app",
         "params": {
@@ -1042,32 +1035,17 @@
         }
       },
       {
-        "type": "tap_element",
+        "type": "shell",
         "params": {
-          "element_content_desc": "검색",
-          "label": "검색 열기"
-        }
-      },
-      {
-        "type": "text",
-        "params": {
-          "input_text": "nasa 4k",
-          "submit": "true",
-          "label": "검색어 입력"
+          "cmd": "am start -a android.intent.action.VIEW -d \"https://www.youtube.com/watch?v=0_0HJbNzGb8\" -p com.google.android.youtube >/dev/null",
+          "label": "영상 열기 (링크)"
         }
       },
       {
         "type": "sleep",
         "params": {
-          "seconds": "4",
-          "label": "결과 로딩"
-        }
-      },
-      {
-        "type": "youtube",
-        "params": {
-          "action": "select_video",
-          "label": "일반 영상 선택"
+          "seconds": "6",
+          "label": "영상 로딩"
         }
       },
       {
@@ -4125,13 +4103,6 @@
     "repeatCount": 3,
     "steps": [
       {
-        "type": "shell",
-        "params": {
-          "cmd": "settings put secure selected_input_method_subtype -1097284911; ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME >/dev/null; settings get secure selected_input_method_subtype",
-          "label": "키보드 영문(Alphabet)으로"
-        }
-      },
-      {
         "type": "launch_app",
         "params": {
           "package_name": "com.google.android.youtube",
@@ -4141,32 +4112,17 @@
         }
       },
       {
-        "type": "tap_element",
+        "type": "shell",
         "params": {
-          "element_content_desc": "검색",
-          "label": "검색 열기"
-        }
-      },
-      {
-        "type": "text",
-        "params": {
-          "input_text": "nasa 4k",
-          "submit": "true",
-          "label": "검색어 입력"
+          "cmd": "am start -a android.intent.action.VIEW -d \"https://www.youtube.com/watch?v=0_0HJbNzGb8\" -p com.google.android.youtube >/dev/null",
+          "label": "영상 열기 (링크)"
         }
       },
       {
         "type": "sleep",
         "params": {
-          "seconds": "4",
-          "label": "결과 로딩"
-        }
-      },
-      {
-        "type": "youtube",
-        "params": {
-          "action": "select_video",
-          "label": "일반 영상 선택"
+          "seconds": "6",
+          "label": "영상 로딩"
         }
       },
       {
@@ -4247,13 +4203,6 @@
     "repeatCount": 3,
     "steps": [
       {
-        "type": "shell",
-        "params": {
-          "cmd": "settings put secure selected_input_method_subtype -1097284911; ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME >/dev/null; settings get secure selected_input_method_subtype",
-          "label": "키보드 영문(Alphabet)으로"
-        }
-      },
-      {
         "type": "launch_app",
         "params": {
           "package_name": "com.google.android.youtube",
@@ -4263,32 +4212,17 @@
         }
       },
       {
-        "type": "tap_element",
+        "type": "shell",
         "params": {
-          "element_content_desc": "검색",
-          "label": "검색 열기"
-        }
-      },
-      {
-        "type": "text",
-        "params": {
-          "input_text": "nasa 4k",
-          "submit": "true",
-          "label": "검색어 입력"
+          "cmd": "am start -a android.intent.action.VIEW -d \"https://www.youtube.com/watch?v=0_0HJbNzGb8\" -p com.google.android.youtube >/dev/null",
+          "label": "영상 열기 (링크)"
         }
       },
       {
         "type": "sleep",
         "params": {
-          "seconds": "4",
-          "label": "결과 로딩"
-        }
-      },
-      {
-        "type": "youtube",
-        "params": {
-          "action": "select_video",
-          "label": "일반 영상 선택"
+          "seconds": "6",
+          "label": "영상 로딩"
         }
       },
       {
@@ -4369,13 +4303,6 @@
     "repeatCount": 3,
     "steps": [
       {
-        "type": "shell",
-        "params": {
-          "cmd": "settings put secure selected_input_method_subtype -1097284911; ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME >/dev/null; settings get secure selected_input_method_subtype",
-          "label": "키보드 영문(Alphabet)으로"
-        }
-      },
-      {
         "type": "launch_app",
         "params": {
           "package_name": "com.google.android.youtube",
@@ -4385,32 +4312,17 @@
         }
       },
       {
-        "type": "tap_element",
+        "type": "shell",
         "params": {
-          "element_content_desc": "검색",
-          "label": "검색 열기"
-        }
-      },
-      {
-        "type": "text",
-        "params": {
-          "input_text": "nasa 4k",
-          "submit": "true",
-          "label": "검색어 입력"
+          "cmd": "am start -a android.intent.action.VIEW -d \"https://www.youtube.com/watch?v=0_0HJbNzGb8\" -p com.google.android.youtube >/dev/null",
+          "label": "영상 열기 (링크)"
         }
       },
       {
         "type": "sleep",
         "params": {
-          "seconds": "4",
-          "label": "결과 로딩"
-        }
-      },
-      {
-        "type": "youtube",
-        "params": {
-          "action": "select_video",
-          "label": "일반 영상 선택"
+          "seconds": "6",
+          "label": "영상 로딩"
         }
       },
       {
@@ -4497,8 +4409,8 @@
     ],
     "loops": [
       {
-        "startStep": 9,
-        "endStep": 12,
+        "startStep": 6,
+        "endStep": 9,
         "count": 5
       }
     ],
