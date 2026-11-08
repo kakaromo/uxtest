@@ -21,7 +21,11 @@ RES = HERE / ".private" / "results"
 OUT = ROOT / "web" / ".private" / "data" / "tcfunc.json"
 # 싣는 가중치 TC (이름, 결과 폴더 접두어, 설명). 같은 이름의 가장 최근 결과를 쓴다
 MIXES = [("m1", "m1-", "고치기 전"), ("m1w", "m1w-", "DB warm-up"), ("m2", "m2-", "고치기 전"), ("m2w", "m2w-", "DB warm-up"),
-         ("m2d", "m2d-", "원본 폴더 구조·시나리오 sync"), ("m2e", "m2e-", "direct Write 하나씩")]
+         ("m2d", "m2d-", "원본 폴더 구조·시나리오 sync"), ("m2e", "m2e-", "direct Write 하나씩"),
+         ("m1f", "m1f-", "새 원본 (fdatasync flag)"), ("m2f", "m2f-", "새 원본 (fdatasync flag)"), ("m2g", "m2g-", "구간별 lag 기록"),
+         ("m1h", "m1h-", "동시 direct Write 재현"), ("m2h", "m2h-", "동시 direct Write 재현"), ("m2i", "m2i-", "구멍 Read·Read 재시도 고침")]
+# 단독 vs 가중치 항목별 실패율에 쓰는 가중치 TC (가장 최근 두 벌). 함수 단독(func-matrix.json)과 같은 원본으로 잰 것이어야 한다
+CMP = ("m1h", "m2i")
 
 
 GROUP_KO = {"browser": "브라우저", "sns": "SNS", "video": "동영상", "music": "음악", "maps": "지도", "camera": "카메라",
@@ -110,6 +114,7 @@ def export():
             MIX.append((name, ds[-1], label))
     mixes = []
     fail_mix = collections.Counter()
+    fail_dir = collections.defaultdict(lambda: [0, 0])  # CMP 가중치 TC 의 틀린 구간: [TC 가 원본보다 적음, 많음]
     nmix = 0
     for name, path, label in MIX:
         p = RES / Path(path).name
@@ -128,7 +133,9 @@ def export():
             for k, v in it["checks"].items():
                 if v.get("ok") is False:
                     fc[k] += 1
-        if name.endswith("w"):
+                    if name in CMP and isinstance(v.get("orig"), (int, float)) and isinstance(v.get("tc"), (int, float)):
+                        fail_dir[k][v["tc"] > v["orig"]] += 1
+        if name in CMP:
             fail_mix.update(fc)
             nmix += len(c["items"])
         comp = collections.defaultdict(lambda: collections.defaultdict(lambda: [0, 0.0]))
@@ -140,6 +147,7 @@ def export():
             "target": {k: round(v * 100, 1) for k, v in m["target"].items()}, "actual": {k: round(v * 100, 1) for k, v in m["actual"].items()},
             "ip": c["itemPass"], "io": c["itemOf"], "solo": round(solo_exp * 100, 1), "tp": c["totalPass"], "to": c["totalOf"],
             "late": c["lateOver5ms"], "req": res.get("requests"), "warms": res.get("sqlWarms"),
+            "errs": sum((res.get("errorKinds") or {}).values()),
             "cats": {k: [v["pass"], v["of"]] for k, v in c["categories"].items()},
             "total": [{"k": CHECK_KO.get(k, k), "o": fmt(v["orig"]), "t": fmt(v["tc"]), "ok": v.get("ok")} for k, v in c["total"].items()],
             "fail": {k: round(v / len(c["items"]) * 100) for k, v in fc.items()},
@@ -147,17 +155,18 @@ def export():
             "tl": tl,
         })
 
-    # 단독 vs 가중치(warm-up) 항목별 실패율: 같은 구간 목록 기준
+    # 단독 vs 가중치(CMP) 항목별 실패율: 같은 구간 목록 기준
     nsolo = 0
     fail_solo_mix = collections.Counter()
     for mx in mixes:
-        if not mx["name"].endswith("w"):
+        if mx["name"] not in CMP:
             continue
         for x in mx["tl"]:
             if x["n"]:
                 nsolo += 1
                 fail_solo_mix.update(cur[x["f"]]["fail"])
-    checkcmp = sorted(({"k": CHECK_KO.get(k, k), "solo": round(fail_solo_mix[k] / nsolo * 100), "mix": round(fail_mix[k] / nmix * 100)}
+    checkcmp = sorted(({"k": CHECK_KO.get(k, k), "solo": round(fail_solo_mix[k] / nsolo * 100), "mix": round(fail_mix[k] / nmix * 100),
+                        "lo": fail_dir[k][0], "hi": fail_dir[k][1]}
                        for k in set(fail_mix) | set(fail_solo_mix)), key=lambda r: (-r["mix"], -r["solo"], r["k"]))
 
     gsum = []
@@ -174,7 +183,7 @@ def export():
         pad_tot[1] += sf.get("pad", 0) + sf.get("real", 0)
 
     DATA = {"funcs": funcs, "groups": gsum, "mixes": mixes, "checkcmp": checkcmp, "groupKo": GROUP_KO, "groupColor": GROUP_COLOR,
-            "allp": allp, "alln": alln, "padPct": round(pad_tot[0] / pad_tot[1] * 100), "failSolo": fail_solo.most_common(8)}
+            "allp": allp, "alln": alln, "padPct": round(pad_tot[0] / pad_tot[1] * 100), "failSolo": fail_solo.most_common(8), "cmp": list(CMP)}
     DATA["failSolo"] = [[CHECK_KO.get(k, k), v] for k, v in DATA["failSolo"]]
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
