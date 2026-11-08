@@ -246,16 +246,57 @@ def main():
 ACCOUNT = re.compile(r"[A-Za-z0-9._+-]+(?:@|%40)(?:[A-Za-z0-9-]+\.)+(?:com|net|org|kr|io|co|me|edu)\b", re.I)
 
 
+# 파일 경로는 앱(패키지)·폴더 종류·확장자만 남긴다. 그 밖의 이름(본 이미지 URL, 촬영 시각, 계정별 캐시 폴더, 무작위 id)은
+# 개인 사용 기록이라 공개하지 않는다. 이름 안에 숫자가 있거나 길면 * 로 바꾼다
+PKG = re.compile(r"^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$")
+WORD = re.compile(r"^[A-Za-z_]{1,24}$")
+EXT = re.compile(r"(\.[A-Za-z]{1,5}(?:-(?:wal|shm|journal))?)$")
+
+
+def anon_path(path):
+    parts = [x for x in path.split("/") if x]
+    out = []
+    for x in parts[:-1]:
+        if x.startswith("~~"):                           # /data/app/~~<무작위>==/<패키지>-<무작위>==/
+            continue
+        x = re.sub(r"-[A-Za-z0-9_=-]{8,}$", "", x)
+        x = x if (PKG.match(x) and not re.search(r"\d{4,}", x)) or WORD.match(x) or x in ("0", "10") else "*"
+        if not (out and out[-1] == "*" and x == "*"):
+            out.append(x)
+    base = parts[-1] if parts else ""
+    stem = EXT.sub("", base)
+    ext = base[len(stem):]
+    if not WORD.match(stem.replace(".", "_").replace("-", "_")):
+        base = "*" + ext
+    return "/" + "/".join(out + [base])
+
+
+def _anon(o):
+    if isinstance(o, dict):
+        return {k: _anon(v) for k, v in o.items()}
+    if isinstance(o, list):
+        return [_anon(v) for v in o]
+    if isinstance(o, str):
+        o = ACCOUNT.sub("account", o)
+        return anon_path(o) if o.startswith("/") and "/" in o[1:] else o
+    return o
+
+
 def mask_accounts():
     n = 0
+    for p in OUT.glob("s-*.json"):                      # 파일 표가 있는 시나리오 데이터
+        t = p.read_text()
+        d = json.loads(t)
+        m = json.dumps(_anon(d), ensure_ascii=False, separators=(",", ":"))
+        if m != t:
+            p.write_text(m)
+            n += 1
     for p in OUT.glob("*.json"):
         t = p.read_text()
         m, k = ACCOUNT.subn("account", t)
         if k:
             p.write_text(m)
-            n += k
-    if n:
-        print(f"  계정 이메일 {n}곳 지움")
+    print(f"  파일 이름 일반화: 시나리오 {n}개")
 
 
 def tc_export():
