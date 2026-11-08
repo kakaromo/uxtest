@@ -275,8 +275,11 @@ def anon_base(base):
 
 
 def _anon(o):
-    if isinstance(o, dict):                              # "file": 경로 없이 이름만 담긴 칸 (request 점)
-        return {k: anon_base(ACCOUNT.sub("account", v)) if k == "file" and isinstance(v, str) and not v.startswith("/") else _anon(v)
+    if isinstance(o, dict):
+        # "file": 경로 없이 이름만 담긴 칸 (request 점). 파일 표 칸({name, kind, readMB/writeMB})의 name 도 파일 이름이다
+        ftab = "kind" in o and ("readMB" in o or "writeMB" in o)
+        return {k: anon_base(ACCOUNT.sub("account", v))
+                if isinstance(v, str) and not v.startswith("/") and (k == "file" or (ftab and k == "name")) else _anon(v)
                 for k, v in o.items()}
     if isinstance(o, list):
         return [_anon(v) for v in o]
