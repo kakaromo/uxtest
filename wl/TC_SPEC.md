@@ -238,12 +238,12 @@ SQLite 는 새 rollback journal 을 만들면 디렉터리를 fsync 하고, Atom
 f2fs 는 덮어써도 새 LBA 에 쓰므로 LBA 로 파일 offset 을 알 수 없어요. 그래서:
 1. inode 마다 R/W 계열이 건드린 LBA 구간 `[lba, lba+블록수)` 을 모아 정렬하고 겹치면 합쳐요.
 2. 합친 구간을 LBA 순서로 이어 붙여 파일 offset 을 줘요. 구간 안은 Sequential 이 유지돼요.
-3. **떨어져 있던 구간 사이에는 4KB 빈칸을 둬요.** 붙여 두면 같은 순간에 낸 Read 를 커널이 원본에 없던 큰 request 로 합쳐요.
+3. **떨어져 있던 구간 사이에는 4KB 빈칸을 둬요.** 붙여 두면 같은 순간에 낸 Read 를 커널이 원본에 없던 큰 request 로 합쳐요. 단, direct Write(WD)만 받는 파일은 빈칸 없이 붙여요(11-08). 파일 둘을 동시에 O_DIRECT 로 쓴 원본은 f2fs 가 블록을 번갈아 할당해 4KB request 가 한 칸씩 떨어져 있어요(전면 카메라 사진 5장, 회차마다 1~2만 개). 빈칸을 두면 uxwl 이 이어진 Write 로 못 합치고 4KB pwrite 수천 개를 하나씩 내다 1초 넘게 밀렸어요. 그런 파일은 같은 파일에서 offset 이 이어지고 0.2ms 안에 온 WD 를 앞 request 에 합쳐요(최대 1MB). Read 가 없으니 합쳐질 Read 도 없어요.
 4. 파일 크기 = 마지막 offset. inode 가 없는 request 는 파일 0(scratch) 이에요.
 5. **파일 번호는 원본에서 처음 쓰인 LBA 순서**로 매겨요. 준비 단계가 이 순서로 미리 채우므로 f2fs 가 원본처럼 붙여 배치하고, 서로 다른 파일을 이어 읽던 Sequential Read 가 살아나요.
 6. fsync·unlink 만 있는 파일은 크기 1블록으로 끝에 붙여요.
 
-**원래 있던 파일(prefill):** 처음 접근이 Read 이거나, 파일 0 이거나, 아래 덮어쓰기 파일이면 준비 단계에서 미리 채워요. Write 로 시작하면 새로 만드는 파일이에요.
+**원래 있던 파일(prefill):** 처음 접근이 Read 이거나, 파일 0 이거나, 아래 덮어쓰기 파일이거나, **아직 쓰지 않은 곳을 Read 하는 파일**이면 준비 단계에서 미리 채워요. 그 밖에 Write 로 시작하면 새로 만드는 파일이에요. 네 번째 조건은 11-08 에 넣었어요. 앱이 파일 일부를 고친 뒤 나머지를 읽으면 처음 접근이 Write 라 새 파일로 잡혔고, 그 Read 는 구멍을 읽어 UFS 에 닿지 않았어요. 구간 64개에서 2.3GB 였고, 갤러리 시나리오 2·3회차가 대부분이에요(회차마다 700MB 넘게). 함수 단독 결과(14.4)는 1회차만 돌려서 이 차이가 안 보였고, 가중치 TC 에서 Read 양이 원본의 81% 였던 원인이에요.
 
 ### 3.6 덮어쓰던 파일
 3.5 처럼 이어 붙이면 WAL·`.pma`·로그 파일처럼 **같은 자리를 계속 덮어쓰던 파일이 끝없이 늘어나는 append** 가 돼요. 그러면 Checkpoint 마다 블록 할당·quota 가 바뀌어 대기 구간 Checkpoint Write 가 원본의 2배가 됐어요.
@@ -397,7 +397,7 @@ uxwl trim  --root /data/local/tmp/uxwl          # FITRIM (v1 실행 흐름에서
 ### 5.3 op 구현
 | op | 구현 |
 |---|---|
-| R | O_DIRECT fd 로 pread (AIO 묶음은 5.5) |
+| R | O_DIRECT fd 로 pread (AIO 묶음은 5.5). atomic write 중(START 뒤 COMMIT 전)인 파일은 f2fs 가 `EOPNOTSUPP` 로 거절해서 buffered fd 로 다시 읽어요. 원본 앱도 그 DB 는 buffered 로 읽어요 |
 | W | buffered fd 로 pwrite → `sync_file_range(off, n, SYNC_FILE_RANGE_WRITE)` |
 | WB | buffered pwrite |
 | WD | O_DIRECT pwrite |
@@ -418,7 +418,7 @@ uxwl trim  --root /data/local/tmp/uxwl          # FITRIM (v1 실행 흐름에서
 
 0. **파일별 순서(v2):** goroutine 은 시작 순서가 정해져 있지 않아, 잠금만으로는 뒤 request 가 먼저 잠금을 잡을 수 있어요. 그래서 발행 전에 파일마다 순서를 정해요. 독점 op(FS·FA·WX·UNLINK·TRUNC·WD)는 앞 request 를 모두 기다리고, 공유 op 는 앞 독점 op 만 기다려요. CP·DS·TRIM 은 빼요. v1 은 이게 없어 `UNLINK: no such file` 이 8~25% 났어요.
 1. **파일 잠금:** 파일마다 RWMutex. FS·FA·WX·UNLINK·TRUNC·**WD** 는 그 파일을 독점하고, 나머지는 공유 잠금이에요. fsync·unlink 는 그 파일의 진행 중 request 가 끝난 뒤에 돼요.
-2. **WD 는 파일마다 하나씩, 전체 동시 3개(`--max-wd`):** 앱은 파일 하나를 스레드 하나가 순서대로 써요. 동시에 쓰면 f2fs 가 파일끼리 블록을 섞어 할당해 Write 가 4KB 로 쪼개졌어요.
+2. **WD 는 파일마다 하나씩, 전체 동시 1개(`--max-wd`, 11-05 까지 3):** 앱은 파일 하나를 스레드 하나가 순서대로 써요. 동시에 쓰면 f2fs 가 파일끼리 블록을 섞어 할당해 Write 가 4KB 로 쪼개졌어요. 예외는 파일 flag 32 예요. 원본에서도 다른 파일과 번갈아 쓰여 WD 가 대부분 4KB 로 나간 파일(전면 카메라 사진 5장, 11-07 이후 원본)은 `segments.py` 가 표시하고, uxwl 은 이 파일들을 서로 동시에 써서 f2fs 가 원본처럼 블록을 번갈아 할당하게 해요.
 3. **같은 파일·같은 op(R/W/WD)가 0.2ms 안에 이어지면 한 goroutine 이 순서대로** 내요. 따로 띄우면 장치에 닿는 순서가 섞여 readahead·카메라 저장 같은 Sequential request 가 Random 처럼 보이고 QD 가 부풀었어요. WD 는 앞 request 와 0.2ms 안이면 계속 이어요.
 4. **이어지는 WD 는 pwrite 하나로 합쳐요** (offset 이 붙어 있고 합이 16MB 이하). 원본 앱의 큰 pwrite 가 커널에서 512KB 씩 나뉜 것이라서, 조각마다 따로 쓰면 다른 파일 Write 와 블록이 섞여 할당돼요.
 5. **FS/FA 바로 뒤(1ms 안) DS 는 같은 goroutine 에서 fsync 가 끝난 뒤에** 내요 (SQLite 순서). 따로 띄우면 DS 의 Checkpoint 가 먼저 끝나 파일 node 까지 써 버리고, fsync 는 쓸 것이 없어 앱 스레드 node Write 가 사라졌어요.
@@ -439,7 +439,7 @@ uxwl trim  --root /data/local/tmp/uxwl          # FITRIM (v1 실행 흐름에서
 AIO context 는 depth 128 로 만들어 최대 512개를 재사용해요. 커널에 AIO 가 없으면 pread 로 내요.
 
 ### 5.6 result.json
-`startMonotonic`, `startBoottime`, `elapsedSec`, `scheduledSec`, `requests`, `lateOver5ms`, `lagMs{p50,p99,max}`, `qdMax`, op 별 `{n, MB, errors, latMs{p50,p99,p999}}`, timeline 구간별 같은 표(`segments`), `errorKinds`.
+`startMonotonic`, `startBoottime`, `elapsedSec`, `scheduledSec`, `requests`, `lateOver5ms`, `lagMs{p50,p99,max}`, `qdMax`, op 별 `{n, MB, errors, latMs{p50,p99,p999}}`, timeline 구간별 같은 표(`segments`), `errorKinds`. `segments` 의 구간마다 `_late`(5ms 넘게 늦게 낸 request 수, op 별)와 `_lagMaxMs`(가장 늦은 request)도 남겨요. 늦음이 어느 함수에서 나왔는지 찾을 때 봐요.
 Latency 는 1µs~100s 로그 칸(칸당 10^(1/20)) 히스토그램이에요.
 
 ---
@@ -788,7 +788,7 @@ v4 는 원본 시각에 Checkpoint op 을 냈어요. v5 후보는 빼고 f2fs �
 
 ### 14.4 함수 하나씩 결과 (2026-11-05, Run 한 번)
 
-아래는 11-05 기록이에요. 최신 값은 14.3 끝(2026-11-07, 61개 원본을 모두 새 fsiotrace 로 다시 잰 뒤 769/933)이에요.
+아래는 11-05 기록이에요. 최신 값은 14.3 끝(2026-11-07, 61개 원본을 모두 새 fsiotrace 로 다시 잰 뒤 769/933)과 14.5 의 11-08 수정 뒤 778/935 예요.
 
 61개 함수, 판정 항목 920개 중 744개 통과(81%). 11-03 은 927개 중 717개(77%)였어요. 그 뒤 새 폴더 flag, 원본 폴더 구조, 시나리오 sync(14.3)를 넣고 모두 다시 돌렸어요. 결과는 `.private/results/func-matrix.json`, sync 전은 `func-matrix-dirs.json` 이에요. 같은 build 로 다시 잰 10개는 함수마다 1~3개씩 흔들렸어요.
 
@@ -822,9 +822,17 @@ v4 는 원본 시각에 Checkpoint op 을 냈어요. v5 후보는 빼고 f2fs �
 | m2w (DB warm-up) | 같음, 같은 seed | 같음 | 77.6% | 83.3% | 12/16 |
 | m2d (원본 폴더 구조, 시나리오 sync) | 같음, 같은 seed | 같음 | 80.3% | 86.2% | 12/16 |
 | m2e (direct Write 하나씩) | 같음, 같은 seed | 같음 | 83.0% | 88.2% | 15/16 |
+| m1f (새 원본, fdatasync flag) | m1 과 같음, 같은 seed | 모두 목표 ±1%p | 86.2% | 안 셈 | 15/16 |
+| m1h (+ 동시 direct Write 고침) | 같음, 같은 seed | 같음 | 85.5% | 안 셈 | 16/16 |
+| m2f (새 원본, fdatasync flag) | m2 와 같음, 같은 seed | 같음 | 83.9% | 안 셈 | 14/16 |
+| m2g (m2f 다시, 구간별 lag 기록) | 같음, 같은 seed | 같음 | 86.2% | 안 셈 | 14/16 |
+| m2h (+ 동시 direct Write 고침) | 같음, 같은 seed | 같음 | 85.3% | 안 셈 | 15/16 |
+| m2i (+ 구멍 Read·Read 재시도 고침) | 같음, 같은 seed | 같음 | 86.1% | 안 셈 | 16/16 |
 
 - **m2d (11-05).** m2w 에 원본 폴더 구조와 cold start 시나리오의 `sync` 재생(14.3)을 더했어요. 구간별 통과가 77.6% → 80.3% 예요. 구간 실패율은 FS Write 54% → 46%, FS Write 비율 36% → 22%, Checkpoint/s 30% → 18%, Flush/s 30% → 22% 로 줄었어요. 앱 실행 유형은 14/16 → 16/16 이에요. 전체 판정에서 FS Write 는 통과(원본 767 MB, TC 614 MB)로 바뀌었고, 대신 Sequential Write 가 틀렸어요(원본 79.6%, TC 67.9%). 2시간 동안 "R: operation not supported" 가 40번 나왔어요.
 - **m2e (11-05).** m2d 에 direct Write 를 하나씩 내는 수정(14.3, `--max-wd 1`)을 더했어요. 구간별 통과가 80.3% → 83.0% 예요(905/1091). 구간 실패율은 Sequential Write 41% → 24%, Request size W 26% → 거의 0, QD p99 36% → 27% 로 줄었어요. 카메라 유형은 10/16 → 14/16 이에요. 전체 판정은 12/16 → 15/16 이고, Sequential Write(원본 79.6%, TC 84.1%), Request size W, QD p99 가 통과로 바뀌었어요. 남은 하나는 fsync/s(원본 1.66, TC 3.64)예요. 같은 함수 단독 값은 11-05 함수 단독 결과(749/918) 기준이에요. "R: operation not supported" 는 6번이에요.
 
+- **새 원본 (11-07~08).** 61개 원본을 fdatasync flag 를 고친 fsiotrace 로 다시 잰 뒤(14.3) 돌렸어요. m1w 79% → m1f 86%, 전체 13/16 → 15/16 이에요. fsync/s 는 두 TC 모두 전체 판정에서 통과로 바뀌었어요. 대신 늦은 request(>5ms)가 m2f 4311개(2.4%), m1f 7261개(4.3%)로 늘었고 가장 늦은 것은 1.4초였어요. 구간별 늦음(`_late`, 5.6)을 남겨 m2f 를 다시 돌린 m2g 에서 보니 거의 전부 "전면 카메라 사진 5장" 1회차였어요(4309개 중 4266개). 새 원본은 카메라가 파일 둘을 동시에 O_DIRECT 로 써서 WD 가 4KB 로 쪼개져 있었고(옛 원본은 512KB), 오프셋 빈칸 때문에 uxwl 이 합치지 못했어요(3.5). 빈칸을 없애고 그런 파일만 동시에 쓰게(5.4) 고친 뒤 그 함수 단독은 늦음 4262 → 0, 통과 10/14 → 14/16 이에요(11-08 에 원본을 다시 재서 판정 항목이 14개에서 16개로 늘었어요). m2h·m1h 의 늦은 request 는 78개·91개, 가장 늦은 것은 8ms 로 m2e 수준으로 돌아왔어요.
+- **Read 양 81% (m2f·m2h).** 전체 판정에서 남은 Read 부족(원본 4153MB, TC 3362MB)은 거의 "뷰어 빠른 넘기기 300장" 2·3회차였어요. 처음 접근이 Write 인 파일을 새 파일로 잡아 구멍을 읽었어요(3.5 원래 있던 파일). 고친 m2i 는 Read 4173MB(1.00), 갤러리 유형 11/16 → 14/16, 전체 16/16 이에요. "R: operation not supported"(atomic write 중 O_DIRECT Read, 5.3)도 0 이 됐어요. 함수 단독 전체 합은 769/933(11-07)에서 이 시나리오 재측정·수정 뒤 773/935, 바뀐 함수 13개를 다시 돌린 뒤 778/935 예요.
 - **DB page cache.** 가중치 TC 는 모든 DB 를 재생 전에 열고 채워요. 1~2시간 뒤에 도는 함수의 DB page 는 cache 에서 밀려나 있어서 함수 첫 5초에 DB 본체·WAL Read 가 원본보다 수 MB 많았어요(Instagram 피드 0.6 vs 12MB). 같은 구간이 두 번째 나올 때는 원본과 같았어요. 그래서 DB 를 60초 넘게 안 쓰다가 다시 쓰는 함수는 시작 10초 전(함수 사이 쉬는 구간)에 DB 파일을 한 번 읽어 둬요(`sqlWarms`). 구간 판정에서 Read Volume 실패가 39% → 거의 0, Request size Read 가 36% → 거의 0 이 됐어요. 함수 단독 실행은 시작이 60초 안이라 바뀌지 않아요.
 - **남은 차이.** Checkpoint/s 는 원본보다 적어요(14.3). QD p99 는 원본보다 높은 구간이 많아요. 앞 함수의 writeback 이 다음 함수 구간에 이어지는 것으로 보는데 확인하지 않았어요. 함수를 이어 돌리면 생기는 차이라 고치지 않았어요.

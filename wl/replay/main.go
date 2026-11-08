@@ -7,7 +7,7 @@
 // TC 형식 (little endian, gen_tc.py 가 만든다)
 //
 //	header  "UXWL0002" | nfiles u32 | 0 u32 | nreq u64       ("UXWL0001" 은 파일에 dir 이 없다)
-//	files   size u64 | flags u8 (1 = prefill, 2 = SQLite DB, 4 = rollback journal DB, 8 = 실제 구조 DB, 16 = 새 폴더 안 파일) | dir u32 (0 = f/ 바로 아래)
+//	files   size u64 | flags u8 (1 = prefill, 2 = SQLite DB, 4 = rollback journal DB, 8 = 실제 구조 DB, 16 = 새 폴더 안 파일, 32 = 다른 파일과 동시에 쓴 O_DIRECT 파일) | dir u32 (0 = f/ 바로 아래)
 //	reqs    t_us u64 | op u8 | file u32 | off u64 | len u32
 //
 // op: 0 R(O_DIRECT pread) 1 W(pwrite+sync_file_range) 2 WB(pwrite) 3 WD(O_DIRECT pwrite)
@@ -35,6 +35,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"sort"
 	"sync"
 	"sync/atomic"
@@ -178,6 +179,12 @@ var fileDirs []uint32
 func dirPath(root string, d uint32) string { return filepath.Join(root, "f", fmt.Sprintf("g%05d", d)) }
 
 func newDir(id uint32) bool { return int(id) < len(fileFlags) && fileFlags[id]&flagNewDir != 0 }
+
+// flags 32: 원본 앱이 다른 파일과 번갈아 O_DIRECT 로 쓴 파일 (전면 카메라 사진 5장, 11-07 이후). wdSem 을 거치지 않고
+// 동시에 내서 f2fs 가 원본처럼 block 을 번갈아 할당해 4KB request 가 나오게 한다
+const flagWDPar = 32
+
+func wdPar(id uint32) bool { return int(id) < len(fileFlags) && fileFlags[id]&flagWDPar != 0 }
 
 func fpath(root string, id uint32) string {
 	if newDir(id) {
@@ -346,7 +353,17 @@ type stat struct {
 }
 
 type segStat struct {
-	ops [nOps]stat
+	ops     [nOps]stat
+	late    [nOps]uint64 // 5ms 넘게 늦게 낸 요청 수 (늦은 요청의 op 별)
+	lateMax int64        // 가장 늦은 요청의 늦음 (ns)
+}
+
+// 늦음 기록: 전체와 함수(seg)별. 재생 goroutine 하나에서만 부른다
+func (g *segStat) noteLag(op uint8, lg int64) {
+	if lg > int64(5*time.Millisecond) {
+		g.late[op]++
+	}
+	g.lateMax = max(g.lateMax, lg)
 }
 
 // Linux AIO (io_submit). 원본 앱은 thread 여러 개·readahead 가 같은 순간에 Read 를 내고 커널이 block plug 로 묶어
@@ -456,6 +473,19 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 			errMu.Unlock()
 		}
 	}
+	// atomic write 중(START 뒤 COMMIT 전)인 파일은 f2fs 가 O_DIRECT Read 를 EOPNOTSUPP 로 거절한다 (홈↔YouTube 복귀 ×10 2회차,
+	// 10~60개). 원본 앱도 그 DB 는 buffered 로 읽으므로 buffered fd 로 다시 읽는다. 호출자가 f.mu 를 잡고 있어야 한다
+	rdRetry := func(r req, f *ofile, b []byte, err error) error {
+		if err != unix.EOPNOTSUPP {
+			return err
+		}
+		fd := s.fd(r.file, f, false)
+		if fd < 0 {
+			return err
+		}
+		_, err = unix.Pread(fd, b, int64(r.off))
+		return err
+	}
 	exec := func(r req, sg *segStat) {
 		f := s.get(r.file)
 		// WD 도 파일마다 하나씩: 앱은 파일 하나를 스레드 하나가 순서대로 쓴다. 동시에 쓰면 f2fs 가 파일끼리 블록을 섞어 할당해 Write 가 4KB 로 쪼개진다
@@ -479,6 +509,7 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 			if r.op == opR {
 				b := pool.Get().([]byte)
 				_, err = unix.Pread(fd, b[:n], int64(r.off))
+				err = rdRetry(r, f, b[:n], err)
 				pool.Put(b)
 			} else {
 				_, err = unix.Pwrite(fd, wbuf[:n], int64(r.off))
@@ -586,6 +617,7 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 				var err error = unix.ENOENT
 				if fd := s.fd(r.file, seen[r.file], true); fd >= 0 {
 					_, err = unix.Pread(fd, b[:min(r.ln, maxIO)], int64(r.off))
+					err = rdRetry(r, seen[r.file], b[:min(r.ln, maxIO)], err)
 				}
 				pool.Put(b)
 				record(r, sg, time.Since(st).Nanoseconds(), err)
@@ -632,6 +664,7 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 				r := grp[idx[k]]
 				t1 := time.Now()
 				_, err := unix.Pread(int(cbs[k].fd), bufs[k][:cbs[k].nbytes], int64(r.off))
+				err = rdRetry(r, seen[r.file], bufs[k][:cbs[k].nbytes], err)
 				record(r, sg, time.Since(t1).Nanoseconds(), err)
 			}
 			evs := make([]ioEvent, sub)
@@ -648,7 +681,9 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 				for _, e := range evs[got : got+int(n)] {
 					var err error
 					if e.res < 0 {
-						err = unix.Errno(-e.res)
+						r := grp[e.data]
+						k := slices.Index(idx, int(e.data))
+						err = rdRetry(r, seen[r.file], bufs[k][:cbs[k].nbytes], unix.Errno(-e.res))
 					}
 					record(grp[e.data], sg, ns, err)
 				}
@@ -766,6 +801,7 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 				late++
 			}
 			lateMax = max(lateMax, lg)
+			segs[seg].noteLag(r.op, lg)
 			sem <- struct{}{}
 			wg.Add(1)
 			q := atomic.AddInt64(&qd, 1)
@@ -802,6 +838,7 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 			late++
 		}
 		lateMax = max(lateMax, lg)
+		segs[seg].noteLag(r.op, lg)
 		sem <- struct{}{}
 		wg.Add(1)
 		q := atomic.AddInt64(&qd, 1)
@@ -818,7 +855,7 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 			for _, c := range before { // wdSem·파일 잠금을 잡기 전에 기다린다 (앞 동작이 그것을 기다리면 멈춘다)
 				<-c
 			}
-			if grp[0].op == opWD {
+			if grp[0].op == opWD && !wdPar(grp[0].file) {
 				wdSem <- struct{}{}
 				defer func() { <-wdSem }()
 			}
@@ -854,6 +891,16 @@ func run(root string, files []tcFile, reqs []req, speed float64, maxQD int, out 
 	ss := make([]map[string]any, len(segs))
 	for i := range segs {
 		ss[i] = sum(&segs[i].ops)
+		lt := map[string]uint64{}
+		for o, n := range segs[i].late {
+			if n > 0 {
+				lt[opName[o]] = n
+			}
+		}
+		if len(lt) > 0 {
+			ss[i]["_late"] = lt
+		}
+		ss[i]["_lagMaxMs"] = float64(segs[i].lateMax) / 1e6
 	}
 	res := map[string]any{
 		"startMonotonic": float64(mono.Sec) + float64(mono.Nsec)/1e9,

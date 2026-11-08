@@ -452,6 +452,8 @@ def main():
                     f["size"][x] = max(int(f["size"][x]), int((a["off"][a["f"] == x] + a["len"][a["f"] == x]).max()))
             for x in nd_files:
                 f["existing"][x] |= 16
+            if "file_wdpar" in a:                         # 원본에서 다른 파일과 동시에 O_DIRECT 로 쓴 파일
+                f["existing"][:n1][a["file_wdpar"]] |= 32
             for k, d in enumerate(dbs):
                 f[n1 + k] = (d[2] * 4096, d[1] | 1)   # 1: 같은 회차를 다시 쓰면 같은 DB
             real = {str(n1 + k): d[0] for k, d in enumerate(dbs) if d[0] in SPECS}

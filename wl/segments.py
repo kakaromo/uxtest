@@ -34,6 +34,7 @@ LBA 순서로 이어 붙여 offset 을 준다 (구간 안 Sequential 유지). in
 나오면(앞 것이 지워지고 새로 만들어짐) 마지막 접근 직후 지운다. 예: TikTok 은 105초에 ttm_strategy.db-journal 을 inode 1045개로 만들고 지웠다.
 """
 import bisect
+import collections
 import json
 import os
 import re
@@ -232,12 +233,17 @@ def build(pq):
           "ckptByFsync": cp_all - sum(1 for e in ev if e[1] == "CP")}
 
     # 3. inode 별 LBA 구간 → 파일 offset
-    ext = {}
+    ext, kinds = {}, {}
     for t, op, ino, lba, nb, _ in ev:
         if op in ("R", "W", "WB", "WD", "WX"):
             ext.setdefault(ino, []).append((lba, lba + nb))
+            kinds.setdefault(ino, set()).add(op)
     fmap = {}
     for ino, iv in ext.items():
+        # direct Write 만 받는 파일은 빈칸 없이 붙인다. 앱이 파일 두 개를 동시에 O_DIRECT 로 쓰면 f2fs 가 block 을 번갈아
+        # 할당해 4KB request 가 한 칸씩 떨어진다 (전면 카메라 사진 5장, 11-07). 빈칸을 두면 uxwl 이 큰 pwrite 로 못 묶고
+        # 4KB pwrite 수천 개를 하나씩 내다 1초 넘게 밀린다. Read 가 없으니 합쳐질 Read 도 없다
+        gap = 0 if ino and kinds[ino] == {"WD"} else 1
         iv.sort()
         st, en, base = [], [], []
         acc = 0
@@ -248,7 +254,7 @@ def build(pq):
                     en[-1] = b
                 continue
             if st:
-                acc += 1    # 떨어져 있던 구간 사이 4KB 빈칸: 붙여 두면 같은 순간에 낸 Read 를 커널이 원본에 없던 큰 request 로 합친다
+                acc += gap  # 떨어져 있던 구간 사이 4KB 빈칸: 붙여 두면 같은 순간에 낸 Read 를 커널이 원본에 없던 큰 request 로 합친다
             st.append(a), en.append(b), base.append(acc)
             acc += b - a
         fmap[ino] = (st, base, acc)
@@ -308,10 +314,57 @@ def build(pq):
                     b = int(OFF[k]) // 4096 % c
                     OFF[k] = (b if b + nb <= c else 0) * 4096
                 LN[k] = nb * 4096
+    # direct Write 만 받는 파일: 같은 파일에서 offset 이 이어지고 0.2ms 안에 온 WD 를 앞 요청에 합친다 (최대 1MB).
+    # 파일 둘을 동시에 쓴 원본은 WD 가 파일끼리 번갈아 와서 uxwl 이 같은 파일 묶음으로 못 모은다
+    keep = np.ones(n, bool)
+    head = {}                                             # 파일 → (머리 요청 번호, 마지막 시각)
+    wdonly = {fid[i] for i, s in kinds.items() if i and s == {"WD"}}
+    # 다른 파일과 번갈아 쓰였고 WD 가 대부분 4KB 인 파일 (uxwl 이 동시에 쓴다, flag 32). 번갈아 와도 512KB 로 나간 파일
+    # (사진 10장 등)은 f2fs 가 큰 덩어리로 할당한 것이라 동시에 쓰면 오히려 4KB 로 쪼개진다
+    par = set()
+    prev = None
+    nwd, n4k = collections.Counter(), collections.Counter()
+    for k in range(n):
+        if OP[k] != OPS["WD"] or F[k] not in wdonly:
+            continue
+        nwd[int(F[k])] += 1
+        n4k[int(F[k])] += LN[k] == 4096
+        if prev is not None and F[prev] != F[k] and T[k] - T[prev] <= 200e-6:
+            par.update((int(F[prev]), int(F[k])))
+        prev = k
+    par = {x for x in par if n4k[x] > nwd[x] / 2}
+    for k in range(n):
+        if OP[k] != OPS["WD"] or F[k] not in wdonly:
+            continue
+        h = head.get(F[k])
+        if h and OFF[h[0]] + LN[h[0]] == OFF[k] and T[k] - h[1] <= 200e-6 and LN[h[0]] + LN[k] <= 1 << 20:
+            LN[h[0]] += LN[k]
+            keep[k] = False
+            head[F[k]] = (h[0], T[k])
+        else:
+            head[F[k]] = (k, T[k])
+    T, OP, F, OFF, LN = T[keep], OP[keep], F[keep], OFF[keep], LN[keep]
+    # Write 로 시작했어도 아직 안 쓴 곳을 Read 하면 원래 있던 파일이다 (앱이 파일 일부를 고친 뒤 나머지를 읽음).
+    # 새 파일로 두면 그 Read 가 구멍을 읽어 UFS 에 안 닿는다 (갤러리 2·3회차 700MB 넘게, 11-08)
+    hasdata = set()
+    wr = {}
+    for k in range(len(OP)):
+        o, fi = OP[k], int(F[k])
+        if fi == 0 or fi in hasdata:
+            continue
+        if o in (OPS["W"], OPS["WB"], OPS["WD"], OPS["WX"]):
+            wr.setdefault(fi, set()).update(range(int(OFF[k]) // 4096, (int(OFF[k]) + int(LN[k]) + 4095) // 4096))
+        elif o == OPS["UL"]:
+            wr[fi] = set()
+        elif o == OPS["R"]:
+            w = wr.get(fi, set())
+            if any(b not in w for b in range(int(OFF[k]) // 4096, (int(OFF[k]) + int(LN[k]) + 4095) // 4096)):
+                hasdata.add(fi)
     files = {"ino": np.array(inos, np.uint64),
              "size": np.array([cap.get(i, fmap[i][2]) * 4096 for i in inos], np.uint64),
              # 처음 접근이 Read 면 원래 있던 파일 → 준비 단계에서 미리 채움. Write 로 시작하면 새로 만든 파일
-             "existing": np.array([first.get(i, "R") == "R" or i == 0 or i in cap for i in inos], bool)}
+             "existing": np.array([first.get(i, "R") == "R" or i == 0 or i in cap or k in hasdata for k, i in enumerate(inos)], bool),
+             "wdpar": np.array([k in par for k in range(len(inos))], bool)}
     db["rewriteFiles"], db["rewriteKB"] = len(cap), sum(cap.values()) * 4
     return {"t": T, "op": OP, "f": F, "off": OFF, "len": LN, **{"file_" + k: v for k, v in files.items()}}, t1 - t0, db
 
