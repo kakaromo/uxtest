@@ -14,6 +14,7 @@ s-<ID>.json = 그 시나리오의 집계 행(G 는 cold/warm 둘) + 회차마다
 시간은 모두 그 회차 trace 첫 요청 기준 초.
 """
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -237,6 +238,24 @@ def main():
         p.write_text(json.dumps(doc, ensure_ascii=False, separators=(",", ":"), default=float))
         print(f"  {sid}: {len(runs)}회차 {p.stat().st_size / 1024:.0f} KB")
     tc_export()
+    mask_accounts()
+
+
+# trace 의 파일 이름에 계정 이메일이 들어 있다 (com.google.<계정>%40gmail.com.metalog, <...>_<계정>@gmail.com.db 등).
+# 공개 데이터에 내보내기 전에 모두 지운다. URL 인코딩(%40) 도 같이 본다
+ACCOUNT = re.compile(r"[A-Za-z0-9._+-]+(?:@|%40)(?:[A-Za-z0-9-]+\.)+(?:com|net|org|kr|io|co|me|edu)\b", re.I)
+
+
+def mask_accounts():
+    n = 0
+    for p in OUT.glob("*.json"):
+        t = p.read_text()
+        m, k = ACCOUNT.subn("account", t)
+        if k:
+            p.write_text(m)
+            n += k
+    if n:
+        print(f"  계정 이메일 {n}곳 지움")
 
 
 def tc_export():
