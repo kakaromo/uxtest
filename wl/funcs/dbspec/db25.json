@@ -1,0 +1,161 @@
+{
+ "create": [
+  "CREATE TABLE backend_regions (account_id TEXT, storage_id TEXT, region_id BLOB, resource_type INT, backend_region_state INT, backend_region_current_resource_set_id BLOB, backend_region_processing_resource_set_id BLOB, backend_region_target_resource_set_id BLOB, backend_region_participating_in_update INT, backend_region_ever_active_in_update INT, serialized_backend_region BLOB, PRIMARY KEY (account_id, storage_id, region_id, resource_type) )",
+  "CREATE TABLE by_owner_keyed_protos (account_id TEXT, storage_id TEXT, owner_account_id BLOB, owner_user_id BLOB, keyed_proto_type INT, serialized_keyed_proto BLOB, timestamp INT, PRIMARY KEY (account_id, storage_id, keyed_proto_type, owner_account_id, owner_user_id) )",
+  "CREATE TABLE cross_instance_keyed_protos (keyed_proto_type INT , serialized_keyed_proto BLOB, PRIMARY KEY (keyed_proto_type) )",
+  "CREATE TABLE debug_history (account_id TEXT, storage_id TEXT, debug_history_message TEXT, timestamp INT)",
+  "CREATE TABLE debug_infos (account_id TEXT, storage_id TEXT, debug_key TEXT, debug_value BLOB, timestamp INT, PRIMARY KEY (account_id, storage_id, debug_key) )",
+  "CREATE TABLE downloads (account_id TEXT, storage_id TEXT, url TEXT, download_next_retry INT, download_state INT, serialized_download BLOB, PRIMARY KEY (account_id, storage_id, url) )",
+  "CREATE TABLE keyed_protos (account_id TEXT, storage_id TEXT, keyed_proto_type INT, serialized_keyed_proto BLOB, timestamp INT, PRIMARY KEY (account_id, storage_id, keyed_proto_type) )",
+  "CREATE TABLE offline_backends (account_id TEXT, storage_id TEXT, resource_type INT, offline_backend BLOB, PRIMARY KEY (account_id, storage_id, resource_type) )",
+  "CREATE TABLE progress_region_info (account_id TEXT, storage_id TEXT, region_id BLOB, region_weight INT, region_completed_weight INT, region_progress_debug_info BLOB, PRIMARY KEY (account_id, storage_id, region_id) )",
+  "CREATE TABLE progress_task_info (account_id TEXT, storage_id TEXT, task_id INT, task_weight INT, task_completion_ratio REAL, PRIMARY KEY (account_id, storage_id, task_id) )",
+  "CREATE TABLE progress_task_map (account_id TEXT, storage_id TEXT, task_id INT, region_id BLOB, inception_ratio REAL, is_in_region INT, PRIMARY KEY (account_id, storage_id, task_id, region_id) )",
+  "CREATE TABLE regions (account_id TEXT, storage_id TEXT, region_id BLOB, region_state INT DEFAULT NULL, serialized_region BLOB, owner_user_id BLOB, owner_account_id BLOB, priority INT, connectivity_constraint INT, PRIMARY KEY (account_id, storage_id, region_id) )",
+  "CREATE TABLE resource_mapping (account_id TEXT, storage_id TEXT, mapping_resource_set_id BLOB, resource_type INT, resource_id BLOB, PRIMARY KEY (account_id, storage_id, mapping_resource_set_id, resource_type, resource_id) )",
+  "CREATE TABLE resource_verifications (account_id TEXT, storage_id TEXT, serialized_resource_verification BLOB, PRIMARY KEY (account_id, storage_id, serialized_resource_verification) )",
+  "CREATE TABLE resources (account_id TEXT, storage_id TEXT, resource_type INT, resource_id BLOB, resource_state INT, resource_failure_reason INT, resource_full_url TEXT, resource_diff_url TEXT, serialized_resource BLOB, resource_diff_source_id BLOB DEFAULT '', PRIMARY KEY (account_id, storage_id, resource_type, resource_id) )",
+  "CREATE TABLE visited_tiles (account_id TEXT, storage_id TEXT, tile_coordinate INT, location_timestamp INT, interaction_timestamp INT, PRIMARY KEY (account_id, storage_id, tile_coordinate) )",
+  "CREATE INDEX ix_backend_regions_account_id_storage_id_backend_region_current_resource_set_id ON backend_regions (account_id, storage_id, backend_region_current_resource_set_id)",
+  "CREATE INDEX ix_backend_regions_account_id_storage_id_backend_region_processing_resource_set_id ON backend_regions (account_id, storage_id, backend_region_processing_resource_set_id)",
+  "CREATE INDEX ix_backend_regions_account_id_storage_id_backend_region_target_resource_set_id ON backend_regions (account_id, storage_id, backend_region_target_resource_set_id)",
+  "CREATE INDEX ix_debug_history_timestamp ON debug_history (timestamp)",
+  "CREATE INDEX ix_progress_task_map_account_id_storage_id_region_id_is_in_region ON progress_task_map (account_id, storage_id, region_id, is_in_region)",
+  "CREATE INDEX ix_resource_mapping_account_id_storage_id_resource_type_resource_id_mapping_resource_set_id ON resource_mapping (account_id, storage_id, resource_type, resource_id, mapping_resource_set_id)",
+  "CREATE INDEX ix_resources_account_id_storage_id_resource_diff_url ON resources (account_id, storage_id, resource_diff_url)",
+  "CREATE INDEX ix_resources_account_id_storage_id_resource_full_url ON resources (account_id, storage_id, resource_full_url)",
+  "CREATE INDEX ix_resources_account_id_storage_id_resource_type_resource_diff_source_id ON resources (account_id, storage_id, resource_type, resource_diff_source_id)"
+ ],
+ "tables": [
+  {
+   "name": "backend_regions",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "by_owner_keyed_protos",
+   "rows": 4,
+   "avgRowBytes": 9035,
+   "insert": 1,
+   "update": 0,
+   "delete": 1
+  },
+  {
+   "name": "cross_instance_keyed_protos",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "debug_history",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "debug_infos",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "downloads",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "keyed_protos",
+   "rows": 3,
+   "avgRowBytes": 36,
+   "insert": 2,
+   "update": 0,
+   "delete": 2
+  },
+  {
+   "name": "offline_backends",
+   "rows": 3,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "progress_region_info",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "progress_task_info",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "progress_task_map",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "regions",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "resource_mapping",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "resource_verifications",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "resources",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "visited_tiles",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  }
+ ],
+ "framesPerOp": 0.0,
+ "opsPerCommit": 6
+}

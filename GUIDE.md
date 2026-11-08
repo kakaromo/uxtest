@@ -322,13 +322,16 @@ python3 gen_tc.py idle --name idle-ctl                # 대조군: 재생 없이
 cd uxtest
 python3 wl/collect_db.py            # 앱 DB 의 테이블 구조와 행 동작 비율 (기기에서 한 번, 결과는 wl/.private/dbinfo)
 python3 wl/gen_funcs.py             # 조각 → 함수 묶음 wl/.private/funcs/funcs.bin
+python3 wl/funcs_text.py export     # 함수 묶음 → 공개 텍스트 wl/funcs/ (함수·회차별 동작 CSV, 파일 표, DB 구조)
+python3 wl/funcs_text.py check      # wl/funcs/ 로 다시 만든 묶음이 funcs.bin 과 같은지
 python3 wl/run_func.py matrix       # 함수 하나씩 실행·비교 → wl/.private/results/func-matrix.json (끊겨도 이어서)
 python3 wl/run_func.py matrix --redo --only C1,B7
 python3 wl/run_func.py mix --name m1 --weight sns=0.4,video=0.3,camera=0.2,standby=0.1 --sec 7200 --seed 1
 ```
 
 - `mix` 는 실행 순서를 기기의 `uxwl plan` 이 정해요. 목표 비중보다 가장 모자란 유형에서 함수를 골라 끝까지 돌려요. 실제 비중은 `manifest.json` 의 `actual`, 함수별 순서는 `timeline` 이에요.
-- DB 파일은 request 를 그대로 재생하지 않고 실제 SQLite 로 써요. 테이블 구조는 앱 DB 와 같고, 행 값은 가짜예요. 앱 DB 의 행 내용은 기기 밖으로 나가지 않고, 구조·SQL 은 `wl/.private/` 에만 있어요.
+- DB 파일은 request 를 그대로 재생하지 않고 실제 SQLite 로 써요. 테이블 구조는 앱 DB 와 같고, 행 값은 가짜예요. 앱 DB 의 행 내용은 기기 밖으로 나가지 않아요. 테이블 구조(CREATE 문)는 `wl/funcs/dbspec/` 에 공개하고, DB 파일 이름은 계정 이메일이 들어간 것이 있어 `db01` 같은 번호로만 둬요.
+- `wl/funcs/` 가 공개된 TC 그 자체예요. 원자료(`runs/`, parquet, `wl/.private/`) 없이 `funcs_text.py build` 로 uxwl 이 읽는 묶음을 다시 만들 수 있어요. 형식은 TC_SPEC 14.6 이에요.
 - `collect_db.py` 는 폰에서 앱 DB 를 `/dev` 에 복사해 읽고 지워요. 측정 중에는 돌리지 않아요.
 
 ## 10. 자주 생기는 문제

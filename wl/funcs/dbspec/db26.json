@@ -1,0 +1,146 @@
+{
+ "create": [
+  "CREATE TABLE android_metadata (locale TEXT)",
+  "CREATE TABLE app_secrets (appId TEXT NOT NULL,app_key TEXT NOT NULL DEFAULT '',app_secret TEXT,PRIMARY KEY (appId, app_key))",
+  "CREATE TABLE common_info_nr (_id INTEGER PRIMARY KEY AUTOINCREMENT,event_key_long INTEGER,header_index INTEGER,common_header TEXT,body_blob BLOB NOT NULL,sequence_id TEXT,common_appid TEXT,common_logtag TEXT,common_eventid TEXT,head_switch INTEGER,event_level INTEGER,network_type INTEGER,upload_type INTEGER,event_time INTEGER,cache_flag INTEGER,event_source INTEGER,raw_size INTEGER DEFAULT 0,upload_claim_id TEXT,upload_claim_time INTEGER DEFAULT 0,upload_success_time INTEGER DEFAULT 0,app_key TEXT)",
+  "CREATE TABLE common_info_rt (_id INTEGER PRIMARY KEY AUTOINCREMENT,event_key_long INTEGER,header_index INTEGER,common_header TEXT,body_blob BLOB NOT NULL,sequence_id TEXT,common_appid TEXT,common_logtag TEXT,common_eventid TEXT,head_switch INTEGER,event_level INTEGER,network_type INTEGER,upload_type INTEGER,event_time INTEGER,cache_flag INTEGER,event_source INTEGER,raw_size INTEGER DEFAULT 0,upload_claim_id TEXT,upload_claim_time INTEGER DEFAULT 0,upload_success_time INTEGER DEFAULT 0,app_key TEXT)",
+  "CREATE TABLE data_reconciliation (_id INTEGER PRIMARY KEY AUTOINCREMENT,app_id TEXT,event_time INTEGER,source_process INTEGER DEFAULT 0,received_count INTEGER DEFAULT 0,validation_failed_reasons TEXT DEFAULT '{}',filtered_reasons TEXT DEFAULT '{}',cached_count INTEGER DEFAULT 0,cached_pending_count INTEGER DEFAULT 0,flow_control_reasons TEXT DEFAULT '{}',upload_attempt_count INTEGER DEFAULT 0,upload_request_count INTEGER DEFAULT 0,upload_failed_reasons TEXT DEFAULT '{}',upload_retry_distribution TEXT DEFAULT '{}',uploaded_count INTEGER DEFAULT 0,clear_reasons TEXT DEFAULT '{}',sequence_id TEXT DEFAULT '0',record_date INTEGER,create_time INTEGER,update_time INTEGER,app_event_version INTEGER DEFAULT 0,app_version TEXT DEFAULT '',sdk_version TEXT DEFAULT '')",
+  "CREATE TABLE dynamic_event_log (_id INTEGER PRIMARY KEY AUTOINCREMENT,event_key_long INTEGER,common_header TEXT,common_body TEXT,common_appid TEXT,event_time INTEGER,upload_mode INTEGER,cache_flag INTEGER)",
+  "CREATE TABLE event_rules (appId TEXT,event_key_long INTEGER,eventGroup TEXT,eventId TEXT,acceptNetType INTEGER,headSwitch INTEGER,eventLevel INTEGER,uploadType INTEGER,status INTEGER,sample_rate INTEGER DEFAULT 100000,v INTEGER,updated_at INTEGER,PRIMARY KEY (appId, eventGroup, eventId))",
+  "CREATE TABLE header_index (_id INTEGER PRIMARY KEY AUTOINCREMENT,headerJson TEXT,created_at INTEGER)",
+  "CREATE TABLE host_config (scope TEXT,appId TEXT,bizHost TEXT,techHost TEXT,v INTEGER,updated_at INTEGER,area TEXT,PRIMARY KEY (scope, appId, area))",
+  "CREATE TABLE rate_limit_quota (date_key TEXT NOT NULL,app_id TEXT NOT NULL,quota_type INTEGER NOT NULL,used_bytes INTEGER DEFAULT 0,dropped_bytes INTEGER DEFAULT 0,dropped_count INTEGER DEFAULT 0,updated_at INTEGER,PRIMARY KEY (date_key, app_id, quota_type))",
+  "CREATE TABLE static_event_log (_id INTEGER PRIMARY KEY AUTOINCREMENT,event_key_long INTEGER,common_header TEXT,common_body TEXT,common_appid TEXT,event_time INTEGER,upload_mode INTEGER,cache_flag INTEGER)",
+  "CREATE TABLE stats_aggregate (stat_type TEXT,appId TEXT,code INTEGER,reason TEXT,count INTEGER DEFAULT 0,updated_at INTEGER,PRIMARY KEY (stat_type, appId, code, reason))",
+  "CREATE TABLE upload_success_log (record_key TEXT PRIMARY KEY,app_id TEXT,event_time INTEGER,source_table TEXT,local_id INTEGER,sequence_id TEXT,create_time INTEGER)",
+  "CREATE INDEX idx_app_secrets_appid ON app_secrets(appId)",
+  "CREATE INDEX idx_dyn_state ON dynamic_event_log(cache_flag, event_time)",
+  "CREATE INDEX idx_nr_claim ON common_info_nr(cache_flag, upload_claim_id)",
+  "CREATE INDEX idx_nr_event_time ON common_info_nr(event_time)",
+  "CREATE INDEX idx_nr_scan ON common_info_nr(common_appid, event_level, cache_flag, upload_type, header_index)",
+  "CREATE INDEX idx_nr_sequence ON common_info_nr(sequence_id)",
+  "CREATE INDEX idx_nr_state ON common_info_nr(cache_flag, event_time, _id)",
+  "CREATE INDEX idx_nr_triplet ON common_info_nr(common_appid, common_logtag, common_eventid)",
+  "CREATE INDEX idx_recon_app_time ON data_reconciliation(app_id, event_time)",
+  "CREATE INDEX idx_recon_create_time ON data_reconciliation(create_time)",
+  "CREATE INDEX idx_recon_seq ON data_reconciliation(sequence_id)",
+  "CREATE INDEX idx_recon_source ON data_reconciliation(source_process)",
+  "CREATE INDEX idx_rt_claim ON common_info_rt(cache_flag, upload_claim_id)",
+  "CREATE INDEX idx_rt_event_time ON common_info_rt(event_time)",
+  "CREATE INDEX idx_rt_scan ON common_info_rt(common_appid, event_level, cache_flag, upload_type, header_index)",
+  "CREATE INDEX idx_rt_sequence ON common_info_rt(sequence_id)",
+  "CREATE INDEX idx_rt_state ON common_info_rt(cache_flag, event_time, _id)",
+  "CREATE INDEX idx_rt_triplet ON common_info_rt(common_appid, common_logtag, common_eventid)",
+  "CREATE INDEX idx_sta_state ON static_event_log(cache_flag, event_time)",
+  "CREATE INDEX idx_upload_success_time ON upload_success_log(create_time)",
+  "CREATE UNIQUE INDEX uniq_header_index_json ON header_index(headerJson)"
+ ],
+ "tables": [
+  {
+   "name": "android_metadata",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "app_secrets",
+   "rows": 2,
+   "avgRowBytes": 41,
+   "insert": 2,
+   "update": 0,
+   "delete": 2
+  },
+  {
+   "name": "common_info_nr",
+   "rows": 4,
+   "avgRowBytes": 1177,
+   "insert": 1,
+   "update": 0,
+   "delete": 2
+  },
+  {
+   "name": "common_info_rt",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "data_reconciliation",
+   "rows": 1,
+   "avgRowBytes": 146,
+   "insert": 2,
+   "update": 0,
+   "delete": 1
+  },
+  {
+   "name": "dynamic_event_log",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "event_rules",
+   "rows": 81,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "header_index",
+   "rows": 2,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "host_config",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "rate_limit_quota",
+   "rows": 5,
+   "avgRowBytes": 55,
+   "insert": 2,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "static_event_log",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "stats_aggregate",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "upload_success_log",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  }
+ ],
+ "framesPerOp": 11.583333333333334,
+ "opsPerCommit": 1
+}

@@ -837,3 +837,19 @@ v4 는 원본 시각에 Checkpoint op 을 냈어요. v5 후보는 빼고 f2fs �
 - **DB page cache.** 가중치 TC 는 모든 DB 를 재생 전에 열고 채워요. 1~2시간 뒤에 도는 함수의 DB page 는 cache 에서 밀려나 있어서 함수 첫 5초에 DB 본체·WAL Read 가 원본보다 수 MB 많았어요(Instagram 피드 0.6 vs 12MB). 같은 구간이 두 번째 나올 때는 원본과 같았어요. 그래서 DB 를 60초 넘게 안 쓰다가 다시 쓰는 함수는 시작 10초 전(함수 사이 쉬는 구간)에 DB 파일을 한 번 읽어 둬요(`sqlWarms`). 구간 판정에서 Read Volume 실패가 39% → 거의 0, Request size Read 가 36% → 거의 0 이 됐어요. 함수 단독 실행은 시작이 60초 안이라 바뀌지 않아요.
 - **남은 차이 (11-05).** Checkpoint/s 는 원본보다 적어요(14.3). QD p99 는 원본보다 높은 구간이 많아요. 앞 함수의 writeback 이 다음 함수 구간에 이어지는 것으로 보는데 확인하지 않았어요. 함수를 이어 돌리면 생기는 차이라 고치지 않았어요.
 - **남은 차이 (11-08, m1h·m2i).** 위 두 가지는 바뀌었어요. Checkpoint/s 가 틀린 구간은 적음 8, 많음 7 이고 실패율은 단독과 가중치 모두 11% 예요. QD p99 는 적음 21, 많음 17 이에요. 대신 Flush/s 실패가 단독 22% 에서 가중치 36% 로 늘었고 거의 다 TC 가 많아요(46/50). 원인은 확인하지 않았어요.
+
+### 14.6 공개 텍스트 형식 (`wl/funcs/`, 2026-11-09)
+함수 묶음(`funcs.bin`)은 원자료에서 만들어 `wl/.private/` 에만 있었어요. 다른 곳(C++ 판, 회사 framework)에서 같은 TC 를 쓰도록 같은 내용을 텍스트로 공개해요. `python3 wl/funcs_text.py export` 로 만들고, `check` 는 텍스트로 다시 만든 묶음이 원래 묶음과 동작·파일 표·DB 구조까지 같은지 봐요.
+
+| 파일 | 내용 |
+|---|---|
+| `index.json` | 유형 → 함수 → 유형 안 비중, 함수 → 이름·회차(seg, durSec, nfiles, nreq) |
+| `<함수>/rep<k>.ops.csv` | `t_us,op,file,off,len`. 시각 순서. op 번호는 5.3 표와 같아요 |
+| `<함수>/rep<k>.files.csv` | `file,size,flags,dir,db`. flags 는 1 미리 채움, 2 SQLite DB, 4 rollback journal, 8 실제 구조 DB, 16 새 폴더 안 파일, 32 동시 O_DIRECT. dir 은 원본 상위 폴더 번호(같은 번호 = 같은 폴더) |
+| `dbspec/db<NN>.json` | 실제 구조 DB 의 CREATE 문, 테이블별 행 수·행 크기·insert/update/delete 비율, `framesPerOp`, `opsPerCommit` |
+
+- SQL op(15): `file` 은 DB 파일 번호, `off` 아래 32bit 는 page 수, 위 32bit 는 서로 다른 page 수, `len` 은 종류(1 WAL+checkpoint, 2 WAL sync, 3 WAL 쓰기만, 4 rollback)에 0x10(DB 다시 열기)을 더한 값이에요.
+- 파일 이름·경로는 처음부터 없어요(번호만). DB 파일 이름은 계정 이메일이 들어간 것이 있어 `db<NN>` 번호로 바꿔요. 테이블 구조는 앱 DB 와 같게 그대로 둬요. 행 값은 넣지 않아요.
+- 크기는 함수 61개, 회차 181개, 동작 71만 줄로 약 21MB 예요. 다시 만들 때마다 바뀐 파일만큼 저장소 기록이 늘어요.
+- `gen_funcs.py` 는 같은 입력이면 같은 묶음을 만들어요. 같은 시각 TOUCH 순서가 DuckDB `list(distinct)` 순서를 따라 바뀌던 것을 정렬로 고쳤어요(11-09).
+

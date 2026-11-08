@@ -1,0 +1,71 @@
+{
+ "create": [
+  "CREATE TABLE `AWEME_READ_RECORD` (`AWEME_ID` TEXT NOT NULL, `READ_TIME` INTEGER NOT NULL, `PAGE_TYPE` INTEGER NOT NULL, `REPORTED` INTEGER NOT NULL, `USER_ID` TEXT NOT NULL, `SCENE` INTEGER NOT NULL, `INSERT_TIME` INTEGER NOT NULL, `AWEME_TYPE` INTEGER NOT NULL, PRIMARY KEY(`AWEME_ID`, `SCENE`))",
+  "CREATE TABLE `FOLLOWING_READ_RECORD` (`AWEME_ID` TEXT NOT NULL, `REPORTED` INTEGER NOT NULL, `AWEME_TYPE` INTEGER NOT NULL, `USER_ID` TEXT NOT NULL, `INSERT_TIME` INTEGER NOT NULL, PRIMARY KEY(`AWEME_ID`))",
+  "CREATE TABLE `FRIENDS_RED_DOT_RECORD` (`AWEME_ID` TEXT NOT NULL, `READ_TIME` INTEGER NOT NULL, `REPORTED` INTEGER NOT NULL, `USER_ID` TEXT NOT NULL, `INSERT_TIME` INTEGER NOT NULL, `AWEME_TYPE` INTEGER NOT NULL, PRIMARY KEY(`AWEME_ID`))",
+  "CREATE TABLE `FRIENDS_UNREAD_RECORD` (`AWEME_ID` TEXT NOT NULL, `READ_TIME` INTEGER NOT NULL, `REPORTED` INTEGER NOT NULL, `USER_ID` TEXT NOT NULL, `INSERT_TIME` INTEGER NOT NULL, `AWEME_TYPE` INTEGER NOT NULL, PRIMARY KEY(`AWEME_ID`))",
+  "CREATE TABLE `REPOST_DISLIKE_RECORD` (`AWEME_ID` TEXT NOT NULL, `DISLIKE_TIME` INTEGER NOT NULL, `REPORTED` INTEGER NOT NULL, `USER_ID` TEXT NOT NULL, `INSERT_TIME` INTEGER NOT NULL, `AWEME_TYPE` INTEGER NOT NULL, PRIMARY KEY(`AWEME_ID`))",
+  "CREATE TABLE android_metadata (locale TEXT)",
+  "CREATE TABLE room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)"
+ ],
+ "tables": [
+  {
+   "name": "AWEME_READ_RECORD",
+   "rows": 11,
+   "avgRowBytes": 90,
+   "insert": 5,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FOLLOWING_READ_RECORD",
+   "rows": 10,
+   "avgRowBytes": 62,
+   "insert": 5,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FRIENDS_RED_DOT_RECORD",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FRIENDS_UNREAD_RECORD",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "REPOST_DISLIKE_RECORD",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "android_metadata",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "room_master_table",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  }
+ ],
+ "framesPerOp": 2.0,
+ "opsPerCommit": 1
+}

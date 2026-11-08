@@ -1,0 +1,119 @@
+{
+ "create": [
+  "CREATE TABLE album_media (_id INTEGER PRIMARY KEY AUTOINCREMENT,local_id TEXT,cloud_id TEXT,album_id TEXT,date_taken_ms INTEGER NOT NULL,sync_generation INTEGER NOT NULL CHECK(sync_generation >= 0),size_bytes INTEGER NOT NULL CHECK(size_bytes > 0),duration_ms INTEGER CHECK(duration_ms >= 0),mime_type TEXT NOT NULL,standard_mime_type_extension INTEGER,_user_id INTEGER,owner_package_name TEXT DEFAULT NULL,CHECK((local_id IS NULL AND cloud_id IS NOT NULL) OR (local_id IS NOT NULL AND cloud_id IS NULL)),UNIQUE(local_id,  album_id),UNIQUE(cloud_id, album_id))",
+  "CREATE TABLE android_metadata (locale TEXT)",
+  "CREATE TABLE de_selections (owner_package_name TEXT,file_id INTEGER,package_user_id INTEGER,UNIQUE(owner_package_name, file_id, package_user_id)  ON CONFLICT IGNORE )",
+  "CREATE TABLE media (_id INTEGER PRIMARY KEY AUTOINCREMENT,local_id TEXT,cloud_id TEXT UNIQUE,is_visible INTEGER CHECK(is_visible == 1),date_taken_ms INTEGER NOT NULL,sync_generation INTEGER NOT NULL CHECK(sync_generation >= 0),width INTEGER,height INTEGER,orientation INTEGER,size_bytes INTEGER NOT NULL CHECK(size_bytes > 0),duration_ms INTEGER CHECK(duration_ms >= 0),mime_type TEXT NOT NULL,standard_mime_type_extension INTEGER,is_favorite INTEGER,_user_id INTEGER,owner_package_name TEXT DEFAULT NULL,CHECK(local_id IS NOT NULL OR cloud_id IS NOT NULL),UNIQUE(local_id, is_visible))",
+  "CREATE TABLE media_grants (owner_package_name TEXT,file_id INTEGER,package_user_id INTEGER,UNIQUE(owner_package_name, file_id, package_user_id)  ON CONFLICT IGNORE )",
+  "CREATE TABLE media_in_media_sets(_id INTEGER PRIMARY KEY AUTOINCREMENT,cloud_id TEXT,local_id TEXT,media_set_picker_id INTEGER,CHECK(local_id IS NOT NULL OR cloud_id IS NOT NULL),UNIQUE(media_set_picker_id, local_id),UNIQUE(media_set_picker_id, cloud_id))",
+  "CREATE TABLE media_sets(_id INTEGER PRIMARY KEY AUTOINCREMENT,category_id TEXT NOT NULL,media_set_id TEXT NOT NULL,display_name TEXT,cover_id TEXT,media_set_authority TEXT NOT NULL,mime_type_filter TEXT NOT NULL,media_in_media_set_sync_resume_key TEXT,UNIQUE(category_id, media_set_id, mime_type_filter))",
+  "CREATE TABLE search_history(_id INTEGER PRIMARY KEY AUTOINCREMENT,authority TEXT,search_text TEXT,media_set_id TEXT,cover_media_id TEXT,creation_time_ms INTEGER NOT NULL,CHECK(search_text IS NOT NULL OR media_set_id IS NOT NULL),UNIQUE(search_text, media_set_id))",
+  "CREATE TABLE search_request(_id INTEGER PRIMARY KEY AUTOINCREMENT,local_sync_resume_key TEXT,local_authority TEXT,cloud_sync_resume_key TEXT,cloud_authority TEXT,mime_types TEXT NOT NULL,search_text TEXT NOT NULL,media_set_id TEXT NOT NULL,suggestion_type TEXT NOT NULL,suggestion_authority TEXT NOT NULL,UNIQUE(mime_types, search_text, media_set_id, suggestion_type, suggestion_authority))",
+  "CREATE TABLE search_result_media(_id INTEGER PRIMARY KEY AUTOINCREMENT,search_request_id INTEGER NOT NULL,local_id TEXT,cloud_id TEXT,CHECK(local_id IS NOT NULL OR cloud_id IS NOT NULL),UNIQUE(search_request_id,  local_id),UNIQUE(search_request_id,  cloud_id))",
+  "CREATE TABLE search_suggestion(_id INTEGER PRIMARY KEY AUTOINCREMENT,authority TEXT NOT NULL,search_text TEXT,media_set_id TEXT NOT NULL,suggestion_type TEXT NOT NULL,cover_media_id TEXT,creation_time_ms INTEGER NOT NULL,UNIQUE(search_text, media_set_id))",
+  "CREATE INDEX cloud_id_album_index on album_media(cloud_id)",
+  "CREATE INDEX cloud_id_index on media(cloud_id)",
+  "CREATE INDEX date_taken_album_row_id_index on album_media(date_taken_ms,_id)",
+  "CREATE INDEX date_taken_row_id_index on media(date_taken_ms, _id)",
+  "CREATE INDEX is_favorite_index on media(is_favorite)",
+  "CREATE INDEX is_visible_index on media(is_visible)",
+  "CREATE INDEX local_id_album_index on album_media(local_id)",
+  "CREATE INDEX local_id_index on media(local_id)",
+  "CREATE INDEX mime_type_album_index on album_media(mime_type)",
+  "CREATE INDEX mime_type_index on media(mime_type)",
+  "CREATE INDEX size_album_index on album_media(size_bytes)",
+  "CREATE INDEX size_index on media(size_bytes)"
+ ],
+ "tables": [
+  {
+   "name": "album_media",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "android_metadata",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "de_selections",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "media",
+   "rows": 13035,
+   "avgRowBytes": 142,
+   "insert": 0,
+   "update": 0,
+   "delete": 20
+  },
+  {
+   "name": "media_grants",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "media_in_media_sets",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "media_sets",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "search_history",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "search_request",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "search_result_media",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "search_suggestion",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  }
+ ],
+ "framesPerOp": 1.8,
+ "opsPerCommit": 20
+}

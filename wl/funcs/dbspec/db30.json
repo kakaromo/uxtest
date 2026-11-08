@@ -1,0 +1,58 @@
+{
+ "create": [
+  "CREATE TABLE package_info (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    package_key TEXT UNIQUE NOT NULL DEFAULT '',\n    engine INT NOT NULL DEFAULT -1,\n    size INT NOT NULL DEFAULT 0,\n    md5 TEXT NOT NULL DEFAULT '',\n    content_type INT NOT NULL DEFAULT 0,\n    content BLOB,\n    content_file_path TEXT NOT NULL DEFAULT '',\n    reuse_count INT NOT NULL DEFAULT 1,\n    run_time_type INT NOT NULL DEFAULT 0,\n    UNIQUE(package_key)\n)",
+  "CREATE TABLE `scene_info`\n(\n    id                           INTEGER PRIMARY KEY AUTOINCREMENT,\n    uid         TEXT NOT NULL DEFAULT '0',\n    scene_key         TEXT NOT NULL DEFAULT '',\n    strategy_key      TEXT NOT NULL DEFAULT '',\n    user_relate BOOLEAN NOT NULL DEFAULT 0,\n    UNIQUE(uid, scene_key, strategy_key)\n)",
+  "CREATE TABLE strategy_action_info (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    strategy_key TEXT NOT NULL DEFAULT '',\n    action_type INTEGER NOT NULL DEFAULT -1,\n    action_param TEXT NOT NULL DEFAULT '',\n    action_order INTEGER NOT NULL DEFAULT 0\n)",
+  "CREATE TABLE strategy_info (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    strategy_key TEXT NOT NULL DEFAULT '',\n    package_key TEXT NOT NULL DEFAULT '',\n    UNIQUE(strategy_key, package_key)\n)",
+  "CREATE TABLE stream_info (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    scene_key TEXT NOT NULL DEFAULT '',\n    strategy_key TEXT NOT NULL DEFAULT '',\n    stream_key TEXT NOT NULL DEFAULT '',\n    options TEXT NOT NULL DEFAULT '',\n    UNIQUE(scene_key, strategy_key, stream_key)\n)",
+  "CREATE INDEX index_package ON package_info (package_key)",
+  "CREATE INDEX index_scene ON scene_info ( uid , strategy_key )",
+  "CREATE INDEX index_strategy ON strategy_info (strategy_key)",
+  "CREATE INDEX index_strategy_action ON strategy_action_info (strategy_key)",
+  "CREATE INDEX index_stream ON stream_info (scene_key, strategy_key)"
+ ],
+ "tables": [
+  {
+   "name": "package_info",
+   "rows": 183,
+   "avgRowBytes": 2018,
+   "insert": 183,
+   "update": 0,
+   "delete": 183
+  },
+  {
+   "name": "scene_info",
+   "rows": 184,
+   "avgRowBytes": 74,
+   "insert": 184,
+   "update": 0,
+   "delete": 184
+  },
+  {
+   "name": "strategy_action_info",
+   "rows": 283,
+   "avgRowBytes": 85,
+   "insert": 283,
+   "update": 0,
+   "delete": 283
+  },
+  {
+   "name": "strategy_info",
+   "rows": 184,
+   "avgRowBytes": 75,
+   "insert": 184,
+   "update": 0,
+   "delete": 184
+  },
+  {
+   "name": "stream_info",
+   "rows": 150,
+   "avgRowBytes": 144,
+   "insert": 150,
+   "update": 0,
+   "delete": 150
+  }
+ ],
+ "framesPerOp": 0.0,
+ "opsPerCommit": 1968
+}

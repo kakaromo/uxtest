@@ -1,0 +1,35 @@
+{
+ "create": [
+  "CREATE TABLE `CacheDataEntity` (`cardIndex` INTEGER NOT NULL, `cardType` INTEGER NOT NULL, `hostId` INTEGER NOT NULL, `uiData` BLOB NOT NULL, PRIMARY KEY(`cardIndex`, `cardType`, `hostId`))",
+  "CREATE TABLE android_metadata (locale TEXT)",
+  "CREATE TABLE room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)"
+ ],
+ "tables": [
+  {
+   "name": "CacheDataEntity",
+   "rows": 6,
+   "avgRowBytes": 1714,
+   "insert": 2,
+   "update": 0,
+   "delete": 1
+  },
+  {
+   "name": "android_metadata",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "room_master_table",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  }
+ ],
+ "framesPerOp": 192.0,
+ "opsPerCommit": 1
+}

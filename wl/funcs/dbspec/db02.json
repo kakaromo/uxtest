@@ -1,0 +1,900 @@
+{
+ "create": [
+  "CREATE TABLE AppLog_cohost_friend_reminder_display_strategy (id           INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT, timestamp    INTEGER     NOT NULL DEFAULT (strftime('%s','now')), timestamp_ms INTEGER     DEFAULT 0, event_name   TEXT        NOT NULL, params       TEXT)",
+  "CREATE TABLE AppLog_gift_panel_rerank (id           INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT, timestamp    INTEGER     NOT NULL DEFAULT (strftime('%s','now')), timestamp_ms INTEGER     DEFAULT 0, event_name   TEXT        NOT NULL, params       TEXT)",
+  "CREATE TABLE AppLog_innerpush_universal_trigger (id           INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT, timestamp    INTEGER     NOT NULL DEFAULT (strftime('%s','now')), timestamp_ms INTEGER     DEFAULT 0, event_name   TEXT        NOT NULL, params       TEXT, scenario_id TEXT, push_type TEXT, action_type TEXT, pitaya_trace_id TEXT)",
+  "CREATE TABLE AppLog_intelligence_push (id           INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT, timestamp    INTEGER     NOT NULL DEFAULT (strftime('%s','now')), timestamp_ms INTEGER     DEFAULT 0, event_name   TEXT        NOT NULL, params       TEXT, rule_id TEXT)",
+  "CREATE TABLE AppLog_live_bubble_optimize (id           INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT, timestamp    INTEGER     NOT NULL DEFAULT (strftime('%s','now')), timestamp_ms INTEGER     DEFAULT 0, event_name   TEXT        NOT NULL, params       TEXT)",
+  "CREATE TABLE AppLog_live_gift_guide_dialog_duration_predict (id           INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT, timestamp    INTEGER     NOT NULL DEFAULT (strftime('%s','now')), timestamp_ms INTEGER     DEFAULT 0, event_name   TEXT        NOT NULL, params       TEXT)",
+  "CREATE TABLE AppLog_live_gift_guide_optimize_strategy (id           INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT, timestamp    INTEGER     NOT NULL DEFAULT (strftime('%s','now')), timestamp_ms INTEGER     DEFAULT 0, event_name   TEXT        NOT NULL, params       TEXT)",
+  "CREATE TABLE AppLog_live_gift_guide_trigger (id           INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT, timestamp    INTEGER     NOT NULL DEFAULT (strftime('%s','now')), timestamp_ms INTEGER     DEFAULT 0, event_name   TEXT        NOT NULL, params       TEXT)",
+  "CREATE TABLE AppLog_live_inner_room_duration_prediction (id           INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT, timestamp    INTEGER     NOT NULL DEFAULT (strftime('%s','now')), timestamp_ms INTEGER     DEFAULT 0, event_name   TEXT        NOT NULL, params       TEXT, user_action_type TEXT)",
+  "CREATE TABLE AppLog_permission_trigger (id           INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT, timestamp    INTEGER     NOT NULL DEFAULT (strftime('%s','now')), timestamp_ms INTEGER     DEFAULT 0, event_name   TEXT        NOT NULL, params       TEXT)",
+  "CREATE TABLE AppLog_quick_share_button (id           INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT, timestamp    INTEGER     NOT NULL DEFAULT (strftime('%s','now')), timestamp_ms INTEGER     DEFAULT 0, event_name   TEXT        NOT NULL, params       TEXT, enter_from TEXT, action_type TEXT)",
+  "CREATE TABLE AppLog_repost_guides (id           INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT, timestamp    INTEGER     NOT NULL DEFAULT (strftime('%s','now')), timestamp_ms INTEGER     DEFAULT 0, event_name   TEXT        NOT NULL, params       TEXT, trigger TEXT)",
+  "CREATE TABLE AppLog_tiktok_push_features (id           INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT, timestamp    INTEGER     NOT NULL DEFAULT (strftime('%s','now')), timestamp_ms INTEGER     DEFAULT 0, event_name   TEXT        NOT NULL, params       TEXT)",
+  "CREATE TABLE AppLog_tiktok_showtime_ad_gap (id           INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT, timestamp    INTEGER     NOT NULL DEFAULT (strftime('%s','now')), timestamp_ms INTEGER     DEFAULT 0, event_name   TEXT        NOT NULL, params       TEXT, session_position TEXT, aweme_id TEXT)",
+  "CREATE TABLE AppLog_tt_live_fyp_preview_enter_guide (id           INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT, timestamp    INTEGER     NOT NULL DEFAULT (strftime('%s','now')), timestamp_ms INTEGER     DEFAULT 0, event_name   TEXT        NOT NULL, params       TEXT, room_id TEXT)",
+  "CREATE TABLE AppLog_tt_liveinfo_page_preload (id           INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT, timestamp    INTEGER     NOT NULL DEFAULT (strftime('%s','now')), timestamp_ms INTEGER     DEFAULT 0, event_name   TEXT        NOT NULL, params       TEXT)",
+  "CREATE TABLE AppLog_tt_real_time_feature (id           INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT, timestamp    INTEGER     NOT NULL DEFAULT (strftime('%s','now')), timestamp_ms INTEGER     DEFAULT 0, event_name   TEXT        NOT NULL, params       TEXT, room_id TEXT, rec_info TEXT)",
+  "CREATE TABLE DatabaseCache_client_feature_upload_pty (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_cohost_follow_prompt_dsl (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_cohost_friend_reminder_display_strategy (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_cs_od_model (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_dynamic_performance_score (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_gec_search_feature (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_gift_guide_trigger_dsl (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_gift_panel_rerank (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_gift_panel_rerank_trigger_dsl (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_innerpush_universal_cep_dsl (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_innerpush_universal_trigger (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_intelligence_push (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_live_client_feature_center (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_live_cohost_friend_notice_optimize_strategy (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_live_fyp_update_trigger (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_live_gift_guide_dialog_duration_predict (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_mpu_guide_cep (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_multi_guest_apply_guide (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_ohr_ios (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_permission_trigger (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_pipo_probe_sdk_1180_n_1233 (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_pipo_probe_sdk_1180_n_1233_async (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_pipo_probe_sdk_1180_n_1233_ttl (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_pitaya_foundation_fix (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_pitaya_sdk_settings_test (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_quick_share_button (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_repost_guides (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_repost_guides_cep_trigger (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_tiktok_fyp_rerank_group (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_tiktok_promote_ad_antispam (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_tiktok_showtime_ad_gap (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_tt_ads_client_feature_center (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_tt_live_hot_reload (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_tt_real_time_feature (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_tt_real_time_feature_rule (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_vod_playtime_prediction (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE DatabaseCache_weak_network_portrait (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER              DEFAULT 0,owner            TEXT        NOT NULL,business         TEXT        NOT NULL,version          TEXT        NOT NULL,model_name       TEXT,model_version    TEXT,input_data       TEXT,predict          INTEGER,label            INTEGER,permission       INTEGER     NOT NULL DEFAULT 0,tag              TEXT,arg0             TEXT,arg1             TEXT,arg2             TEXT,arg3             TEXT,arg4             TEXT,arg5             TEXT,arg6             TEXT,arg7             TEXT,arg8             TEXT,arg9             TEXT)",
+  "CREATE TABLE FEInternalAppLogConfigTable (id              INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,business_name   TEXT        NOT NULL,package_version TEXT        NOT NULL,table_name      TEXT        NOT NULL,config_md5      TEXT        NOT NULL)",
+  "CREATE TABLE FEInternalAppSessionTable (id                 INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp          INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms       INTEGER     DEFAULT 0,session            TEXT        NOT NULL,event_name         TEXT        NOT NULL,is_launch          INTEGER,enter_timestamp    INTEGER,enter_timestamp_ms INTEGER,duration           INTEGER)",
+  "CREATE TABLE FEInternalDatabaseCacheConfigTable (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,business         TEXT        NOT NULL UNIQUE,table_name       TEXT        NOT NULL UNIQUE,feature_config   TEXT)",
+  "CREATE TABLE FEInternalFeatureMigrationTable (id              INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,kv_store_down   INTEGER,db_store_down   INTEGER)",
+  "CREATE TABLE FEInternalFeatureSchemaConfigTable (business_name   TEXT        NOT NULL PRIMARY KEY,table_name      TEXT        NOT NULL)",
+  "CREATE TABLE FEInternalFeatureStoreKVTable (group_name      TEXT        DEFAULT \"\",feature_name    TEXT        NOT NULL,feature_type    INTEGER     NOT NULL,value_type      INTEGER     NOT NULL,detail_index    INTEGER     NOT NULL,numic_value     REAL        NOT NULL,string_value    TEXT        NOT NULL,ext1            TEXT        ,ext2            TEXT        ,ext3            TEXT        ,ext4            TEXT        ,ext5            TEXT        ,timestamp       INTEGER     NOT NULL DEFAULT (strftime('%s','now')),UNIQUE(feature_name, feature_type, value_type, detail_index) ON CONFLICT REPLACE)",
+  "CREATE TABLE FEInternalFeatureStoreSeqTable (group_name      TEXT        DEFAULT \"\",feature_name    TEXT        NOT NULL,feature_type    INTEGER     NOT NULL,value_type      INTEGER     NOT NULL,detail_index    INTEGER     NOT NULL,numic_value     REAL        NOT NULL,string_value    TEXT        NOT NULL,ext1            TEXT        ,ext2            TEXT        ,ext3            TEXT        ,ext4            TEXT        ,ext5            TEXT        ,timestamp       INTEGER     NOT NULL DEFAULT (strftime('%s','now')),UNIQUE(feature_name, feature_type, value_type, detail_index) ON CONFLICT REPLACE)",
+  "CREATE TABLE FEInternalFeatureStoreSessionTable (group_name      TEXT        DEFAULT \"\",feature_name    TEXT        NOT NULL,sub_feature_name    TEXT    NOT NULL,feature_type    INTEGER     NOT NULL,value_type      INTEGER     NOT NULL,session_index   INTEGER     NOT NULL,detail_index    INTEGER     NOT NULL,numic_value     REAL        NOT NULL,string_value    TEXT        NOT NULL,ext1            TEXT        ,ext2            TEXT        ,ext3            TEXT        ,ext4            TEXT        ,ext5            TEXT        ,timestamp       INTEGER     NOT NULL DEFAULT (strftime('%s','now')),UNIQUE(group_name, feature_name, sub_feature_name, feature_type, value_type, session_index, detail_index) ON CONFLICT REPLACE)",
+  "CREATE TABLE FEInternalKVCacheConfigTable (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,business         TEXT        NOT NULL UNIQUE,table_name       TEXT        NOT NULL UNIQUE)",
+  "CREATE TABLE FEInternalUserActivityTable (id                  INTEGER         NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp           INTEGER         NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms        INTEGER         DEFAULT 0,start_timestamp_ms  INTEGER         NOT NULL,end_timestamp_ms    INTEGER         NOT NULL,open_app_count      INTEGER         NOT NULL,launch_hour_0 INTEGER NOT NULL,launch_hour_1 INTEGER NOT NULL,launch_hour_2 INTEGER NOT NULL,launch_hour_3 INTEGER NOT NULL,launch_hour_4 INTEGER NOT NULL,launch_hour_5 INTEGER NOT NULL,launch_hour_6 INTEGER NOT NULL,launch_hour_7 INTEGER NOT NULL,launch_hour_8 INTEGER NOT NULL,launch_hour_9 INTEGER NOT NULL,launch_hour_10 INTEGER NOT NULL,launch_hour_11 INTEGER NOT NULL,launch_hour_12 INTEGER NOT NULL,launch_hour_13 INTEGER NOT NULL,launch_hour_14 INTEGER NOT NULL,launch_hour_15 INTEGER NOT NULL,launch_hour_16 INTEGER NOT NULL,launch_hour_17 INTEGER NOT NULL,launch_hour_18 INTEGER NOT NULL,launch_hour_19 INTEGER NOT NULL,launch_hour_20 INTEGER NOT NULL,launch_hour_21 INTEGER NOT NULL,launch_hour_22 INTEGER NOT NULL,launch_hour_23 INTEGER NOT NULL,total_duration INTEGER NOT NULL)",
+  "CREATE TABLE FEInternalVersionTable (id               INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,timestamp        INTEGER     NOT NULL DEFAULT (strftime('%s','now')),timestamp_ms     INTEGER     DEFAULT 0,database_version INTEGER     NOT NULL)",
+  "CREATE TABLE FeatureSchema_client_feature_upload_pty (id integer primary key, event_name text not null, filter text integer null, insert_time integer not null, timestamp_ms integer not null, chat_type_string text, platform_string text, search_keyword_string text, page_name_string text, module_name_string text, button_name_string text, duration_integer integer, product_id_string text, campaign_id_string text, duration_float real, stay_time_integer integer, request_id_string text, ad_id_integer integer, previous_page_string text, seller_id_string text, creative_id_integer integer, enter_from_string text, purchase_path_string text, log_extra_product_category_ids_string text, is_ad_integer integer, value_string text, log_extra_creative_id_string text, author_id_string text, group_id_string text, enter_method_string text)",
+  "CREATE TABLE FeatureSchema_cohost_friend_reminder_display_strategy (id integer primary key, event_name text not null, filter text integer null, insert_time integer not null, timestamp_ms integer not null)",
+  "CREATE TABLE FeatureSchema_gec_search_feature (id integer primary key, event_name text not null, filter text integer null, insert_time integer not null, timestamp_ms integer not null, sales_price_string text, click_area_string text, bgm_clip_id_string text, search_result_id_string text, sales_price_float real, trigger_condition_string text, coupon_type_id_string text, aweme_id_integer integer, volume_string text, after_coupon_price_string text, item_order_string text, sale_price_string text, words_content_string text, title_string text, original_price_type_string text, EVENT_ORIGIN_FEATURE_string text, words_source_string text, stay_time_integer integer, is_ad_string text, order_id_integer integer, enter_group_id_string text, is_ecom_string text, rate_integer integer, coupon_type_id_list_string text, order_status_string text, selling_point_string text, shop_id_string text, author_id_string text, first_category_id_string text, clip_id_integer integer, module_name_string text, review_cnt_integer integer, entrance_form_string text, aweme_id_string text, volume_type_string text, product_tag_string text, sale_intent_string text, product_id_string text, rate_float real, source_content_id_string text, group_id_string text, rank_integer integer, is_back_string text, suggest_id_string text, search_keyword_string text, enter_from_merge_string text, enter_from_info_string text, search_type_string text, enter_method_string text, end_to_end_search_session_id_string text, timestamp_ms_string text, landscape_portrait_string text, search_id_string text, enter_time_integer integer, search_channel_string text, volume_integer integer, anchor_id_string text, source_page_type_string text, duration_integer integer, order_id_string text, room_id_string text, impr_id_string text, button_name_string text, trigger_condition_integer integer, btm_string text, is_ad_integer integer, suggest_content_string text, original_price_string text, interaction_name_string text, video_duration_float real, sug_id_string text, ecom_product_list_string text, page_name_string text, shop_id_integer integer, is_ecom_integer integer, item_order_integer integer, search_entrance_string text, enter_from_string text, tab_id_string text, product_category_string text)",
+  "CREATE TABLE FeatureSchema_gift_panel_rerank (id integer primary key, event_name text not null, filter text integer null, insert_time integer not null, timestamp_ms integer not null, room_id_integer integer, anchor_id_string text, anchor_id_integer integer, room_id_string text, combo_count_string text, gift_price_integer integer, shown_strategy_string text, gift_id_integer integer, from_user_id_string text, gift_id_string text, event_name_string text, gift_price_string text)",
+  "CREATE TABLE FeatureSchema_gift_panel_rerank_trigger_dsl (id integer primary key, event_name text not null, filter text integer null, insert_time integer not null, timestamp_ms integer not null)",
+  "CREATE TABLE FeatureSchema_innerpush_universal_trigger (id integer primary key, event_name text not null, filter text integer null, insert_time integer not null, timestamp_ms integer not null)",
+  "CREATE TABLE FeatureSchema_intelligence_push (id integer primary key, event_name text not null, filter text integer null, insert_time integer not null, timestamp_ms integer not null)",
+  "CREATE TABLE FeatureSchema_live_cohost_friend_notice_optimize_strategy (id integer primary key, event_name text not null, filter text integer null, insert_time integer not null, timestamp_ms integer not null, is_multi_string text, fps_string text, room_id_integer integer, relation_type_integer integer, gift_type_string text)",
+  "CREATE TABLE FeatureSchema_live_gift_guide_dialog_duration_predict (id integer primary key, event_name text not null, filter text integer null, insert_time integer not null, timestamp_ms integer not null, notification_type_string text, gift_enter_from_string text)",
+  "CREATE TABLE FeatureSchema_permission_trigger (id integer primary key, event_name text not null, filter text integer null, insert_time integer not null, timestamp_ms integer not null, pitaya_trace_id_string text, action_type_string text, trigger_string text, pop_up_type_string text, intelligent_trigger_id_string text, enter_from_string text, duration_integer integer)",
+  "CREATE TABLE FeatureSchema_pipo_probe_sdk_1180_n_1233 (id integer primary key, event_name text not null, filter text integer null, insert_time integer not null, timestamp_ms integer not null, search_keyword_string text, room_id_string text, group_id_string text, author_id_string text, product_id_string text, duration_integer integer, enter_from_string text, anchor_id_string text)",
+  "CREATE TABLE FeatureSchema_pipo_probe_sdk_1180_n_1233_async (id integer primary key, event_name text not null, filter text integer null, insert_time integer not null, timestamp_ms integer not null, shopping_status_string text, landing_page_string text, anchor_show_type_string text, entrance_form_string text, follow_status_string text, to_user_id_string text, is_guest_connection_integer integer, user_id_integer integer, room_source_string text, duration_string text, is_ecom_integer integer, event_page_string text, previous_page_string text, anchor_id_string text, comment_id_string text, ad_id_integer integer, attribution_L3_string text, message_id_string text, is_ad_string text, promote_version_string text, current_page_string text, fans_club_level_integer integer, live_type_string text, source_video_id_integer integer, extra_string text, enter_method_string text, video_duration_float real, order_status_string text, timestamp_integer integer, track_id_string text, user_id_string text, is_reddot_integer integer, conversation_id_string text, unavailable_reason_string text, is_ad_integer integer, Permision_location_string text, promote_by_string text, reddot_type_string text, fans_club_level_string text, key_string text, format_type_string text, coupon_string text, is_subscription_integer integer, group_id_string text, entrance_info_string text, initial_follow_status_string text, enter_from_string text, coupon_id_string text, panel_source_string text, ranking_string text, initial_follow_status_integer integer, from_room_id_string text, content_type_string text, percentage_float real, author_id_string text, room_id_string text, connection_type_string text, uid_integer integer, entrance_type_string text, action_type_string text, entrance_format_string text, is_subscription_string text, user_account_type_integer integer, product_id_string text, stay_duration_integer integer, card_type_string text, promote_status_integer integer, smart_toast_show_string text, select_uid_string text, is_guest_connection_string text, duration_integer integer, new_user_string text, group_type_string text, page_type_string text, enter_from_merge_string text, search_keyword_string text, follow_status_integer integer, attribution_L2_string text)",
+  "CREATE TABLE FeatureSchema_pipo_probe_sdk_1180_n_1233_ttl (id integer primary key, event_name text not null, filter text integer null, insert_time integer not null, timestamp_ms integer not null, search_keyword_string text, room_id_string text, enter_from_info_string text, group_id_string text, author_id_string text, stay_time_integer integer, enter_from_string text, anchor_id_string text, product_id_string text, duration_integer integer)",
+  "CREATE TABLE FeatureSchema_pitaya_sdk_settings_test (id integer primary key, event_name text not null, filter text integer null, insert_time integer not null, timestamp_ms integer not null)",
+  "CREATE TABLE FeatureSchema_repost_guides (id integer primary key, event_name text not null, filter text integer null, insert_time integer not null, timestamp_ms integer not null, is_promoted_string text, follow_status_integer integer, duration_integer integer, rank_num_integer integer)",
+  "CREATE TABLE FeatureSchema_tt_ads_client_feature_center (id integer primary key, event_name text not null, filter text integer null, insert_time integer not null, timestamp_ms integer not null, group_id_string text, duration_integer integer, chat_type_string text, module_name_string text, button_name_string text, search_keyword_string text, page_name_string text, previous_page_string text, creative_id_integer integer, seller_id_string text, platform_string text, purchase_path_string text, duration_float real, product_id_string text, campaign_id_string text, enter_from_string text, ad_id_integer integer, log_extra_creative_id_string text, value_string text, stay_time_integer integer, request_id_string text, author_id_string text, enter_method_string text, is_ad_integer integer, log_extra_product_category_ids_string text)",
+  "CREATE TABLE FeatureSchema_tt_live_hot_reload (id integer primary key, event_name text not null, filter text integer null, insert_time integer not null, timestamp_ms integer not null)",
+  "CREATE TABLE FeatureSchema_tt_real_time_feature (id integer primary key, event_name text not null, filter text integer null, insert_time integer not null, timestamp_ms integer not null, room_id_integer integer, timestamp_ms_string text, enter_method_string text, action_type_string text, is_ad_string text, user_action_type_string text, duration_show_stream_integer integer, duration_string text, anchor_id_string text, stall_count_float real, duration_integer integer, enter_from_merge_string text, aweme_type_integer integer, stream_state_integer integer, is_ad_integer integer, stream_duration_integer integer, is_ecom_integer integer, check_alive_state_integer integer, room_id_string text, stall_duration_float real, aweme_id_integer integer, author_id_string text, request_id_string text, live_window_mode_string text, group_id_string text)",
+  "CREATE TABLE KeyValueCache_gec_search_feature (key                    TEXT        NOT NULL,value                  TEXT        NOT NULL,modification_time      integer,last_access_time       integer,primary key(key))",
+  "CREATE TABLE KeyValueCache_innerpush_universal_trigger (key                    TEXT        NOT NULL,value                  TEXT        NOT NULL,modification_time      integer,last_access_time       integer,primary key(key))",
+  "CREATE TABLE KeyValueCache_item_feature_set (key                    TEXT        NOT NULL,value                  TEXT        NOT NULL,modification_time      integer,last_access_time       integer,primary key(key))",
+  "CREATE TABLE KeyValueCache_repost_guides (key                    TEXT        NOT NULL,value                  TEXT        NOT NULL,modification_time      integer,last_access_time       integer,primary key(key))",
+  "CREATE TABLE KeyValueCache_screen_area (key                    TEXT        NOT NULL,value                  TEXT        NOT NULL,modification_time      integer,last_access_time       integer,primary key(key))",
+  "CREATE TABLE KeyValueCache_showtime_rerank_adcore (key                    TEXT        NOT NULL,value                  TEXT        NOT NULL,modification_time      integer,last_access_time       integer,primary key(key))",
+  "CREATE TABLE KeyValueCache_tiktok_push_features (key                    TEXT        NOT NULL,value                  TEXT        NOT NULL,modification_time      integer,last_access_time       integer,primary key(key))",
+  "CREATE TABLE KeyValueCache_tt_real_time_feature (key                    TEXT        NOT NULL,value                  TEXT        NOT NULL,modification_time      integer,last_access_time       integer,primary key(key))",
+  "CREATE INDEX AppLog_cohost_friend_reminder_display_strategy_6783_Index_V2 ON AppLog_cohost_friend_reminder_display_strategy (event_name, timestamp_ms)",
+  "CREATE INDEX AppLog_gift_panel_rerank_6126_Index_V2 ON AppLog_gift_panel_rerank (event_name, timestamp_ms)",
+  "CREATE INDEX AppLog_innerpush_universal_trigger_8670_Index_V2 ON AppLog_innerpush_universal_trigger (event_name, timestamp_ms)",
+  "CREATE INDEX AppLog_intelligence_push_8567_Index_V2 ON AppLog_intelligence_push (event_name, timestamp_ms)",
+  "CREATE INDEX AppLog_live_bubble_optimize_8866_Index_V2 ON AppLog_live_bubble_optimize (event_name, timestamp_ms)",
+  "CREATE INDEX AppLog_live_gift_guide_dialog_duration_predict_5014_Index_V2 ON AppLog_live_gift_guide_dialog_duration_predict (event_name, timestamp_ms)",
+  "CREATE INDEX AppLog_live_gift_guide_optimize_strategy_7708_Index_V2 ON AppLog_live_gift_guide_optimize_strategy (event_name, timestamp_ms)",
+  "CREATE INDEX AppLog_live_gift_guide_trigger_8771_Index_V2 ON AppLog_live_gift_guide_trigger (event_name, timestamp_ms)",
+  "CREATE INDEX AppLog_live_inner_room_duration_prediction_6353_Index_V2 ON AppLog_live_inner_room_duration_prediction (event_name, timestamp_ms)",
+  "CREATE INDEX AppLog_permission_trigger_8470_Index_V2 ON AppLog_permission_trigger (event_name, timestamp_ms)",
+  "CREATE INDEX AppLog_quick_share_button_7814_Index_V2 ON AppLog_quick_share_button (event_name, timestamp_ms)",
+  "CREATE INDEX AppLog_repost_guides_8104_Index_V2 ON AppLog_repost_guides (event_name, timestamp_ms)",
+  "CREATE INDEX AppLog_tiktok_push_features_4454_Index_V2 ON AppLog_tiktok_push_features (event_name, timestamp_ms)",
+  "CREATE INDEX AppLog_tiktok_showtime_ad_gap_8804_Index_V2 ON AppLog_tiktok_showtime_ad_gap (event_name, timestamp_ms)",
+  "CREATE INDEX AppLog_tt_live_fyp_preview_enter_guide_8854_Index_V2 ON AppLog_tt_live_fyp_preview_enter_guide (event_name, timestamp_ms)",
+  "CREATE INDEX AppLog_tt_liveinfo_page_preload_7128_Index_V2 ON AppLog_tt_liveinfo_page_preload (event_name, timestamp_ms)",
+  "CREATE INDEX AppLog_tt_real_time_feature_8779_Index_V2 ON AppLog_tt_real_time_feature (event_name, timestamp_ms)",
+  "CREATE INDEX DatabaseCache_client_feature_upload_pty_Index ON DatabaseCache_client_feature_upload_pty (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_cohost_follow_prompt_dsl_Index ON DatabaseCache_cohost_follow_prompt_dsl (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_cohost_friend_reminder_display_strategy_Index ON DatabaseCache_cohost_friend_reminder_display_strategy (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_cs_od_model_Index ON DatabaseCache_cs_od_model (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_dynamic_performance_score_Index ON DatabaseCache_dynamic_performance_score (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_gec_search_feature_Index ON DatabaseCache_gec_search_feature (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_gift_guide_trigger_dsl_Index ON DatabaseCache_gift_guide_trigger_dsl (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_gift_panel_rerank_Index ON DatabaseCache_gift_panel_rerank (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_gift_panel_rerank_trigger_dsl_Index ON DatabaseCache_gift_panel_rerank_trigger_dsl (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_innerpush_universal_cep_dsl_Index ON DatabaseCache_innerpush_universal_cep_dsl (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_innerpush_universal_trigger_Index ON DatabaseCache_innerpush_universal_trigger (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_intelligence_push_Index ON DatabaseCache_intelligence_push (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_live_client_feature_center_Index ON DatabaseCache_live_client_feature_center (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_live_cohost_friend_notice_optimize_strategy_Index ON DatabaseCache_live_cohost_friend_notice_optimize_strategy (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_live_fyp_update_trigger_Index ON DatabaseCache_live_fyp_update_trigger (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_live_gift_guide_dialog_duration_predict_Index ON DatabaseCache_live_gift_guide_dialog_duration_predict (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_mpu_guide_cep_Index ON DatabaseCache_mpu_guide_cep (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_multi_guest_apply_guide_Index ON DatabaseCache_multi_guest_apply_guide (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_ohr_ios_Index ON DatabaseCache_ohr_ios (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_permission_trigger_Index ON DatabaseCache_permission_trigger (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_pipo_probe_sdk_1180_n_1233_Index ON DatabaseCache_pipo_probe_sdk_1180_n_1233 (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_pipo_probe_sdk_1180_n_1233_async_Index ON DatabaseCache_pipo_probe_sdk_1180_n_1233_async (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_pipo_probe_sdk_1180_n_1233_ttl_Index ON DatabaseCache_pipo_probe_sdk_1180_n_1233_ttl (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_pitaya_foundation_fix_Index ON DatabaseCache_pitaya_foundation_fix (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_pitaya_sdk_settings_test_Index ON DatabaseCache_pitaya_sdk_settings_test (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_quick_share_button_Index ON DatabaseCache_quick_share_button (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_repost_guides_Index ON DatabaseCache_repost_guides (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_repost_guides_cep_trigger_Index ON DatabaseCache_repost_guides_cep_trigger (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_tiktok_fyp_rerank_group_Index ON DatabaseCache_tiktok_fyp_rerank_group (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_tiktok_promote_ad_antispam_Index ON DatabaseCache_tiktok_promote_ad_antispam (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_tiktok_showtime_ad_gap_Index ON DatabaseCache_tiktok_showtime_ad_gap (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_tt_ads_client_feature_center_Index ON DatabaseCache_tt_ads_client_feature_center (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_tt_live_hot_reload_Index ON DatabaseCache_tt_live_hot_reload (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_tt_real_time_feature_Index ON DatabaseCache_tt_real_time_feature (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_tt_real_time_feature_rule_Index ON DatabaseCache_tt_real_time_feature_rule (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_vod_playtime_prediction_Index ON DatabaseCache_vod_playtime_prediction (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX DatabaseCache_weak_network_portrait_Index ON DatabaseCache_weak_network_portrait (label, tag, arg0, arg1, arg2, permission, timestamp)",
+  "CREATE INDEX FeatureSchema_client_feature_upload_pty_index ON FeatureSchema_client_feature_upload_pty (event_name, filter, timestamp_ms)",
+  "CREATE INDEX FeatureSchema_cohost_friend_reminder_display_strategy_index ON FeatureSchema_cohost_friend_reminder_display_strategy (event_name, filter, timestamp_ms)",
+  "CREATE INDEX FeatureSchema_gec_search_feature_index ON FeatureSchema_gec_search_feature (event_name, filter, timestamp_ms)",
+  "CREATE INDEX FeatureSchema_gift_panel_rerank_index ON FeatureSchema_gift_panel_rerank (event_name, filter, timestamp_ms)",
+  "CREATE INDEX FeatureSchema_gift_panel_rerank_trigger_dsl_index ON FeatureSchema_gift_panel_rerank_trigger_dsl (event_name, filter, timestamp_ms)",
+  "CREATE INDEX FeatureSchema_innerpush_universal_trigger_index ON FeatureSchema_innerpush_universal_trigger (event_name, filter, timestamp_ms)",
+  "CREATE INDEX FeatureSchema_intelligence_push_index ON FeatureSchema_intelligence_push (event_name, filter, timestamp_ms)",
+  "CREATE INDEX FeatureSchema_live_cohost_friend_notice_optimize_strategy_index ON FeatureSchema_live_cohost_friend_notice_optimize_strategy (event_name, filter, timestamp_ms)",
+  "CREATE INDEX FeatureSchema_live_gift_guide_dialog_duration_predict_index ON FeatureSchema_live_gift_guide_dialog_duration_predict (event_name, filter, timestamp_ms)",
+  "CREATE INDEX FeatureSchema_permission_trigger_index ON FeatureSchema_permission_trigger (event_name, filter, timestamp_ms)",
+  "CREATE INDEX FeatureSchema_pipo_probe_sdk_1180_n_1233_async_index ON FeatureSchema_pipo_probe_sdk_1180_n_1233_async (event_name, filter, timestamp_ms)",
+  "CREATE INDEX FeatureSchema_pipo_probe_sdk_1180_n_1233_index ON FeatureSchema_pipo_probe_sdk_1180_n_1233 (event_name, filter, timestamp_ms)",
+  "CREATE INDEX FeatureSchema_pipo_probe_sdk_1180_n_1233_ttl_index ON FeatureSchema_pipo_probe_sdk_1180_n_1233_ttl (event_name, filter, timestamp_ms)",
+  "CREATE INDEX FeatureSchema_pitaya_sdk_settings_test_index ON FeatureSchema_pitaya_sdk_settings_test (event_name, filter, timestamp_ms)",
+  "CREATE INDEX FeatureSchema_repost_guides_index ON FeatureSchema_repost_guides (event_name, filter, timestamp_ms)",
+  "CREATE INDEX FeatureSchema_tt_ads_client_feature_center_index ON FeatureSchema_tt_ads_client_feature_center (event_name, filter, timestamp_ms)",
+  "CREATE INDEX FeatureSchema_tt_live_hot_reload_index ON FeatureSchema_tt_live_hot_reload (event_name, filter, timestamp_ms)",
+  "CREATE INDEX FeatureSchema_tt_real_time_feature_index ON FeatureSchema_tt_real_time_feature (event_name, filter, timestamp_ms)",
+  "CREATE INDEX applogConfigIndex ON FEInternalAppLogConfigTable (business_name, package_version, table_name)"
+ ],
+ "tables": [
+  {
+   "name": "AppLog_cohost_friend_reminder_display_strategy",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "AppLog_gift_panel_rerank",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "AppLog_innerpush_universal_trigger",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "AppLog_intelligence_push",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "AppLog_live_bubble_optimize",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "AppLog_live_gift_guide_dialog_duration_predict",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "AppLog_live_gift_guide_optimize_strategy",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "AppLog_live_gift_guide_trigger",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "AppLog_live_inner_room_duration_prediction",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "AppLog_permission_trigger",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "AppLog_quick_share_button",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "AppLog_repost_guides",
+   "rows": 76,
+   "avgRowBytes": 1000,
+   "insert": 2,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "AppLog_tiktok_push_features",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "AppLog_tiktok_showtime_ad_gap",
+   "rows": 338,
+   "avgRowBytes": 10576,
+   "insert": 5,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "AppLog_tt_live_fyp_preview_enter_guide",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "AppLog_tt_liveinfo_page_preload",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "AppLog_tt_real_time_feature",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_client_feature_upload_pty",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_cohost_follow_prompt_dsl",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_cohost_friend_reminder_display_strategy",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_cs_od_model",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_dynamic_performance_score",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_gec_search_feature",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_gift_guide_trigger_dsl",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_gift_panel_rerank",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_gift_panel_rerank_trigger_dsl",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_innerpush_universal_cep_dsl",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_innerpush_universal_trigger",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_intelligence_push",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_live_client_feature_center",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_live_cohost_friend_notice_optimize_strategy",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_live_fyp_update_trigger",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_live_gift_guide_dialog_duration_predict",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_mpu_guide_cep",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_multi_guest_apply_guide",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_ohr_ios",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_permission_trigger",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_pipo_probe_sdk_1180_n_1233",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_pipo_probe_sdk_1180_n_1233_async",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_pipo_probe_sdk_1180_n_1233_ttl",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_pitaya_foundation_fix",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_pitaya_sdk_settings_test",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_quick_share_button",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_repost_guides",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_repost_guides_cep_trigger",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_tiktok_fyp_rerank_group",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_tiktok_promote_ad_antispam",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_tiktok_showtime_ad_gap",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_tt_ads_client_feature_center",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_tt_live_hot_reload",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_tt_real_time_feature",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_tt_real_time_feature_rule",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_vod_playtime_prediction",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "DatabaseCache_weak_network_portrait",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FEInternalAppLogConfigTable",
+   "rows": 17,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FEInternalAppSessionTable",
+   "rows": 47,
+   "avgRowBytes": 97,
+   "insert": 2,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FEInternalDatabaseCacheConfigTable",
+   "rows": 37,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FEInternalFeatureMigrationTable",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FEInternalFeatureSchemaConfigTable",
+   "rows": 18,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FEInternalFeatureStoreKVTable",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FEInternalFeatureStoreSeqTable",
+   "rows": 120,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FEInternalFeatureStoreSessionTable",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FEInternalKVCacheConfigTable",
+   "rows": 8,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FEInternalUserActivityTable",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FEInternalVersionTable",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FeatureSchema_client_feature_upload_pty",
+   "rows": 1449,
+   "avgRowBytes": 40,
+   "insert": 20,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FeatureSchema_cohost_friend_reminder_display_strategy",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FeatureSchema_gec_search_feature",
+   "rows": 1561,
+   "avgRowBytes": 90,
+   "insert": 21,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FeatureSchema_gift_panel_rerank",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FeatureSchema_gift_panel_rerank_trigger_dsl",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FeatureSchema_innerpush_universal_trigger",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FeatureSchema_intelligence_push",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FeatureSchema_live_cohost_friend_notice_optimize_strategy",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FeatureSchema_live_gift_guide_dialog_duration_predict",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FeatureSchema_permission_trigger",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FeatureSchema_pipo_probe_sdk_1180_n_1233",
+   "rows": 748,
+   "avgRowBytes": 73,
+   "insert": 10,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FeatureSchema_pipo_probe_sdk_1180_n_1233_async",
+   "rows": 728,
+   "avgRowBytes": 70,
+   "insert": 9,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FeatureSchema_pipo_probe_sdk_1180_n_1233_ttl",
+   "rows": 748,
+   "avgRowBytes": 73,
+   "insert": 10,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FeatureSchema_pitaya_sdk_settings_test",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FeatureSchema_repost_guides",
+   "rows": 1088,
+   "avgRowBytes": 43,
+   "insert": 13,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FeatureSchema_tt_ads_client_feature_center",
+   "rows": 1453,
+   "avgRowBytes": 40,
+   "insert": 20,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FeatureSchema_tt_live_hot_reload",
+   "rows": 368,
+   "avgRowBytes": 42,
+   "insert": 5,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FeatureSchema_tt_real_time_feature",
+   "rows": 1193,
+   "avgRowBytes": 75,
+   "insert": 16,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "KeyValueCache_gec_search_feature",
+   "rows": 5,
+   "avgRowBytes": 52,
+   "insert": 5,
+   "update": 0,
+   "delete": 5
+  },
+  {
+   "name": "KeyValueCache_innerpush_universal_trigger",
+   "rows": 4,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "KeyValueCache_item_feature_set",
+   "rows": 18,
+   "avgRowBytes": 1057,
+   "insert": 18,
+   "update": 0,
+   "delete": 18
+  },
+  {
+   "name": "KeyValueCache_repost_guides",
+   "rows": 12,
+   "avgRowBytes": 57,
+   "insert": 4,
+   "update": 5,
+   "delete": 4
+  },
+  {
+   "name": "KeyValueCache_screen_area",
+   "rows": 1,
+   "avgRowBytes": 2836,
+   "insert": 1,
+   "update": 0,
+   "delete": 1
+  },
+  {
+   "name": "KeyValueCache_showtime_rerank_adcore",
+   "rows": 1,
+   "avgRowBytes": 55,
+   "insert": 1,
+   "update": 0,
+   "delete": 1
+  },
+  {
+   "name": "KeyValueCache_tiktok_push_features",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "KeyValueCache_tt_real_time_feature",
+   "rows": 1,
+   "avgRowBytes": 7409,
+   "insert": 1,
+   "update": 0,
+   "delete": 1
+  }
+ ],
+ "framesPerOp": 2.04040404040404,
+ "opsPerCommit": 1
+}

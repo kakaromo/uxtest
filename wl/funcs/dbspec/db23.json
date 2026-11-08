@@ -1,0 +1,27 @@
+{
+ "create": [
+  "CREATE TABLE android_metadata (locale TEXT)",
+  "CREATE TABLE pending_ops (_id INTEGER PRIMARY KEY AUTOINCREMENT, target_package TEXT NOT NULL, target_class TEXT NOT NULL, tag TEXT, runtime INTEGER, flex_time INTEGER, period INTEGER, last_runtime INTEGER, user_id INTEGER, required_network_type INTEGER, requires_charging INTEGER, extras TEXT, retry_strategy TEXT, task_type INTEGER, job_id INTEGER, content_uris TEXT, source INTEGER DEFAULT 0, source_version INTEGER DEFAULT 0, triggered_content_uris TEXT, required_uris TEXT,preferred_network_type INTEGER, preferred_charging_state INTEGER,required_idleness_state INTEGER, preferred_idleness_state INTEGER,service_kind INTEGER, persistence_level INTEGER)",
+  "CREATE UNIQUE INDEX pk_pending_ops ON \"pending_ops\" (\"tag\", \"target_class\", \"target_package\", \"user_id\")"
+ ],
+ "tables": [
+  {
+   "name": "android_metadata",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "pending_ops",
+   "rows": 133,
+   "avgRowBytes": 399,
+   "insert": 2,
+   "update": 0,
+   "delete": 1
+  }
+ ],
+ "framesPerOp": 9.0,
+ "opsPerCommit": 1
+}

@@ -1,0 +1,43 @@
+{
+ "create": [
+  "CREATE TABLE metrics(id INTEGER PRIMARY KEY NOT NULL,event_timestamp INTEGER NOT NULL,ukm_source_id INTEGER NOT NULL,url_id INTEGER NOT NULL,event_id INTEGER NOT NULL,event_hash TEXT NOT NULL,metric_hash TEXT NOT NULL,metric_value INTEGER NOT NULL)",
+  "CREATE TABLE uma_metrics(id INTEGER PRIMARY KEY NOT NULL,event_timestamp INTEGER NOT NULL,profile_id INTEGER NOT NULL,type INTEGER NOT NULL,metric_hash TEXT NOT NULL,metric_value INTEGER NOT NULL)",
+  "CREATE TABLE urls(url_id INTEGER PRIMARY KEY NOT NULL,url TEXT NOT NULL,last_timestamp INTEGER NOT NULL,counter INTEGER,title TEXT,profile_id TEXT)",
+  "CREATE INDEX event_hash_index ON metrics(event_hash)",
+  "CREATE INDEX event_timestamp_index ON metrics(event_timestamp)",
+  "CREATE INDEX ukm_source_id_index ON metrics(ukm_source_id)",
+  "CREATE INDEX uma_event_timestamp_index ON uma_metrics(event_timestamp)",
+  "CREATE INDEX uma_metric_hash_index ON uma_metrics(metric_hash)",
+  "CREATE INDEX uma_profile_id_index ON uma_metrics(profile_id)",
+  "CREATE INDEX uma_type_index ON uma_metrics(type)",
+  "CREATE INDEX url_id_index ON metrics(url_id)"
+ ],
+ "tables": [
+  {
+   "name": "metrics",
+   "rows": 1767,
+   "avgRowBytes": 80,
+   "insert": 11,
+   "update": 1756,
+   "delete": 0
+  },
+  {
+   "name": "uma_metrics",
+   "rows": 2007,
+   "avgRowBytes": 55,
+   "insert": 8,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "urls",
+   "rows": 7,
+   "avgRowBytes": 80,
+   "insert": 0,
+   "update": 4,
+   "delete": 0
+  }
+ ],
+ "framesPerOp": 0.06689151208544127,
+ "opsPerCommit": 445
+}

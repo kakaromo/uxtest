@@ -1,0 +1,84 @@
+{
+ "create": [
+  "CREATE TABLE batch(id INTEGER PRIMARY KEY AUTOINCREMENT,identities_hash INTEGER UNIQUE,timestamp INTEGER,device_id TEXT,family_device_id TEXT,os_build_number TEXT,app_id TEXT,app_version TEXT,build_num INTEGER,bundle_id TEXT,session_id TEXT,sequence_id INTEGER,consent_state INTEGER,mode_state INTEGER,user_identity_type INTEGER,claims TEXT,account_id TEXT,actor_id TEXT,uid TEXT,identifier TEXT,proxy_app_id TEXT,proxy_app_version TEXT,lane INTEGER)",
+  "CREATE TABLE buffer_event(id INTEGER PRIMARY KEY AUTOINCREMENT,identities_hash INTEGER,name TEXT,time_in_ms INTEGER,tags INTEGER,sample_rate INTEGER,requested_latency INTEGER,extra TEXT,extra_binary BINARY,compression_method TEXT,trace_id TEXT,lane INTEGER,device_timezone TEXT,device_utc_offset_sec INTEGER,clock_offset_ms INTEGER,clock_offset_error_ms INTEGER,clock_offset_source INTEGER)",
+  "CREATE TABLE checksum(id INTEGER PRIMARY KEY AUTOINCREMENT,checksum_hash INTEGER UNIQUE,identities_hash INTEGER,type INTEGER,checksum TEXT,timestamp INTEGER)",
+  "CREATE TABLE claim(id INTEGER PRIMARY KEY AUTOINCREMENT,principal_subject_hash INTEGER,claim TEXT,expires_at INTEGER)",
+  "CREATE TABLE collection_constraint(id INTEGER PRIMARY KEY AUTOINCREMENT,identities_hash INTEGER,node_type INTEGER,value INTEGER,expression_op TEXT,expression_refs TEXT,mode_bit INTEGER)",
+  "CREATE TABLE event(id INTEGER PRIMARY KEY AUTOINCREMENT,identities_hash INTEGER,name TEXT,time_in_ms INTEGER,tags INTEGER,sample_rate INTEGER,requested_latency INTEGER,extra TEXT,extra_binary BINARY,compression_method TEXT,trace_id TEXT,debug_token TEXT,lane INTEGER,device_timezone TEXT,device_utc_offset_sec INTEGER,clock_offset_ms INTEGER,clock_offset_error_ms INTEGER,clock_offset_source INTEGER)",
+  "CREATE TABLE event_config(id INTEGER PRIMARY KEY AUTOINCREMENT,event_config_hash INTEGER UNIQUE,identities_hash INTEGER,event_name TEXT,sampling_rate INTEGER,collection_constraint_ref INTEGER,is_deidentified INTEGER)",
+  "CREATE TABLE upload(id INTEGER PRIMARY KEY AUTOINCREMENT,request_data BINARY,num_events INTEGER,is_compressed INTEGER,compression_method TEXT,event_names TEXT,event_timestamps TEXT,lane INTEGER)",
+  "CREATE INDEX collection_constraint_0 ON collection_constraint(identities_hash)",
+  "CREATE INDEX event_0 ON event(requested_latency)",
+  "CREATE INDEX event_1 ON event(time_in_ms)",
+  "CREATE INDEX event_2 ON event(requested_latency DESC)"
+ ],
+ "tables": [
+  {
+   "name": "batch",
+   "rows": 6,
+   "avgRowBytes": 313,
+   "insert": 2,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "buffer_event",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "checksum",
+   "rows": 4,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "claim",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "collection_constraint",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "event",
+   "rows": 64,
+   "avgRowBytes": 2147,
+   "insert": 54,
+   "update": 0,
+   "delete": 64
+  },
+  {
+   "name": "event_config",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "upload",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  }
+ ],
+ "framesPerOp": 7.733333333333333,
+ "opsPerCommit": 1
+}

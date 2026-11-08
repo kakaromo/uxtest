@@ -229,7 +229,7 @@ def touch_extra(con, pq, a, sel, drop):
         if tc < 0 or tc > last_end + 1:
             prev = tc
             continue
-        for ino in inos:
+        for ino in sorted(inos):                 # DuckDB list(distinct) 는 순서가 매번 달라 같은 시각 TOUCH 순서가 바뀌었다
             f = of.get(int(ino))
             if f is None:
                 st["touchNoFile"] += 1

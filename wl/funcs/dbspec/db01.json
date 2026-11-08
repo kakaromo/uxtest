@@ -1,0 +1,80 @@
+{
+ "create": [
+  "CREATE TABLE android_metadata (locale TEXT)",
+  "CREATE TABLE event(_id integer primary key autoincrement,local_time_ms integer,tea_event_index integer,nt integer,user_id integer,uid integer,session_id varchar,user_unique_id varchar,ab_sdk_version varchar,user_type integer,user_is_login integer,user_is_auth integer,_app_id varchar,priority integer,forward integer,_local_event_id varchar,monitor_id integer,event_stained integer,category varchar,tag varchar,value integer,ext_value integer,params varchar,label varchar)",
+  "CREATE TABLE event_misc(_id integer primary key autoincrement,local_time_ms integer,tea_event_index integer,nt integer,user_id integer,uid integer,session_id varchar,user_unique_id varchar,ab_sdk_version varchar,user_type integer,user_is_login integer,user_is_auth integer,_app_id varchar,priority integer,forward integer,_local_event_id varchar,monitor_id integer,event_stained integer,params varchar,log_type varchar)",
+  "CREATE TABLE eventv3(_id integer primary key autoincrement,local_time_ms integer,tea_event_index integer,nt integer,user_id integer,uid integer,session_id varchar,user_unique_id varchar,ab_sdk_version varchar,user_type integer,user_is_login integer,user_is_auth integer,_app_id varchar,priority integer,forward integer,_local_event_id varchar,monitor_id integer,event_stained integer,event varchar,params varchar,is_bav integer,disable_personalization varchar,page_info varchar)",
+  "CREATE TABLE forward_eventv3(_id integer primary key autoincrement,local_time_ms integer,tea_event_index integer,nt integer,user_id integer,uid integer,session_id varchar,user_unique_id varchar,ab_sdk_version varchar,user_type integer,user_is_login integer,user_is_auth integer,_app_id varchar,priority integer,forward integer,_local_event_id varchar,monitor_id integer,event_stained integer,event varchar,params varchar,is_bav integer,disable_personalization varchar,page_info varchar)",
+  "CREATE TABLE launch(_id integer primary key autoincrement,local_time_ms integer,tea_event_index integer,nt integer,user_id integer,uid integer,session_id varchar,user_unique_id varchar,ab_sdk_version varchar,user_type integer,user_is_login integer,user_is_auth integer,_app_id varchar,priority integer,forward integer,_local_event_id varchar,monitor_id integer,event_stained integer,ver_name varchar,ver_code integer,last_session varchar,is_background integer,flat_params varchar,sendable integer)",
+  "CREATE TABLE pack(_id integer primary key autoincrement,local_time_ms integer,_data blob,session_id varchar,_fail integer,event_count varchar,key varchar,iv varchar,data_json text,_app_id varchar,encode_type integer,encode_headers varchar,priority integer,forward integer,e_ids varchar,isolate_key varchar,isolate_key_value varchar,_launch_count integer,_terminate_count integer,_event_v1_count integer,_event_v3_count integer,_event_misc_count integer,_impression_count integer,sentry_stained_ids varchar)",
+  "CREATE TABLE page(_id integer primary key autoincrement,local_time_ms integer,tea_event_index integer,nt integer,user_id integer,uid integer,session_id varchar,user_unique_id varchar,ab_sdk_version varchar,user_type integer,user_is_login integer,user_is_auth integer,_app_id varchar,priority integer,forward integer,_local_event_id varchar,monitor_id integer,event_stained integer,page_key varchar,refer_page_key varchar,duration integer,is_back integer,last_session varchar,flat_params varchar)"
+ ],
+ "tables": [
+  {
+   "name": "android_metadata",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "event",
+   "rows": 0,
+   "avgRowBytes": 0,
+   "insert": 0,
+   "update": 0,
+   "delete": 3
+  },
+  {
+   "name": "event_misc",
+   "rows": 1,
+   "avgRowBytes": 20485,
+   "insert": 1,
+   "update": 0,
+   "delete": 1
+  },
+  {
+   "name": "eventv3",
+   "rows": 42,
+   "avgRowBytes": 3538,
+   "insert": 42,
+   "update": 0,
+   "delete": 76
+  },
+  {
+   "name": "forward_eventv3",
+   "rows": 1,
+   "avgRowBytes": 3896,
+   "insert": 1,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "launch",
+   "rows": 1,
+   "avgRowBytes": 781,
+   "insert": 1,
+   "update": 0,
+   "delete": 1
+  },
+  {
+   "name": "pack",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "page",
+   "rows": 1,
+   "avgRowBytes": 809,
+   "insert": 1,
+   "update": 0,
+   "delete": 1
+  }
+ ],
+ "framesPerOp": 8.1953125,
+ "opsPerCommit": 1
+}

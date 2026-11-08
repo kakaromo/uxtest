@@ -1,0 +1,249 @@
+{
+ "create": [
+  "CREATE TABLE android_metadata (locale TEXT)",
+  "CREATE TABLE connected_apps_metadata (package_name TEXT,auth_status BOOLEAN NOT NULL DEFAULT(0),connected_account_id INTEGER,library_version TEXT,consent_version INTEGER NOT NULL DEFAULT(1))",
+  "CREATE TABLE deleted_local_locked_media (deleted_id INTEGER NOT NULL UNIQUE, generation INTEGER NOT NULL UNIQUE )",
+  "CREATE TABLE downloaded_file_groups (file_group_id TEXT UNIQUE NOT NULL, last_interaction_time INTEGER DEFAULT NULL, backfill_time INTEGER DEFAULT NULL, deletion_status INTEGER DEFAULT NULL)",
+  "CREATE TABLE generic_connected_apps_metadata (\n  connected_api INTEGER NOT NULL DEFAULT 0,\n  package_name TEXT,\n  auth_status INTEGER NOT NULL DEFAULT 0,\n  account_id INTEGER,\n  library_version TEXT,\n  consent_version INTEGER NOT NULL DEFAULT 1\n)",
+  "CREATE TABLE imported_media_metadata (\n      id STRING PRIMARY KEY NOT NULL,\n      display_name STRING NOT NULL,\n      relative_path STRING NOT NULL,\n      metadata BLOB NOT NULL\n    , is_consumed INTEGER NOT NULL DEFAULT 0, is_album_state_consumed INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE key_value (prefix TEXT NOT NULL, _key TEXT NOT NULL, value TEXT NOT NULL, value_type INTEGER NOT NULL, collection_type INTEGER NOT NULL, UNIQUE(prefix, _key, value))",
+  "CREATE TABLE local_locked_media (_id INTEGER PRIMARY KEY AUTOINCREMENT, dedup_key TEXT UNIQUE NOT NULL, original_file_location TEXT, private_file_path TEXT NOT NULL, type INTEGER NOT NULL, capture_timestamp INTEGER NOT NULL, utc_timestamp INTEGER NOT NULL, timezone_offset INTEGER NOT NULL, composition_type INTEGER, is_micro_video INTEGER NOT NULL DEFAULT 0, micro_video_offset INTEGER NOT NULL DEFAULT -1, micro_video_still_image_timestamp INTEGER, processing_id INTEGER, width INTEGER, height INTEGER, overlay_type INTEGER NOT NULL DEFAULT 0, is_vr INTEGER NOT NULL DEFAULT 0, capture_frame_rate REAL, encoded_frame_rate REAL, oem_special_type TEXT, latitude REAL, longitude REAL, duration INTEGER, is_raw INTEGER NOT NULL DEFAULT 0, mime_type TEXT, generation INTEGER NOT NULL DEFAULT 0, size_bytes INTEGER, fingerprint_hex TEXT, filename TEXT, threepio_metadata_state INTEGER DEFAULT NULL )",
+  "CREATE TABLE locked_folder_metadata (version TEXT NOT NULL, generation INTEGER NOT NULL)",
+  "CREATE TABLE media_store_extension(id INTEGER PRIMARY KEY NOT NULL, date_modified INTEGER NOT NULL, populated_columns INTEGER NOT NULL, is_animated INTEGER, photo_orientation INTEGER, burst_id TEXT, filename_burst_id TEXT, burst_is_primary INTEGER, drm INTEGER, fingerprint TEXT, fingerprint_size INTEGER, oem_special_type_id TEXT, photosphere INTEGER, video_width INTEGER, video_height INTEGER, video_captured_frame_rate REAL, video_encoded_frame_rate REAL, is_vr INTEGER, is_raw INTEGER, depth_type INTEGER, is_microvideo INTEGER, micro_video_offset INTEGER, burst_is_extra INTEGER, micro_video_still_image_timestamp_ms INTEGER, micro_video_duration_ms INTEGER, micro_video_metadata BLOB, adjusted_exif_date_time INTEGER, timezone_offset INTEGER, latitude REAL, longitude REAL, is_long_shot_video INTEGER, image_width INTEGER, image_height INTEGER, video_duration INTEGER, retry_count INTEGER DEFAULT NULL, next_retry_time INTEGER DEFAULT NULL, hdr_type INTEGER, burst_group_type INTEGER DEFAULT NULL, has_gainmap INTEGER, blanford_format INTEGER DEFAULT NULL, face_count INTEGER DEFAULT NULL, xmp_is_auto_enhanced INTEGER, iptc_credit TEXT, iptc_digital_source_type TEXT, threepio_provenance_metadata_state INTEGER DEFAULT NULL,g_file_metadata BLOB DEFAULT NULL, fingerprint_generation_modified INTEGER DEFAULT NULL, video_codec INTEGER DEFAULT NULL, camera_capture_session_group_id TEXT, has_smpte_2094_50 INTEGER DEFAULT NULL)",
+  "CREATE TABLE media_store_extra_slomo_transition (_id INTEGER PRIMARY KEY AUTOINCREMENT, content_uri TEXT UNIQUE NOT NULL, transition_data BLOB NOT NULL, modified_timestamp_utc INTEGER NOT NULL DEFAULT -2147483648)",
+  "CREATE TABLE media_store_ids (media_store_id INTEGER PRIMARY KEY NOT NULL)",
+  "CREATE TABLE media_store_sync_state_settings (\n  _id INTEGER PRIMARY KEY NOT NULL,\n  media_store_ids_imported INTEGER NOT NULL DEFAULT 0\n)",
+  "CREATE TABLE mediastore_observer_version (\n  observer_id INTEGER NOT NULL,\n  account_id INTEGER NOT NULL,\n  version TEXT NOT NULL,\n  PRIMARY KEY (observer_id, account_id)\n) WITHOUT ROWID",
+  "CREATE TABLE mediastore_sync (\n  mediastore_id INTEGER PRIMARY KEY,\n  generation_modified INTEGER,\n  date_modified INTEGER,\n  is_deleted INTEGER NOT NULL DEFAULT 0,\n  batch_edge_marker INTEGER NOT NULL DEFAULT 0,\n  state_all_photos_initial INTEGER NOT NULL DEFAULT 0,\n  state_all_photos_secondary INTEGER NOT NULL DEFAULT 0,\n  state_mediastore_extension INTEGER NOT NULL DEFAULT 0\n)",
+  "CREATE TABLE mediastore_sync_account_state (\n  mediastore_id INTEGER NOT NULL,\n  observer_id INTEGER NOT NULL,\n  account_id INTEGER, notified_state INTEGER NOT NULL DEFAULT 0,\n  PRIMARY KEY (mediastore_id, observer_id, account_id)\n) WITHOUT ROWID",
+  "CREATE TABLE mediastore_sync_reset (\n  account_id INTEGER PRIMARY KEY NOT NULL\n)",
+  "CREATE TABLE obsolete_mse_processor_ids(processor_id TEXT PRIMARY KEY)",
+  "CREATE TABLE prioritizer_task_frequency (\nwork_id TEXT NOT NULL,\ntimestamp INTEGER NOT NULL,\naggregate_runtime INTEGER NOT NULL DEFAULT 0,\ntask_run_count INTEGER NOT NULL DEFAULT 0,\ntask_succeeded_count INTEGER NOT NULL DEFAULT 0,\ntask_paused_count INTEGER NOT NULL DEFAULT 0,\ntask_failed_count INTEGER NOT NULL DEFAULT 0,\ntask_cancellation_count INTEGER NOT NULL DEFAULT 0,\nPRIMARY KEY (work_id, timestamp)\n) WITHOUT ROWID",
+  "CREATE TABLE processing_mars (id INTEGER PRIMARY KEY AUTOINCREMENT, date_added INTEGER NOT NULL, file_name TEXT NOT NULL, is_pending INTEGER NOT NULL DEFAULT 1, is_visible INTEGER NOT NULL DEFAULT 1, av_type INTEGER NOT NULL, mime_type TEXT NOT NULL, private_file_path TEXT, progress_status INTEGER NOT NULL DEFAULT 1, progress_percentage INTEGER NOT NULL DEFAULT 0, restore_path TEXT, special_type_id TEXT, thumbnail_file_path TEXT, timezone_offset INTEGER NOT NULL, utc_timestamp INTEGER NOT NULL)",
+  "CREATE TABLE shared_on_device_mi (\n          _id INTEGER PRIMARY KEY AUTOINCREMENT,\n          fingerprint TEXT NOT NULL,\n          model INTEGER NOT NULL,\n          version INTEGER NOT NULL,\n          failed INTEGER NOT NULL,\n          results BLOB,\n          UNIQUE (\n            fingerprint,\n            model,\n            version\n          )\n        )",
+  "CREATE TABLE timezones (content_uri TEXT UNIQUE NOT NULL, timezone_offset INTEGER NOT NULL )",
+  "CREATE TABLE video_transcode_probe (width INTEGER NOT NULL, height INTEGER NOT NULL, frame_rate INTEGER NOT NULL, decoder_name TEXT NOT NULL, encoder_name TEXT NOT NULL, probe_bitrate REAL NOT NULL, output_size INTEGER NOT NULL, motion_correction_factor DOUBLE NOT NULL DEFAULT 1, PRIMARY KEY (width, height, frame_rate, decoder_name, encoder_name, output_size))",
+  "CREATE TABLE video_transcode_probe_v2 (width INTEGER NOT NULL, height INTEGER NOT NULL, frame_rate INTEGER NOT NULL, decoder_name TEXT NOT NULL, encoder_name TEXT NOT NULL, output_size INTEGER NOT NULL, input_motion_factor DOUBLE NOT NULL, renderer_type INTEGER NOT NULL, probe_bitrate REAL NOT NULL, motion_correction_factor DOUBLE NOT NULL DEFAULT 1)",
+  "CREATE TABLE watch_face_media (_id INTEGER PRIMARY KEY AUTOINCREMENT, media_id TEXT NOT NULL, node_id TEXT NOT NULL, position INTEGER NOT NULL )",
+  "CREATE INDEX app_local_lfolder_filepath_idx ON local_locked_media(private_file_path)",
+  "CREATE INDEX app_local_lfolder_gen_idx ON local_locked_media(generation, _id)",
+  "CREATE INDEX app_local_lfolder_procid_idx ON local_locked_media(processing_id)",
+  "CREATE INDEX content_uri_idx ON timezones(content_uri, timezone_offset)",
+  "CREATE INDEX date_modified_and_id_idx\n ON mediastore_sync(date_modified DESC, mediastore_id DESC)",
+  "CREATE INDEX date_modified_id_deleted_idx\n ON mediastore_sync(date_modified DESC, mediastore_id DESC)\n WHERE is_deleted = 1",
+  "CREATE INDEX date_modified_id_marker_idx\n ON mediastore_sync(date_modified DESC, mediastore_id DESC)\n WHERE batch_edge_marker != 0",
+  "CREATE INDEX fingerprint_model_version_failed_idx\n        ON shared_on_device_mi (\n          fingerprint COLLATE NOCASE,\n          model,\n          version,\n          failed\n        )",
+  "CREATE INDEX generation_modified_and_id_idx\n ON mediastore_sync(generation_modified DESC, mediastore_id DESC)",
+  "CREATE INDEX generation_modified_id_deleted_idx\n ON mediastore_sync(generation_modified DESC, mediastore_id DESC)\n WHERE is_deleted = 1",
+  "CREATE INDEX generation_modified_id_marker_idx\n ON mediastore_sync(generation_modified DESC, mediastore_id DESC)\n WHERE batch_edge_marker != 0",
+  "CREATE INDEX index_imported_metadata_consumed ON imported_media_metadata(is_consumed, id)",
+  "CREATE INDEX key_prefix_idx ON key_value(_key, prefix)",
+  "CREATE INDEX media_store_extension_fingerprint_idx ON media_store_extension(fingerprint)",
+  "CREATE INDEX mediastore_sync_state_account_id_idx\nON mediastore_sync_account_state(account_id)",
+  "CREATE INDEX observer_and_account_idx\n ON mediastore_sync_account_state(observer_id, account_id)"
+ ],
+ "tables": [
+  {
+   "name": "android_metadata",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "connected_apps_metadata",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "deleted_local_locked_media",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "downloaded_file_groups",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "generic_connected_apps_metadata",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "imported_media_metadata",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "key_value",
+   "rows": 224,
+   "avgRowBytes": 189,
+   "insert": 15,
+   "update": 0,
+   "delete": 15
+  },
+  {
+   "name": "local_locked_media",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "locked_folder_metadata",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "media_store_extension",
+   "rows": 947,
+   "avgRowBytes": 190,
+   "insert": 0,
+   "update": 0,
+   "delete": 19
+  },
+  {
+   "name": "media_store_extra_slomo_transition",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "media_store_ids",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "media_store_sync_state_settings",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "mediastore_observer_version",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "mediastore_sync",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "mediastore_sync_account_state",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "mediastore_sync_reset",
+   "rows": 2,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "obsolete_mse_processor_ids",
+   "rows": 4,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "prioritizer_task_frequency",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "processing_mars",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "shared_on_device_mi",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "timezones",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "video_transcode_probe",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "video_transcode_probe_v2",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "watch_face_media",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  }
+ ],
+ "framesPerOp": 1.3061224489795917,
+ "opsPerCommit": 3
+}

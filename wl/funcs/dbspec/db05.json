@@ -1,0 +1,95 @@
+{
+ "create": [
+  "CREATE TABLE `Dependency` (`work_spec_id` TEXT NOT NULL, `prerequisite_id` TEXT NOT NULL, PRIMARY KEY(`work_spec_id`, `prerequisite_id`), FOREIGN KEY(`work_spec_id`) REFERENCES `WorkSpec`(`id`) ON UPDATE CASCADE ON DELETE CASCADE , FOREIGN KEY(`prerequisite_id`) REFERENCES `WorkSpec`(`id`) ON UPDATE CASCADE ON DELETE CASCADE )",
+  "CREATE TABLE `Preference` (`key` TEXT NOT NULL, `long_value` INTEGER, PRIMARY KEY(`key`))",
+  "CREATE TABLE `SystemIdInfo` (`work_spec_id` TEXT NOT NULL, `generation` INTEGER NOT NULL DEFAULT 0, `system_id` INTEGER NOT NULL, PRIMARY KEY(`work_spec_id`, `generation`), FOREIGN KEY(`work_spec_id`) REFERENCES `WorkSpec`(`id`) ON UPDATE CASCADE ON DELETE CASCADE )",
+  "CREATE TABLE `WorkName` (`name` TEXT NOT NULL, `work_spec_id` TEXT NOT NULL, PRIMARY KEY(`name`, `work_spec_id`), FOREIGN KEY(`work_spec_id`) REFERENCES `WorkSpec`(`id`) ON UPDATE CASCADE ON DELETE CASCADE )",
+  "CREATE TABLE `WorkProgress` (`work_spec_id` TEXT NOT NULL, `progress` BLOB NOT NULL, PRIMARY KEY(`work_spec_id`), FOREIGN KEY(`work_spec_id`) REFERENCES `WorkSpec`(`id`) ON UPDATE CASCADE ON DELETE CASCADE )",
+  "CREATE TABLE `WorkSpec` (`id` TEXT NOT NULL, `state` INTEGER NOT NULL, `worker_class_name` TEXT NOT NULL, `input_merger_class_name` TEXT NOT NULL, `input` BLOB NOT NULL, `output` BLOB NOT NULL, `initial_delay` INTEGER NOT NULL, `interval_duration` INTEGER NOT NULL, `flex_duration` INTEGER NOT NULL, `run_attempt_count` INTEGER NOT NULL, `backoff_policy` INTEGER NOT NULL, `backoff_delay_duration` INTEGER NOT NULL, `last_enqueue_time` INTEGER NOT NULL DEFAULT -1, `minimum_retention_duration` INTEGER NOT NULL, `schedule_requested_at` INTEGER NOT NULL, `run_in_foreground` INTEGER NOT NULL, `out_of_quota_policy` INTEGER NOT NULL, `period_count` INTEGER NOT NULL DEFAULT 0, `generation` INTEGER NOT NULL DEFAULT 0, `next_schedule_time_override` INTEGER NOT NULL DEFAULT 9223372036854775807, `next_schedule_time_override_generation` INTEGER NOT NULL DEFAULT 0, `stop_reason` INTEGER NOT NULL DEFAULT -256, `trace_tag` TEXT, `backoff_on_system_interruptions` INTEGER, `required_network_type` INTEGER NOT NULL, `required_network_request` BLOB NOT NULL DEFAULT x'', `requires_charging` INTEGER NOT NULL, `requires_device_idle` INTEGER NOT NULL, `requires_battery_not_low` INTEGER NOT NULL, `requires_storage_not_low` INTEGER NOT NULL, `trigger_content_update_delay` INTEGER NOT NULL, `trigger_max_content_delay` INTEGER NOT NULL, `content_uri_triggers` BLOB NOT NULL, PRIMARY KEY(`id`))",
+  "CREATE TABLE `WorkTag` (`tag` TEXT NOT NULL, `work_spec_id` TEXT NOT NULL, PRIMARY KEY(`tag`, `work_spec_id`), FOREIGN KEY(`work_spec_id`) REFERENCES `WorkSpec`(`id`) ON UPDATE CASCADE ON DELETE CASCADE )",
+  "CREATE TABLE android_metadata (locale TEXT)",
+  "CREATE TABLE room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+  "CREATE INDEX `index_Dependency_prerequisite_id` ON `Dependency` (`prerequisite_id`)",
+  "CREATE INDEX `index_Dependency_work_spec_id` ON `Dependency` (`work_spec_id`)",
+  "CREATE INDEX `index_WorkName_work_spec_id` ON `WorkName` (`work_spec_id`)",
+  "CREATE INDEX `index_WorkSpec_last_enqueue_time` ON `WorkSpec` (`last_enqueue_time`)",
+  "CREATE INDEX `index_WorkSpec_schedule_requested_at` ON `WorkSpec` (`schedule_requested_at`)",
+  "CREATE INDEX `index_WorkTag_work_spec_id` ON `WorkTag` (`work_spec_id`)"
+ ],
+ "tables": [
+  {
+   "name": "Dependency",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "Preference",
+   "rows": 2,
+   "avgRowBytes": 27,
+   "insert": 2,
+   "update": 0,
+   "delete": 2
+  },
+  {
+   "name": "SystemIdInfo",
+   "rows": 14,
+   "avgRowBytes": 52,
+   "insert": 10,
+   "update": 0,
+   "delete": 10
+  },
+  {
+   "name": "WorkName",
+   "rows": 16,
+   "avgRowBytes": 60,
+   "insert": 9,
+   "update": 0,
+   "delete": 9
+  },
+  {
+   "name": "WorkProgress",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "WorkSpec",
+   "rows": 16,
+   "avgRowBytes": 524,
+   "insert": 9,
+   "update": 7,
+   "delete": 9
+  },
+  {
+   "name": "WorkTag",
+   "rows": 36,
+   "avgRowBytes": 91,
+   "insert": 24,
+   "update": 0,
+   "delete": 24
+  },
+  {
+   "name": "android_metadata",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "room_master_table",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  }
+ ],
+ "framesPerOp": 5.921739130434783,
+ "opsPerCommit": 1
+}

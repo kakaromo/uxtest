@@ -1,0 +1,36 @@
+{
+ "create": [
+  "CREATE TABLE android_metadata (locale TEXT)",
+  "CREATE TABLE `medias` (`id` TEXT NOT NULL, `type` TEXT NOT NULL, `data` BLOB NOT NULL, `stored_time` INTEGER NOT NULL, `csr_cache_score` REAL NOT NULL, `top_rank_csr_cache_score` REAL NOT NULL, `ranked_at_ms` INTEGER NOT NULL, `delivered_at_ms` INTEGER NOT NULL, `blending_csr_cache_score` REAL NOT NULL, `csr_channel_type` INTEGER NOT NULL, PRIMARY KEY(`id`, `type`))",
+  "CREATE TABLE room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+  "CREATE INDEX `index_medias_stored_time` ON `medias` (`stored_time`)"
+ ],
+ "tables": [
+  {
+   "name": "android_metadata",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "medias",
+   "rows": 45,
+   "avgRowBytes": 44849,
+   "insert": 5,
+   "update": 33,
+   "delete": 12
+  },
+  {
+   "name": "room_master_table",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  }
+ ],
+ "framesPerOp": 39.46,
+ "opsPerCommit": 2
+}

@@ -1,0 +1,1861 @@
+{
+ "create": [
+  "CREATE TABLE \"AgenticSuggestion\" (`suggestionId` TEXT NOT NULL, `text` TEXT NOT NULL, `associatedClusters` TEXT NOT NULL DEFAULT '', `suggestionIntents` TEXT NOT NULL DEFAULT '', `templateId` TEXT NOT NULL DEFAULT '', `suggestionCategory` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`suggestionId`))",
+  "CREATE TABLE `AutoBestTakeMoment` (`dedupKey` TEXT NOT NULL, `momentId` TEXT NOT NULL, PRIMARY KEY(`dedupKey`))",
+  "CREATE TABLE `BackupFaceCluster` (`personClusterId` INTEGER NOT NULL, PRIMARY KEY(`personClusterId`))",
+  "CREATE TABLE `BbqFaceDetectionProgress` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `dedupKey` TEXT NOT NULL, `faceCount` INTEGER NOT NULL, `selfieScore` REAL NOT NULL)",
+  "CREATE TABLE `BbqMediaCandidate` (`dedupKey` TEXT NOT NULL, `score` REAL NOT NULL, `hasSeen` INTEGER NOT NULL, PRIMARY KEY(`dedupKey`))",
+  "CREATE TABLE `BouquetJoinSheetAcknowledgment` (`albumLocalId` TEXT NOT NULL, `acknowledged` INTEGER NOT NULL, PRIMARY KEY(`albumLocalId`))",
+  "CREATE TABLE `BouquetReviewOptOut` (`albumLocalId` TEXT NOT NULL, PRIMARY KEY(`albumLocalId`))",
+  "CREATE TABLE `FiloliCandidate` (`burstId` TEXT NOT NULL, `captureTimestamp` INTEGER NOT NULL, `dedupKey` TEXT NOT NULL, `filoliState` INTEGER NOT NULL DEFAULT 0, `numOfAttempts` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`burstId`))",
+  "CREATE TABLE `JettyScannedMedia` (`collection_id` TEXT NOT NULL, `dedup_key` TEXT NOT NULL, `scan_time_ms` INTEGER NOT NULL, `status` INTEGER NOT NULL, `retry_count` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`collection_id`, `dedup_key`))",
+  "CREATE TABLE `LocalBytesMutationData` (`dedupKey` TEXT NOT NULL, `isPending` INTEGER NOT NULL, `mediaGeneration` INTEGER, `pendingTimestampMs` INTEGER, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
+  "CREATE TABLE \"LocalClusterFace\" (`dedupKey` TEXT NOT NULL, `kernelId` INTEGER NOT NULL, `clusteredFace` BLOB NOT NULL, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL DEFAULT 0, `qualityScore` REAL NOT NULL DEFAULT 0)",
+  "CREATE TABLE \"LocalClusterKernel\" (`kernelId` INTEGER NOT NULL, `personClusterId` INTEGER NOT NULL, `faceClusterId` INTEGER NOT NULL, `kernel` BLOB NOT NULL, `kernelSize` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`kernelId`))",
+  "CREATE TABLE `LocalClusterMedia` (`dedupKey` TEXT NOT NULL, PRIMARY KEY(`dedupKey`))",
+  "CREATE TABLE `LocalVideoTimeline` (`dedupKey` TEXT NOT NULL, `videoTimeline` BLOB NOT NULL, `localAudioClips` BLOB NOT NULL, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
+  "CREATE TABLE `MediaTombstone` (`remoteMediaKey` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `dedupKey` TEXT, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
+  "CREATE TABLE `MediaVisualEffect` (`dedupKey` TEXT NOT NULL, `dataType` INTEGER NOT NULL, `data` BLOB, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
+  "CREATE TABLE `MusaTemplate` (`templateId` TEXT NOT NULL, `musaTemplate` BLOB, PRIMARY KEY(`templateId`))",
+  "CREATE TABLE `PostCaptureJobRecord` (`job_id` BLOB, `scheduled_time_ms` INTEGER NOT NULL, `num_tries` INTEGER NOT NULL, `root_row_id` INTEGER NOT NULL, `parent_row_id` INTEGER NOT NULL, `row_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `result_status` INTEGER, `result_details` BLOB, `g_file_metadata` BLOB DEFAULT NULL, `max_tries` INTEGER NOT NULL DEFAULT 1)",
+  "CREATE TABLE `ServerTriggeredReuploadMedia` (`dedupKey` TEXT NOT NULL, `reuploadStatus` TEXT NOT NULL DEFAULT '0', PRIMARY KEY(`dedupKey`))",
+  "CREATE TABLE `SpatialMedia` (`originalMediaDedupKey` TEXT NOT NULL, `addedTimestamp` INTEGER NOT NULL, `lastUpdatedTimestamp` INTEGER NOT NULL, `originalMediaSoftDeleted` INTEGER NOT NULL, `spatializationState` INTEGER NOT NULL DEFAULT 0, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
+  "CREATE TABLE `TopPersonClusteringProgress` (`clusterMediaKey` TEXT NOT NULL, `clusteredMediaCount` INTEGER NOT NULL, PRIMARY KEY(`clusterMediaKey`))",
+  "CREATE TABLE `UnprocessedMediaRowMutation` (`allMediaListenerBatchEvent` BLOB, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
+  "CREATE TABLE \"VellumClip\" (`clip_id` TEXT NOT NULL, `collection_id` TEXT NOT NULL, `dedup_key` TEXT NOT NULL, `display_order` INTEGER, `trim_start_ms` INTEGER, `trim_end_ms` INTEGER, `image_duration_ms` INTEGER, `capture_timestamp` INTEGER, PRIMARY KEY(`clip_id`))",
+  "CREATE TABLE `VellumKnownMedia` (`collection_id` TEXT NOT NULL, `dedup_key` TEXT NOT NULL, PRIMARY KEY(`collection_id`, `dedup_key`))",
+  "CREATE TABLE `VellumProject` (`collection_id` TEXT NOT NULL, `project_uuid` TEXT NOT NULL, `last_modified_timestamp` INTEGER NOT NULL, PRIMARY KEY(`collection_id`))",
+  "CREATE TABLE access_media_tombstone (_id INTEGER PRIMARY KEY AUTOINCREMENT, data_source_id TEXT NOT NULL, data_source_specific_id INTEGER NOT NULL, media_generation INTEGER NOT NULL, UNIQUE (data_source_id, data_source_specific_id))",
+  "CREATE TABLE account_local_locked_media (_id INTEGER PRIMARY KEY, dedup_key TEXT UNIQUE NOT NULL, private_file_path TEXT NOT NULL, type TEXT NOT NULL, capture_timestamp INTEGER NOT NULL, utc_timestamp INTEGER NOT NULL, timezone_offset INTEGER NOT NULL, composition_type INTEGER, is_micro_video INTEGER NOT NULL DEFAULT 0, micro_video_offset INTEGER NOT NULL DEFAULT -1, micro_video_still_image_timestamp INTEGER, processing_id INTEGER, width INTEGER, height INTEGER, overlay_type INTEGER NOT NULL DEFAULT 0, is_vr INTEGER NOT NULL DEFAULT 0, capture_frame_rate REAL, encoded_frame_rate REAL, oem_special_type TEXT, latitude REAL, longitude REAL, duration INTEGER, is_raw INTEGER NOT NULL DEFAULT 0, mime_type TEXT, size_bytes INTEGER, first_backup_timestamp INTEGER, is_backup_processed INTEGER NOT NULL DEFAULT 0, fingerprint_hex TEXT, generation INTEGER NOT NULL, added_timestamp INTEGER NOT NULL DEFAULT 0, original_file_location TEXT, filename TEXT, threepio_metadata_state INTEGER DEFAULT NULL )",
+  "CREATE TABLE account_locked_folder_metadata (synced_version TEXT NOT NULL,synced_gen INTEGER NOT NULL,synced_id INTEGER NOT NULL,synced_del_gen INTEGER NOT NULL)",
+  "CREATE TABLE action_queue (rowid INTEGER PRIMARY KEY AUTOINCREMENT, entity_type INTEGER NOT NULL, entity_blob BLOB NOT NULL, fetch_count INTEGER NOT NULL DEFAULT 0, schedule_timestamp INTEGER(4) NOT NULL, creation_timestamp INTEGER(4) NOT NULL, cancellation_status INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE actors(_id INTEGER PRIMARY KEY, actor_media_key TEXT UNIQUE NOT NULL,gaia_id TEXT,display_name TEXT,given_name TEXT,profile_photo_url TEXT,display_contact_method TEXT,show_suggested_share_notifications INTEGER NOT NULL DEFAULT 0,protobuf BLOB,face_template_version INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE album_enrichments (_id INTEGER PRIMARY KEY AUTOINCREMENT, enrichment_media_key TEXT NOT NULL, collection_media_key TEXT NOT NULL, position REAL, sort_key TEXT, pivot_media_direction INTEGER NOT NULL DEFAULT 0, protobuf BLOB NOT NULL, UNIQUE (enrichment_media_key, collection_media_key))",
+  "CREATE TABLE album_state(media_key STRING UNIQUE NOT NULL,state INTEGER NOT NULL, reason STRING)",
+  "CREATE TABLE album_upload_media (_id INTEGER PRIMARY KEY AUTOINCREMENT, batch_id INTEGER NOT NULL, local_uri TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'Queued', update_time INTEGER NOT NULL, attempt_count INTEGER NOT NULL DEFAULT 0, photo_id TEXT NOT NULL DEFAULT '', media_key TEXT NOT NULL DEFAULT '', upload_source INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE all_media_count (count INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE all_media_count_nd_collapsed (count INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE ambient_memories_content (_id INTEGER PRIMARY KEY, local_id TEXT NOT NULL, memory_key TEXT)",
+  "CREATE TABLE android_metadata (locale TEXT)",
+  "CREATE TABLE app_packages (_id INTEGER PRIMARY KEY AUTOINCREMENT, package_name TEXT NOT NULL, remote_app_localization TEXT DEFAULT NULL, localization_quality INTEGER NOT NULL DEFAULT 1)",
+  "CREATE TABLE assistant_cards (card_key TEXT UNIQUE NOT NULL, notification_key TEXT UNIQUE, card_type TEXT NOT NULL, source INTEGER NOT NULL, display_timestamp_ms INTEGER, priority INTEGER NOT NULL DEFAULT(0), dismissed INTEGER NOT NULL DEFAULT(0), proto BLOB, locale TEXT, template INTEGER NOT NULL DEFAULT(0))",
+  "CREATE TABLE assistant_collections (assistant_card_key TEXT UNIQUE NOT NULL, collection_media_key TEXT NOT NULL)",
+  "CREATE TABLE assistant_media (assistant_card_key TEXT NOT NULL, remote_media_media_key TEXT NOT NULL, cover_media_score REAL, CONSTRAINT unique_card_media_pair UNIQUE (assistant_card_key, remote_media_media_key))",
+  "CREATE TABLE auto_add_clusters (collection_id TEXT NOT NULL, cluster_media_key TEXT NOT NULL, start_time_ms INTEGER NOT NULL, write_time_ms INTEGER, is_local INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (collection_id, cluster_media_key))",
+  "CREATE TABLE backup_folders(bucket_id TEXT NOT NULL PRIMARY KEY )",
+  "CREATE TABLE backup_item_status(dedup_key TEXT NOT NULL, in_locked_folder INTEGER NOT NULL DEFAULT 0, state INTEGER NOT NULL, logged_upload_started INTEGER NOT NULL DEFAULT 0, permanent_failure_reason INTEGER NOT NULL DEFAULT 0, last_modified_timestamp INTEGER, next_attempt_timestamp INTEGER NOT NULL DEFAULT 0, upload_attempt_count INTEGER NOT NULL DEFAULT 0, preview_uploaded_timestamp INTEGER, needs_resolver INTEGER NOT NULL DEFAULT 0, try_reupload_if_remote_exists INTEGER NOT NULL DEFAULT 0, media_key_on_upload TEXT, upload_request_type INTEGER NOT NULL DEFAULT 0, last_uploaded_media_generation INTEGER NOT NULL DEFAULT 0, last_edited_upload_token BLOB, PRIMARY KEY (dedup_key, in_locked_folder))",
+  "CREATE TABLE backup_progress(dedup_key TEXT NOT NULL, in_locked_folder INTEGER NOT NULL DEFAULT 0, resume_token TEXT, PRIMARY KEY (dedup_key, in_locked_folder))",
+  "CREATE TABLE backup_queue(dedup_key TEXT NOT NULL, in_locked_folder INTEGER NOT NULL DEFAULT 0, designation INTEGER NOT NULL DEFAULT 0, required_media_generation INTEGER NOT NULL DEFAULT 0,  PRIMARY KEY (dedup_key, in_locked_folder))",
+  "CREATE TABLE backup_video_compression_state (_id INTEGER PRIMARY KEY, dedup_key TEXT NOT NULL, storage_policy INTEGER NOT NULL, video_compression_started_breadcrumb INTEGER NOT NULL DEFAULT 0, is_transcode_ready_for_validation INTEGER NOT NULL DEFAULT 0, has_video_compression_finished INTEGER NOT NULL DEFAULT 0, resume_state BLOB, first_compression_timestamp INTEGER)",
+  "CREATE TABLE burst_media (dedup_key TEXT NOT NULL, burst_group_id TEXT NOT NULL, filename_burst_group_id TEXT, is_primary INTEGER NOT NULL DEFAULT 0, primary_score INTEGER NOT NULL DEFAULT 0, bucket_id INTEGER, is_extra INTEGER NOT NULL DEFAULT 0, has_local_primary_change INTEGER NOT NULL DEFAULT 0, count INTEGER, type INTEGER NOT NULL DEFAULT 0, burst_group_type INTEGER NOT NULL DEFAULT 0, unique(dedup_key, bucket_id))",
+  "CREATE TABLE cleanup_items (dedup_key TEXT NOT NULL, category INTEGER NOT NULL, subcategory INTEGER NOT NULL DEFAULT -1, quota_charged_bytes INTEGER NOT NULL, deletion_confidence_score INTEGER NOT NULL, PRIMARY KEY (category, subcategory, dedup_key))",
+  "CREATE TABLE cloud_picker_tombstone (_id INTEGER PRIMARY KEY AUTOINCREMENT, cloud_media_id TEXT NOT NULL, media_generation INTEGER NOT NULL)",
+  "CREATE TABLE cloud_picker_version (_id INTEGER PRIMARY KEY, version TEXT)",
+  "CREATE TABLE cluster_kernel (_id INTEGER PRIMARY KEY AUTOINCREMENT, kernel_media_key TEXT UNIQUE NOT NULL, search_cluster_id INTEGER REFERENCES search_clusters (_id) ON DELETE SET NULL, search_cluster_media_key TEXT NOT NULL, face_cluster_id INTEGER REFERENCES search_clusters (_id) ON DELETE SET NULL, face_cluster_media_key TEXT NOT NULL, kernel_proto BLOB, pending_state INTEGER NOT NULL DEFAULT 1)",
+  "CREATE TABLE collage_templates (group_type TEXT NOT NULL PRIMARY KEY, proto BLOB NOT NULL)",
+  "CREATE TABLE collections(_id INTEGER PRIMARY KEY, collection_media_key STRING UNIQUE NOT NULL, collection_album_id INTEGER, cover_item_media_key STRING, start DATETIME, end DATETIME, last_activity_time_ms DATETIME NOT NULL DEFAULT 0, title_text TEXT, title STRING, total_items INTEGER NOT NULL, type INTEGER NOT NULL, protobuf BLOB, pristine_protobuf BLOB, is_hidden INTEGER NOT NULL DEFAULT 0, display_mode INTEGER NOT NULL DEFAULT 0, audience INTEGER NOT NULL DEFAULT 0, associated_envelope_media_key TEXT, sort_order INTEGER NOT NULL DEFAULT 0, is_custom_ordered INTEGER NOT NULL DEFAULT 0, composition_state2 INTEGER DEFAULT -1, ahi_notifications_enabled INTEGER NOT NULL DEFAULT 0,has_seen_invite_promo INTEGER NOT NULL DEFAULT 0,has_dismissed_shortcut_sharing INTEGER NOT NULL DEFAULT 0, is_soft_deleted INTEGER NOT NULL DEFAULT 0, stale_sync_version INTEGER, is_dirty INTEGER NOT NULL DEFAULT 0, can_edit_days INTEGER, narrative TEXT DEFAULT NULL, ongoing_state INTEGER NOT NULL DEFAULT 0, ongoing_collection_type INTEGER, is_face_cluster_share_chip_dismissed INTEGER NOT NULL DEFAULT 0, last_view_time_ms INTEGER NOT NULL DEFAULT 0, has_seen_add_title_tooltip INTEGER NOT NULL DEFAULT 0, has_dismissed_auto_add_paused_photo_limit_reached_banner INTEGER NOT NULL DEFAULT 0, album_theme INTEGER, creator_project_info BLOB)",
+  "CREATE TABLE comments (_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, remote_comment_id TEXT UNIQUE NOT NULL, envelope_media_key TEXT NOT NULL, item_media_key TEXT, actor_media_key TEXT NOT NULL, segments BLOB NOT NULL, timestamp INTEGER, write_time INTEGER, sort_key TEXT, allowed_actions INTEGER NOT NULL DEFAULT 0, is_soft_deleted INTEGER NOT NULL DEFAULT 0, optimistic_write_time_ms INTEGER, stale_sync_version INTEGER, pristine_protobuf BLOB, format INTEGER NOT NULL DEFAULT 1, local_comment_id TEXT)",
+  "CREATE TABLE confetti_xp(xp_id TEXT PRIMARY KEY, shown INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE content_hash_dedup_key (content_hash TEXT UNIQUE NOT NULL, dedup_key TEXT NOT NULL)",
+  "CREATE TABLE curated_wallpapers_media (\n  dedup_key TEXT UNIQUE PRIMARY KEY NOT NULL,\n  added_timestamp INTEGER NOT NULL,\n  google_photos_content_uri TEXT\n, remote_media_key TEXT) WITHOUT ROWID",
+  "CREATE TABLE day_segmented_date_headers (start_time INTEGER UNIQUE NOT NULL, items_under_header INTEGER NOT NULL)",
+  "CREATE TABLE day_segmented_date_headers_nd_collapsed (start_time INTEGER UNIQUE NOT NULL, items_under_header INTEGER NOT NULL)",
+  "CREATE TABLE day_segmented_location_headers (timestamp INTEGER NOT NULL, cluster_chip_id TEXT NOT NULL, cluster_label TEXT, location_name TEXT, score REAL NOT NULL, update_state INTEGER DEFAULT 0, PRIMARY KEY (timestamp, cluster_chip_id))",
+  "CREATE TABLE device_mgmt_batch (id INTEGER PRIMARY KEY AUTOINCREMENT, batch_id TEXT NOT NULL, threshold INTEGER NOT NULL, content_uri TEXT NOT NULL, size_bytes INTEGER NOT NULL, fingerprint TEXT NOT NULL, last_modified DATETIME NOT NULL, type INTEGER NOT NULL, width INTEGER, height INTEGER, is_dismissed INTEGER DEFAULT 0, path TEXT NOT NULL, is_read INTEGER DEFAULT 0, has_original_bytes INTEGER DEFAULT 0, UNIQUE (content_uri, batch_id))",
+  "CREATE TABLE device_mgmt_batch_type (_id INTEGER PRIMARY KEY, batch_id TEXT UNIQUE NOT NULL, batch_type INTEGER UNIQUE NOT NULL)",
+  "CREATE TABLE download (id INTEGER PRIMARY KEY AUTOINCREMENT, download_url TEXT UNIQUE NOT NULL, destination_directory TEXT NOT NULL, filename TEXT NOT NULL, file_size_bytes INTEGER NOT NULL, dedup_key TEXT)",
+  "CREATE TABLE download_status (id INTEGER PRIMARY KEY AUTOINCREMENT, download_id INTEGER, dedup_key TEXT NOT NULL, download_status INTEGER NOT NULL, retry_download INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE editdownloads(_id INTEGER PRIMARY KEY AUTOINCREMENT, edit_id INTEGER UNIQUE NOT NULL,download_id INTEGER UNIQUE NOT NULL, download_uri TEXT UNIQUE NOT NULL, download_attempts INTEGER NOT NULL, edit_data BLOB NOT NULL)",
+  "CREATE TABLE edits(_id INTEGER PRIMARY KEY AUTOINCREMENT, original_uri TEXT NOT NULL,original_fingerprint TEXT NOT NULL, media_store_uri TEXT,media_store_fingerprint TEXT,app_id INTEGER NOT NULL, edit_data BLOB, status INT NOT NULL DEFAULT 0)",
+  "CREATE TABLE edits_tombstone_log (edit_id INTEGER NOT NULL PRIMARY KEY, deletion_time_ms INTEGER NOT NULL )",
+  "CREATE TABLE `empty_entity` (`id` INTEGER, `text` TEXT, PRIMARY KEY(`id`))",
+  "CREATE TABLE envelope_forbidden_actions (_id INTEGER PRIMARY KEY, envelope_media_key TEXT NOT NULL, action_id INTEGER NOT NULL, UNIQUE (envelope_media_key,action_id), FOREIGN KEY (envelope_media_key) REFERENCES envelopes(media_key)ON DELETE CASCADE)",
+  "CREATE TABLE envelope_members (envelope_media_key TEXT NOT NULL, actor_id TEXT NOT NULL, sort_key TEXT, write_time_ms INTEGER, last_view_time_ms INTEGER NOT NULL DEFAULT 0, last_activity_time_ms INTEGER NOT NULL DEFAULT 0, invite_time_ms INTEGER NOT NULL DEFAULT 0, status INTEGER NOT NULL DEFAULT 0, type INTEGER NOT NULL DEFAULT 0, phone_number TEXT, email TEXT, display_contact_method TEXT, allow_remove_display_name INTEGER NOT NULL DEFAULT 0, allow_remove_member INTEGER NOT NULL DEFAULT 0, allow_block INTEGER NOT NULL DEFAULT 0, inviter_actor_id TEXT, gaia_id TEXT, display_name TEXT, given_name TEXT, profile_photo_url TEXT, protobuf BLOB, is_auto_add_enabled INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (envelope_media_key, actor_id))",
+  "CREATE TABLE envelopes (_id INTEGER PRIMARY KEY AUTOINCREMENT, media_key TEXT UNIQUE NOT NULL, title TEXT, auth_key TEXT, short_url TEXT, is_hidden INTEGER NOT NULL DEFAULT 0, is_pinned INTEGER NOT NULL DEFAULT 0, is_joined INTEGER NOT NULL DEFAULT 0, is_media_location_shared INTEGER NOT NULL DEFAULT 0, is_notification_muted INTEGER NOT NULL DEFAULT 0, is_collaborative INTEGER NOT NULL DEFAULT 0, can_add_comment INTEGER NOT NULL DEFAULT 0, comment_count INTEGER NOT NULL DEFAULT 0, can_add_content INTEGER NOT NULL DEFAULT 0, can_add_heart INTEGER NOT NULL DEFAULT 0, can_set_cover INTEGER,can_link_share INTEGER NOT NULL DEFAULT 0, show_in_sharing_tab INTEGER NOT NULL DEFAULT 0, display_mode INTEGER NOT NULL DEFAULT 0, cover_item_media_key TEXT, owner_actor_id TEXT NOT NULL, viewer_actor_id TEXT, start_time_ms DATETIME, end_time_ms DATETIME, created_time_ms DATETIME, last_activity_time_ms DATETIME, newest_operation_time_ms DATETIME NOT NULL DEFAULT 0, write_time_ms INTEGER, type INTEGER, protobuf BLOB, total_item_count INTEGER NOT NULL, total_recipient_count INTEGER NOT NULL, total_invite_link_count INTEGER NOT NULL DEFAULT 0, should_show_message INTEGER NOT NULL DEFAULT 0, share_message BLOB, has_queued_mark_read_rpc INTEGER NOT NULL DEFAULT 0, authkey_recipient_inviter_actor_id TEXT, authkey_recipient_actor_id TEXT, sort_order INTEGER NOT NULL DEFAULT 0, is_custom_ordered INTEGER NOT NULL DEFAULT 0, mark_as_read_time_ms INTEGER NOT NULL DEFAULT 0, total_contributor_count INTEGER NOT NULL DEFAULT 0, unseen_count INTEGER NOT NULL DEFAULT 0, create_action_id INTEGER NOT NULL DEFAULT -1, create_state INTEGER NOT NULL DEFAULT 0, has_seen_suggested_add INTEGER NOT NULL DEFAULT 0, num_pending_actions INTEGER NOT NULL DEFAULT 0, ahi_notifications_enabled INTEGER NOT NULL DEFAULT 0, abuse_warning_severity INTEGER NOT NULL DEFAULT 0, optimistic_write_time_ms INTEGER, optimistic_write_sync_version INTEGER, pristine_protobuf BLOB, narrative TEXT DEFAULT NULL, ongoing_state INTEGER NOT NULL DEFAULT 0, ongoing_collection_type INTEGER, is_my_week INTEGER NOT NULL DEFAULT 0, viewer_inviter_actor_id TEXT, viewer_invite_time_ms INTEGER NOT NULL DEFAULT 0, has_dismissed_auto_add_paused_photo_limit_reached_banner INTEGER NOT NULL DEFAULT 0, has_dismissed_auto_add_paused_collaboration_disabled_banner INTEGER NOT NULL DEFAULT 0, bouquet_start_time_ms INTEGER, bouquet_end_time_ms INTEGER, album_theme INTEGER)",
+  "CREATE TABLE envelopes_sync (media_key TEXT PRIMARY KEY NOT NULL, current_sync_token TEXT, next_sync_token TEXT, resume_token TEXT, invalid_time_ms INTEGER, syncability INTEGER NOT NULL DEFAULT 1,priority INTEGER NOT NULL DEFAULT 0,hint_time_ms INTEGER NOT NULL DEFAULT 0, sync_completion_version INTEGER NOT NULL DEFAULT 0, enabled_features INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE face_details (_id INTEGER PRIMARY KEY, dedup_key TEXT NOT NULL, face_template_id INTEGER, face_region BLOB, write_timestamp_ms INTEGER NOT NULL )",
+  "CREATE TABLE gallery_api_metadata_sync_state (\n  account_id INTEGER PRIMARY KEY,\n  file_path_generation INTEGER NOT NULL DEFAULT 0,\n  file_metadata_generation INTEGER NOT NULL DEFAULT 0,\n  user_metadata_generation INTEGER NOT NULL DEFAULT 0,\n  edited_hash_generation INTEGER NOT NULL DEFAULT 0,\n  folder_media_trash_timestamp_generation INTEGER NOT NULL DEFAULT 0,\n  deleted_metadata_sync_token TEXT\n) WITHOUT ROWID",
+  "CREATE TABLE guided_confirmation(suggestion_media_key TEXT NOT NULL PRIMARY KEY, guided_confirmation_type INTEGER NOT NULL, cluster_media_key TEXT NOT NULL, dedup_key TEXT NOT NULL, user_response INTEGER NOT NULL DEFAULT 0, person_suggestion_data BLOB, cluster_item_suggestion_metadata BLOB)",
+  "CREATE TABLE header_map (_id INTEGER PRIMARY KEY AUTOINCREMENT, slot_id INTEGER NOT NULL, grid_settings BLOB NOT NULL )",
+  "CREATE TABLE hearts (_id INTEGER PRIMARY KEY AUTOINCREMENT,remote_id TEXT,envelope_media_key TEXT NOT NULL, item_media_key TEXT, actor_id TEXT NOT NULL, creation_time_ms INTEGER NOT NULL, write_time_ms INTEGER, allowed_actions BLOB NOT NULL,is_soft_deleted INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE item_collection_data(\n  _id INTEGER PRIMARY KEY AUTOINCREMENT,\n  icd_id TEXT UNIQUE NOT NULL,\n  canonical_id TEXT NOT NULL,\n  collection_id TEXT NOT NULL,\n  provenance INTEGER NOT NULL,\n  version INTEGER,\n  sort_key TEXT,\n  protobuf BLOB\n)",
+  "CREATE TABLE item_collection_data_rollback_store(\n   icd_id TEXT UNIQUE PRIMARY KEY NOT NULL,\n   canonical_id TEXT NOT NULL,\n   collection_id TEXT NOT NULL,\n   protobuf BLOB,\n   stale_sync_version INTEGER,\n   provenance INTEGER NOT NULL\n )",
+  "CREATE TABLE job_queue_table (_id INTEGER PRIMARY KEY AUTOINCREMENT, subsystem_id TEXT NOT NULL, network_required INTEGER, job_data BLOB)",
+  "CREATE TABLE kefir_template_chips_create_tab (template_id TEXT NOT NULL PRIMARY KEY, proto BLOB NOT NULL)",
+  "CREATE TABLE kefir_template_chips_playground (template_id TEXT NOT NULL PRIMARY KEY, proto BLOB NOT NULL)",
+  "CREATE TABLE kefir_templates_create_tab (template_id TEXT NOT NULL PRIMARY KEY, proto BLOB NOT NULL)",
+  "CREATE TABLE kefir_templates_playground (template_id TEXT NOT NULL PRIMARY KEY, proto BLOB NOT NULL)",
+  "CREATE TABLE local_face_metadata (_id INTEGER PRIMARY KEY, content_uri TEXT UNIQUE NOT NULL, face_detection_ms INTEGER, face_recognition_ms INTEGER, face_clustering_ms INTEGER, processing_state INTEGER NOT NULL, write_timestamp_ms INTEGER NOT NULL, capture_time_ms INTEGER NOT NULL )",
+  "CREATE TABLE `local_ica_label` (`dedup_key` TEXT NOT NULL, `model` INTEGER NOT NULL, `version` INTEGER NOT NULL, `mid` TEXT NOT NULL, `confidence` INTEGER NOT NULL DEFAULT 0, `failed` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`dedup_key`, `model`, `version`, `mid`))",
+  "CREATE TABLE `local_image_safety` (`dedup_key` TEXT NOT NULL, `model` INTEGER NOT NULL, `version` INTEGER NOT NULL, `search_safety_failed` INTEGER NOT NULL, `reminiscing_safety_failed` INTEGER NOT NULL, `failed` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`dedup_key`, `model`, `version`))",
+  "CREATE TABLE local_media (_id INTEGER PRIMARY KEY, dedup_key TEXT NOT NULL, content_uri TEXT UNIQUE NOT NULL, capture_timestamp INTEGER NOT NULL, type TEXT NOT NULL, state INTEGER NOT NULL DEFAULT 0, photosphere INTEGER NOT NULL DEFAULT 0, composition_type INTEGER, width INTEGER, height INTEGER, size_bytes INTEGER, timezone_offset INTEGER NOT NULL, utc_timestamp INTEGER NOT NULL, duration INTEGER, filename TEXT, filepath TEXT, latitude REAL, longitude REAL, signature INTEGER, bucket_id TEXT NOT NULL, capture_frame_rate REAL, encoded_frame_rate REAL,oem_special_type TEXT, mime_type TEXT, is_hidden INTEGER NOT NULL DEFAULT 0, is_vr INTEGER, is_raw INTEGER NOT NULL DEFAULT 0, folder_name TEXT, media_store_id INTEGER, is_archived INTEGER NOT NULL DEFAULT 0, depth_type INTEGER NOT NULL DEFAULT 0, is_micro_video INTEGER NOT NULL DEFAULT 0, micro_video_offset INTEGER NOT NULL DEFAULT -1, in_camera_folder INTEGER NOT NULL DEFAULT 0, in_primary_storage INTEGER NOT NULL DEFAULT 0, first_backup_timestamp INTEGER, micro_video_still_image_timestamp INTEGER, added_timestamp INTEGER NOT NULL DEFAULT 0, is_backup_processed INTEGER NOT NULL DEFAULT 0, is_favorite INTEGER NOT NULL DEFAULT 0, compact_warp_grids BLOB, micro_video_motion_state INTEGER NOT NULL DEFAULT 0, is_ls_video INTEGER, extension_bitmask INTEGER, requires_stabilization INTEGER NOT NULL DEFAULT 1,trash_timestamp INTEGER, purge_timestamp INTEGER, desired_state INTEGER NOT NULL DEFAULT 0, caption TEXT,showcase_score REAL NOT NULL DEFAULT 0, showcase_weights_version INTEGER, user_specified_caption TEXT, is_edited INTEGER, hdr_type INTEGER, has_upload_permanently_failed INTEGER, edit_data BLOB, gainmap_present INTEGER, blanford_format INTEGER DEFAULT NULL, face_count_value INTEGER DEFAULT -1, owner_package_name TEXT, xmp_is_auto_enhanced INTEGER, micro_video_moments_count INTEGER DEFAULT NULL, upload_origin INTEGER NOT NULL DEFAULT 0, is_screen_capture INTEGER, iptc_credit TEXT, iptc_digital_source_type TEXT, last_archive_origin INTEGER NOT NULL DEFAULT 0,threepio_metadata_state INTEGER DEFAULT NULL, g_file_metadata BLOB DEFAULT NULL, content_hash TEXT DEFAULT NULL, video_codec INTEGER DEFAULT NULL, camera_capture_session_group_id TEXT, is_pending INTEGER, has_smpte_2094_50 INTEGER DEFAULT NULL)",
+  "CREATE TABLE local_notification_payloads (_id INTEGER PRIMARY KEY AUTOINCREMENT, notification_type TEXT NOT NULL, payload BLOB NOT NULL, display_time_ms INTEGER NOT NULL)",
+  "CREATE TABLE local_private_media (_id INTEGER PRIMARY KEY, dedup_key TEXT NOT NULL, content_hash TEXT DEFAULT NULL, filepath TEXT NOT NULL, capture_timestamp INTEGER NOT NULL, timezone_offset INTEGER NOT NULL, utc_timestamp INTEGER NOT NULL, is_hidden INTEGER NOT NULL DEFAULT 0, composition_type INTEGER, type TEXT NOT NULL DEFAULT '0', is_micro_video INTEGER NOT NULL DEFAULT 0, size_bytes INTEGER, added_timestamp INTEGER NOT NULL DEFAULT 0, is_backup_processed INTEGER NOT NULL DEFAULT 0, height INTEGER, width INTEGER, content_uri TEXT)",
+  "CREATE TABLE `local_saliency_result` (`dedup_key` TEXT NOT NULL, `model` INTEGER NOT NULL, `version` INTEGER NOT NULL, `aspect_ratio` REAL NOT NULL, `min_x` REAL NOT NULL, `min_y` REAL NOT NULL, `max_x` REAL NOT NULL, `max_y` REAL NOT NULL, `failed` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`dedup_key`, `model`, `version`, `aspect_ratio`))",
+  "CREATE TABLE local_showcase_table (dedup_key TEXT UNIQUE NOT NULL, one_up_views INTEGER NOT NULL DEFAULT 0, needs_local_showcase_score INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE ls_items(_id INTEGER PRIMARY KEY AUTOINCREMENT, media_key TEXT UNIQUE NOT NULL, remote_media_key TEXT, media_ls_item BLOB, stale_sync_version INTEGER, is_dirty INTEGER NOT NULL DEFAULT 0, ordering_timestamp INTEGER NOT NULL, collection_media_key TEXT, envelope_media_key TEXT, state INTEGER NOT NULL DEFAULT 0, visible_layout INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE main_grid_date_headers (\n  timestamp_ms INTEGER UNIQUE NOT NULL,\n  item_count INTEGER NOT NULL\n)",
+  "CREATE TABLE main_grid_queried_count (count INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE main_grid_queried_date_headers (slot_id INTEGER NOT NULL, start_time INTEGER NOT NULL, items_under_header INTEGER NOT NULL )",
+  "CREATE TABLE media (_id INTEGER PRIMARY KEY AUTOINCREMENT, dedup_key TEXT UNIQUE NOT NULL, utc_timestamp INTEGER NOT NULL, timezone_offset INTEGER NOT NULL, capture_timestamp INTEGER NOT NULL, month_random_timestamp INTEGER NOT NULL DEFAULT 0, type TEXT NOT NULL, is_deleted INTEGER NOT NULL DEFAULT 0, is_vr INTEGER NOT NULL DEFAULT 0, has_local INTEGER NOT NULL DEFAULT 0, is_hidden INTEGER NOT NULL DEFAULT 0, composition_type INTEGER, partial_backup_downloaded INTEGER NOT NULL DEFAULT 0, oem_special_type TEXT, is_archived INTEGER NOT NULL DEFAULT 0, is_favorite INTEGER NOT NULL DEFAULT 0, in_camera_folder INTEGER NOT NULL DEFAULT 0, in_primary_storage INTEGER NOT NULL DEFAULT 0, overlay_type INTEGER NOT NULL DEFAULT 0, min_upload_utc_timestamp INTEGER NOT NULL DEFAULT 0,date_header_utc_timestamp INTEGER,trash_timestamp INTEGER,location_type INTEGER NOT NULL DEFAULT 0, canonical_media_key TEXT, canonical_content_version INTEGER, media_generation INTEGER NOT NULL DEFAULT 0, owner_package_name TEXT, is_recommended INTEGER, upload_origin INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE media_collection_key_proxy (local_id TEXT PRIMARY KEY, remote_media_key TEXT)",
+  "CREATE TABLE media_collection_tombstone_log (local_id TEXT PRIMARY KEY, reason TEXT NOT NULL )",
+  "CREATE TABLE media_generation (_id INTEGER PRIMARY KEY, generation INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE media_key_proxy (local_id TEXT PRIMARY KEY, remote_media_key TEXT)",
+  "CREATE TABLE media_share_api_requests_v2(api_request_id TEXT UNIQUE NOT NULL, upload_request_id INTEGER, request_source INTEGER NOT NULL, request_state INTEGER NOT NULL, request_creation_timestamp_millis INTEGER NOT NULL, shared_album_url TEXT, final_status_callback_timestamp_millis INTEGER)",
+  "CREATE TABLE media_sync_table(url TEXT NOT NULL, width INTEGER NOT NULL, height INTEGER NOT NULL, sync_time INTEGER NOT NULL)",
+  "CREATE TABLE media_tombstone_log (local_id TEXT PRIMARY KEY, reason TEXT NOT NULL )",
+  "CREATE TABLE memories (_id INTEGER PRIMARY KEY, memory_key TEXT NOT NULL, render_start_time_ms INTEGER, render_end_time_ms INTEGER, feature_enabled INTEGER NOT NULL DEFAULT 1, render_type INTEGER NOT NULL DEFAULT 1, subtype INTEGER NOT NULL DEFAULT -1, relevance_type INTEGER NOT NULL DEFAULT -1, title TEXT, subtitle TEXT, ranking_value INTEGER NOT NULL DEFAULT 0, read_state_key TEXT NOT NULL DEFAULT '', media_curated_item_set BLOB, is_persistent INTEGER, music_track_id TEXT, parent_collection_id TEXT, is_shared INTEGER NOT NULL DEFAULT 0, is_user_saved INTEGER NOT NULL DEFAULT 0, show_hidden_items_in_private_memory INTEGER NOT NULL DEFAULT 0, is_user_managed INTEGER NOT NULL DEFAULT 0, is_deleted INTEGER NOT NULL DEFAULT 0, title_type INTEGER NOT NULL DEFAULT 0, subheader_type INTEGER NOT NULL DEFAULT 0, cover_media_local_id TEXT, full_width_cover_media_local_id TEXT, is_owned INTEGER, can_pregenerate_title_suggestion INTEGER NOT NULL DEFAULT 1, regeneration_state INTEGER NOT NULL DEFAULT 0, stale_sync_version INTEGER, is_dirty INTEGER NOT NULL DEFAULT 0, optimistic_write_time_ms INTEGER, is_on_device INTEGER NOT NULL DEFAULT 0, on_device_generation_info TEXT, UNIQUE(memory_key, is_shared))",
+  "CREATE TABLE memories_carousel_schedule (date TEXT PRIMARY KEY NOT NULL, memories_count INTEGER NOT NULL)",
+  "CREATE TABLE memories_content (_id INTEGER PRIMARY KEY, memory_id INTEGER NOT NULL, hidden_date_ref_count INTEGER NOT NULL DEFAULT 0, is_disabled_creation INTEGER NOT NULL DEFAULT 0, media_local_id TEXT NOT NULL, ranking INTEGER NOT NULL DEFAULT 0, effect_render_instruction BLOB, duration REAL NOT NULL DEFAULT 5.0, is_shared INTEGER NOT NULL DEFAULT 0, is_thumbnail INTEGER NOT NULL DEFAULT 0, is_full_width_thumbnail INTEGER NOT NULL DEFAULT 0, is_souvenir INTEGER NOT NULL DEFAULT 0, souvenir_label TEXT NOT NULL DEFAULT '', shareable_asset_type INTEGER NOT NULL DEFAULT 0, page_id INTEGER, item_dedup_key TEXT NOT NULL DEFAULT 'unknown', shareable_type INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE memories_content_info (_id INTEGER PRIMARY KEY, memory_id INTEGER NOT NULL, start_time_ms INTEGER NOT NULL, end_time_ms INTEGER NOT NULL)",
+  "CREATE TABLE memories_content_read_state (_id INTEGER PRIMARY KEY, read_state_key TEXT NOT NULL, item_local_id TEXT NOT NULL, item_dedup_key TEXT NOT NULL DEFAULT 'unknown', UNIQUE (read_state_key, item_local_id, item_dedup_key))",
+  "CREATE TABLE memories_key_proxy (\n  local_id TEXT PRIMARY KEY,\n  remote_media_key TEXT UNIQUE)",
+  "CREATE TABLE memories_music_evicted_tracks (\n  track_url TEXT PRIMARY KEY NOT NULL, \n  eviction_timestamp_ms INTEGER NOT NULL DEFAULT 0\n) WITHOUT ROWID",
+  "CREATE TABLE memories_pages (\n  _id INTEGER PRIMARY KEY AUTOINCREMENT,\n  memory_id INTEGER NOT NULL,\n  page_type INTEGER NOT NULL,\n  ranking INTEGER NOT NULL,\n  duration_secs REAL NOT NULL DEFAULT 5.0,\n  effect_render_instruction BLOB,\n  is_soft_deleted INTEGER NOT NULL DEFAULT 0\n)",
+  "CREATE TABLE memories_promos (_id INTEGER PRIMARY KEY AUTOINCREMENT, promo_memory_key TEXT NOT NULL, promo_memory_id INTEGER, promo_id TEXT NOT NULL, promo_title TEXT, promo_subtitle TEXT, promo_primary_button_label TEXT, promo_dismiss_button_label TEXT, question_lane_ranking INTEGER, question_lane_render_start_time_ms INTEGER, question_lane_render_end_time_ms INTEGER)",
+  "CREATE TABLE memories_read_items_pending (memory_media_key TEXT NOT NULL, item_dedup_key TEXT NOT NULL, UNIQUE (memory_media_key, item_dedup_key))",
+  "CREATE TABLE memories_subjects (\n          _id INTEGER PRIMARY KEY AUTOINCREMENT,\n          memory_id INTEGER NOT NULL,\n          cluster_media_key TEXT NOT NULL,\n          FOREIGN KEY (memory_id) REFERENCES memories (_id)\n        )",
+  "CREATE TABLE memories_title_suggestions (\n          _id INTEGER PRIMARY KEY AUTOINCREMENT,\n          memory_row_id INTEGER NOT NULL,\n          title_suggestion TEXT NOT NULL\n        )",
+  "CREATE TABLE metadata_sync (key INTEGER PRIMARY KEY, value BLOB)",
+  "CREATE TABLE mobile_ica_scan (_id INTEGER PRIMARY KEY, dedup_key TEXT UNIQUE NOT NULL, utc_timestamp INTEGER NOT NULL,scan_state INTEGER NOT NULL DEFAULT 0, labels BLOB, sharpness_score FLOAT NOT NULL DEFAULT 0)",
+  "CREATE TABLE notification_throttling (_id INTEGER PRIMARY KEY AUTOINCREMENT, throttling_key TEXT UNIQUE NOT NULL, last_notification_time INTEGER NOT NULL, last_alert_time INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE obsolete_processor_ids(processor_id TEXT PRIMARY KEY)",
+  "CREATE TABLE odfc_tombstone_log (cluster_kernel_media_key TEXT NOT NULL, deletion_time_ms INTEGER NOT NULL )",
+  "CREATE TABLE odfc_unexamined_media (unexamined_media_key TEXT UNIQUE NOT NULL)",
+  "CREATE TABLE offline_commit_queue (id INTEGER PRIMARY KEY AUTOINCREMENT, commit_type INTEGER NOT NULL, offline_commit_blob BLOB NOT NULL, action_queue_rowid INTEGER NOT NULL, stale_condition_blob BLOB, post_commit_offline_commit_blob BLOB, creation_timestamp INTEGER NOT NULL DEFAULT 0, online_completed_timestamp INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE on_device_mi (_id INTEGER PRIMARY KEY, dedup_key TEXT NOT NULL, model INTEGER NOT NULL, version INTEGER NOT NULL, last_access_ms INTEGER NOT NULL, result BLOB, UNIQUE (dedup_key,model,version))",
+  "CREATE TABLE ongoing_candidate_media (dedup_key TEXT UNIQUE NOT NULL, utc_timestamp_ms INTEGER NOT NULL DEFAULT 0, is_temporally_distinct INTEGER NOT NULL DEFAULT 0 )",
+  "CREATE TABLE os_migration_album_mapping (\n        source_album_id STRING PRIMARY KEY NOT NULL,\n        photos_album_local_id STRING NOT NULL\n      )",
+  "CREATE TABLE out_of_sync_suggested_action (action_type INTEGER PRIMARY KEY,out_of_sync_last_received_time_ms INTEGER,last_shown_time_ms INTEGER,last_dismissed_time_ms INTEGER)",
+  "CREATE TABLE partition_tables (partition_name TEXT NOT NULL,table_name TEXT NOT NULL,UNIQUE (partition_name,table_name))",
+  "CREATE TABLE partition_versions (partition_name TEXT NOT NULL PRIMARY KEY,version INT NOT NULL DEFAULT(0))",
+  "CREATE TABLE partition_views (partition_name TEXT NOT NULL,view_name TEXT NOT NULL,UNIQUE (partition_name,view_name))",
+  "CREATE TABLE pending_suggested_action (_id INTEGER PRIMARY KEY, media_key TEXT NOT NULL, dedup_key TEXT, suggestion_id TEXT NOT NULL, suggestion_type INTEGER NOT NULL, UNIQUE (media_key, suggestion_id, suggestion_type))",
+  "CREATE TABLE permanent_delete_media_id_consent (\n_id INTEGER PRIMARY KEY AUTOINCREMENT,\nmedia_id TEXT NOT NULL,\npackage_name TEXT NOT NULL,\ncreation_timestamp INTEGER NOT NULL DEFAULT 0\n)",
+  "CREATE TABLE pfc_face (_id INTEGER PRIMARY KEY AUTOINCREMENT, face_media_key TEXT UNIQUE, photo_clustering_status_id INTEGER NOT NULL REFERENCES photo_clustering_status (_id) ON DELETE CASCADE, cluster_kernel_id INTEGER REFERENCES cluster_kernel (_id) ON DELETE SET NULL, face_proto BLOB, face_crop BLOB, face_template_vector BLOB, write_time_utc_ms INTEGER, detection_image_width INTEGER, detection_image_height INTEGER, used_in_repel_score INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE photo_clustering_status (_id INTEGER PRIMARY KEY, dedup_key TEXT UNIQUE NOT NULL, detection_time_ms INTEGER, extraction_time_ms INTEGER, clustering_time_ms INTEGER, write_time_utc_ms INTEGER, capture_time_utc_ms INTEGER, source INTEGER NOT NULL, processing_state INTEGER NOT NULL, is_reclustering INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE photos_validation_summary (\n  _id INTEGER PRIMARY KEY AUTOINCREMENT,\n  dedup_key TEXT NOT NULL,\n  photos_validation_summary BLOB\n)",
+  "CREATE TABLE print_subscriptions (_id INTEGER PRIMARY KEY AUTOINCREMENT, subscription_media_key TEXT UNIQUE NOT NULL, order_category INTEGER NOT NULL, subscription_state INTEGER NOT NULL, subscription_proto BLOB NOT NULL)",
+  "CREATE TABLE printing_layouts (draft_media_key TEXT NOT NULL PRIMARY KEY, draft_layout_proto BLOB NOT NULL)",
+  "CREATE TABLE printing_media (_id INTEGER PRIMARY KEY AUTOINCREMENT, draft_media_key TEXT NOT NULL, surface_index INTEGER NOT NULL, photo_index INTEGER NOT NULL DEFAULT 0, photo_position INTEGER NOT NULL, print_photo_proto BLOB NOT NULL, UNIQUE (draft_media_key, surface_index, photo_position))",
+  "CREATE TABLE printing_orders (media_key TEXT NOT NULL PRIMARY KEY, product_id TEXT NOT NULL DEFAULT '', order_category INTEGER NOT NULL, order_status INTEGER NOT NULL, last_edited_time_ms INTEGER NOT NULL, order_proto BLOB NOT NULL, layout_proto BLOB)",
+  "CREATE TABLE printing_promotions (_id INTEGER PRIMARY KEY, promotion_id TEXT NOT NULL, start_time_ms INTEGER NOT NULL, end_time_ms INTEGER NOT NULL, surface INTEGER NOT NULL DEFAULT 0, is_dismissible INTEGER NOT NULL DEFAULT 1, is_dismissed INTEGER NOT NULL DEFAULT 0, proto BLOB NOT NULL)",
+  "CREATE TABLE printing_proto_dump (type INTEGER NOT NULL, proto BLOB NOT NULL)",
+  "CREATE TABLE printing_suggestions (suggestion_media_key TEXT NOT NULL PRIMARY KEY, aisle INTEGER NOT NULL DEFAULT 0, type INTEGER NOT NULL DEFAULT 0, cover_media_key TEXT NOT NULL, title TEXT, mode INTEGER, sort_order INTEGER, suggestion_state INTEGER NOT NULL DEFAULT 0, item_count INTEGER, proto BLOB NOT NULL)",
+  "CREATE TABLE promo (_id INTEGER PRIMARY KEY, promo_id TEXT UNIQUE NOT NULL, promo_type INTEGER NOT NULL, is_recurring INTEGER NOT NULL DEFAULT 0, is_eligible INTEGER NOT NULL DEFAULT 0, last_shown_time_ms INTEGER NOT NULL DEFAULT 0, dismissed_time_ms INTEGER NOT NULL DEFAULT 0, was_negative_dismissal INTEGER NOT NULL DEFAULT 0, ignore_period_count INTEGER NOT NULL DEFAULT 0, last_ignore_period_start_time_ms INTEGER NOT NULL DEFAULT 0, category INTEGER NOT NULL DEFAULT 0, promo_data_source INTEGER NOT NULL DEFAULT 0, surface INTEGER NOT NULL DEFAULT 0, priority INTEGER NOT NULL DEFAULT 2147483647, nudge_id INTEGER DEFAULT NULL)",
+  "CREATE TABLE promo_surfaces (\n    promotion_id TEXT NOT NULL,\n    surface INTEGER NOT NULL, can_auto_expand INTEGER NOT NULL DEFAULT 0,\n    PRIMARY KEY(promotion_id, surface)\n)",
+  "CREATE TABLE quick_actions (_id INTEGER PRIMARY KEY AUTOINCREMENT, type INTEGER NOT NULL, album_media_key TEXT DEFAULT NULL, envelope_media_key TEXT DEFAULT NULL, search_cluster_id INTEGER DEFAULT NULL, device_folder_bucket_id TEXT DEFAULT NULL, utility_action_type INTEGER DEFAULT NULL, score INTEGER NOT NULL DEFAULT 0, last_access_time_ms INTEGER NOT NULL DEFAULT 0, access_count INTEGER NOT NULL DEFAULT 0, pinned_order_score REAL DEFAULT NULL, UNIQUE(type, album_media_key, envelope_media_key, search_cluster_id, device_folder_bucket_id, utility_action_type) )",
+  "CREATE TABLE remote_locked_media(_id INTEGER PRIMARY KEY, dedup_key TEXT NOT NULL, capture_timestamp INTEGER NOT NULL, type TEXT NOT NULL, photosphere INTEGER, protobuf BLOB, width INTEGER, height INTEGER, size_bytes INTEGER NOT NULL, timezone_offset INTEGER NOT NULL, utc_timestamp INTEGER NOT NULL, duration INTEGER, filename TEXT, latitude REAL, longitude REAL, adaptive_video_stream_state INTEGER, oem_special_type TEXT, mime_type TEXT, is_vr INTEGER NOT NULL DEFAULT 0, content_version INTEGER, server_creation_timestamp INTEGER NOT NULL DEFAULT 0, upload_status INTEGER NOT NULL DEFAULT 100, is_raw INTEGER NOT NULL DEFAULT 0, partial_backup INTEGER NOT NULL DEFAULT 0, is_micro_video INTEGER NOT NULL DEFAULT 0, depth_type INTEGER NOT NULL DEFAULT 0, micro_video_still_image_timestamp INTEGER, capture_frame_rate REAL, encoded_frame_rate REAL, can_download INTEGER, micro_video_motion_state INTEGER NOT NULL DEFAULT 0, is_ls_video INTEGER, inferred_latitude REAL, inferred_longitude REAL, can_play_video INTEGER NOT NULL DEFAULT 1, remote_media_key TEXT, quota_charged_bytes INTEGER, location_source INTEGER, version INTEGER, hdr_type INTEGER, remote_url TEXT NOT NULL, media_key TEXT UNIQUE NOT NULL, partial_backup_downloaded INTEGER NOT NULL DEFAULT 0, composition_type INTEGER )",
+  "CREATE TABLE remote_media(_id INTEGER PRIMARY KEY, dedup_key TEXT NOT NULL, remote_url STRING NOT NULL, media_key STRING UNIQUE NOT NULL, capture_timestamp INTEGER NOT NULL, type TEXT NOT NULL, state INTEGER NOT NULL DEFAULT 0, photosphere INTEGER, photo_id INTEGER, collection_id STRING, composition_state2 INTEGER DEFAULT -1, composition_type INTEGER, caption TEXT, cluster_id TEXT, cluster_score REAL, protobuf BLOB, width INTEGER, height INTEGER, size_bytes INTEGER NOT NULL, timezone_offset INTEGER NOT NULL, utc_timestamp INTEGER NOT NULL, duration INTEGER, filename TEXT, latitude REAL, is_edited INTEGER, longitude REAL, showcase_score REAL DEFAULT 0, is_hidden INTEGER NOT NULL DEFAULT 0, is_shared INTEGER NOT NULL DEFAULT 0, is_from_drive INTEGER NOT NULL DEFAULT 0, adaptive_video_stream_state INTEGER, has_storyboard INTEGER NOT NULL DEFAULT 0, position REAL, sort_key TEXT, oem_special_type TEXT, locally_rendered_uri TEXT, mime_type TEXT, is_vr INTEGER NOT NULL DEFAULT 0, content_version INTEGER, server_creation_timestamp INTEGER NOT NULL DEFAULT 0, upload_status INTEGER NOT NULL DEFAULT 100, local_content_uri TEXT, local_signature INTEGER NOT NULL DEFAULT 0, has_content_hashes INTEGER NOT NULL DEFAULT 0, is_raw INTEGER NOT NULL DEFAULT 0, partial_backup INTEGER NOT NULL DEFAULT 0, is_archived INTEGER NOT NULL DEFAULT 0, suggested_archive_score FLOAT NOT NULL DEFAULT 0, archive_suggestion_state INTEGER NOT NULL DEFAULT 0, is_micro_video INTEGER NOT NULL DEFAULT 0, depth_type INTEGER NOT NULL DEFAULT 0, micro_video_still_image_timestamp INTEGER, capture_frame_rate REAL, encoded_frame_rate REAL, is_favorite INTEGER NOT NULL DEFAULT 0, compact_warp_grids BLOB, can_download INTEGER, micro_video_motion_state INTEGER NOT NULL DEFAULT 0, is_ls_video INTEGER, trash_timestamp INTEGER, inferred_latitude REAL, inferred_longitude REAL, is_canonical INTEGER, can_play_video INTEGER NOT NULL DEFAULT 1, remote_media_key TEXT, quota_charged_bytes INTEGER, location_source INTEGER, version INTEGER, user_specified_caption TEXT, hdr_type INTEGER, gainmap_present INTEGER, blanford_format INTEGER DEFAULT NULL, face_count_value INTEGER DEFAULT -1, has_sdr_vp9 INTEGER NOT NULL DEFAULT 0, owner_package_name TEXT, is_recommended INTEGER, micro_video_moments_count INTEGER DEFAULT NULL, upload_origin INTEGER NOT NULL DEFAULT 0, threepio_metadata_state INTEGER DEFAULT NULL , camera_capture_session_group_id TEXT, oem_state INTEGER DEFAULT NULL, is_canonical_copy INTEGER DEFAULT NULL, has_smpte_2094_50 INTEGER DEFAULT NULL)",
+  "CREATE TABLE remote_media_rollback_store (local_id TEXT UNIQUE PRIMARY KEY NOT NULL, protobuf BLOB, dedup_key TEXT, collection_id TEXT, stale_sync_version INTEGER)",
+  "CREATE TABLE retail_prints_order_info (media_key TEXT NOT NULL, store_id BLOB NOT NULL, FOREIGN KEY (media_key) REFERENCES printing_orders(media_key) ON DELETE CASCADE)",
+  "CREATE TABLE room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+  "CREATE TABLE search_cluster_ranking (ranking_type INTEGER NOT NULL, search_cluster_id INTEGER NOT NULL REFERENCES search_clusters(_id) ON DELETE CASCADE, score REAL NOT NULL, UNIQUE (ranking_type, search_cluster_id))",
+  "CREATE TABLE search_clusters (_id INTEGER PRIMARY KEY AUTOINCREMENT, type INTEGER NOT NULL, chip_id TEXT, cluster_media_key TEXT UNIQUE, cache_timestamp INTEGER, iconic_image_uri TEXT, label TEXT, subject_id TEXT, proto BLOB, visibility INTEGER NOT NULL DEFAULT 1, hide_reason INTEGER, me_score FLOAT NOT NULL DEFAULT 0, estimated_birth_time INTEGER NOT NULL DEFAULT 0, is_pet_cluster INTEGER NOT NULL DEFAULT 0, location_name TEXT, is_alias_location INTEGER NOT NULL DEFAULT 0, query_proto BLOB, cover_item_refs TEXT, suggestion_type INTEGER, detailed_description TEXT, face_hiding_status INTEGER NOT NULL DEFAULT 0, UNIQUE (type, chip_id))",
+  "CREATE TABLE 'search_clusters_fts4_docsize'(docid INTEGER PRIMARY KEY, size BLOB)",
+  "CREATE TABLE 'search_clusters_fts4_segdir'(level INTEGER,idx INTEGER,start_block INTEGER,leaves_end_block INTEGER,end_block INTEGER,root BLOB,PRIMARY KEY(level, idx))",
+  "CREATE TABLE 'search_clusters_fts4_segments'(blockid INTEGER PRIMARY KEY, block BLOB)",
+  "CREATE TABLE 'search_clusters_fts4_stat'(id INTEGER PRIMARY KEY, value BLOB)",
+  "CREATE TABLE search_grid_suggestions(refinement_id TEXT UNIQUE NOT NULL, start_time_ms DATETIME NOT NULL, end_time_ms DATETIME NOT NULL, ranking REAL NOT NULL, refinement_proto BLOB NOT NULL, icon_type INTEGER NOT NULL, label TEXT NOT NULL)",
+  "CREATE TABLE search_proto_store (proto_key TEXT UNIQUE NOT NULL, proto BLOB)",
+  "CREATE TABLE search_refinements(refinement_id TEXT UNIQUE NOT NULL, parent_cluster_id INTEGER NOT NULL REFERENCES search_clusters(_id) ON DELETE CASCADE, search_cluster_id INTEGER NOT NULL REFERENCES search_clusters(_id) ON DELETE CASCADE, placement INTEGER NOT NULL, ranking REAL, refinement_proto BLOB, cache_key BLOB)",
+  "CREATE TABLE search_results (search_cluster_id INTEGER NOT NULL REFERENCES search_clusters(_id) ON DELETE CASCADE, dedup_key TEXT NOT NULL, capture_day INTEGER NOT NULL, capture_offset INTEGER NOT NULL, date_header_start_timestamp INTEGER, query_specific_thumbnail_url TEXT, all_media_id INTEGER NOT NULL REFERENCES media(_id) ON DELETE CASCADE, cache_timestamp INTEGER, display_order INTEGER NOT NULL DEFAULT -1, UNIQUE (search_cluster_id, dedup_key))",
+  "CREATE TABLE selective_backup(content_uri TEXT PRIMARY KEY NOT NULL)",
+  "CREATE TABLE server_promo(promo_id TEXT NOT NULL PRIMARY KEY, proto BLOB NOT NULL)",
+  "CREATE TABLE settings(setting_name TEXT PRIMARY KEY, is_enabled INTEGER NOT NULL)",
+  "CREATE TABLE share_suggestions ( \n  _id INTEGER PRIMARY KEY AUTOINCREMENT, \n  suggestion_media_key TEXT UNIQUE NOT NULL,\n  suggestion_state INTEGER NOT NULL, \n  suggestion_type INTEGER NOT NULL, \n  target_collection_media_key TEXT,\n  protobuf BLOB NOT NULL\n)",
+  "CREATE TABLE shared_media(_id INTEGER PRIMARY KEY, dedup_key TEXT NOT NULL, remote_url TEXT NOT NULL, media_key TEXT UNIQUE NOT NULL, capture_timestamp INTEGER NOT NULL, type TEXT NOT NULL, state INTEGER NOT NULL DEFAULT 0, photosphere INTEGER, photo_id INTEGER, collection_id TEXT, composition_state2 INTEGER DEFAULT -1, composition_type INTEGER, caption TEXT, cluster_id TEXT, cluster_score REAL, protobuf BLOB, width INTEGER, height INTEGER, size_bytes INTEGER NOT NULL, timezone_offset INTEGER NOT NULL, utc_timestamp INTEGER NOT NULL, duration INTEGER, filename TEXT, latitude REAL, is_edited INTEGER, longitude REAL, showcase_score REAL DEFAULT 0, is_hidden INTEGER NOT NULL DEFAULT 0, is_shared INTEGER NOT NULL DEFAULT 0, is_from_drive INTEGER NOT NULL DEFAULT 0, adaptive_video_stream_state INTEGER, has_storyboard INTEGER NOT NULL DEFAULT 0, position REAL, oem_special_type TEXT, sort_key TEXT, mime_type TEXT, server_creation_timestamp INTEGER NOT NULL DEFAULT 0, owner_media_key TEXT NOT NULL, write_time_ms INTEGER, is_vr INTEGER NOT NULL DEFAULT 0, content_version INTEGER, can_share INTEGER NOT NULL DEFAULT 0, can_set_as_cover INTEGER, upload_status INTEGER NOT NULL DEFAULT 100, comment_count INTEGER, has_content_hashes INTEGER NOT NULL DEFAULT 0, is_raw INTEGER NOT NULL DEFAULT 0, partial_backup INTEGER NOT NULL DEFAULT 0, suggested_archive_score FLOAT NOT NULL DEFAULT 0, archive_suggestion_state INTEGER NOT NULL DEFAULT 0, is_micro_video INTEGER NOT NULL DEFAULT 0, is_favorite INTEGER NOT NULL DEFAULT 0, depth_type INTEGER NOT NULL DEFAULT 0, micro_video_still_image_timestamp INTEGER, capture_frame_rate REAL, encoded_frame_rate REAL, compact_warp_grids BLOB, can_download INTEGER, has_viewer_heart INTEGER NOT NULL DEFAULT 0, add_method INTEGER NOT NULL DEFAULT 0, micro_video_motion_state INTEGER NOT NULL DEFAULT 0, is_ls_video INTEGER, can_play_video INTEGER NOT NULL DEFAULT 1,remote_media_key TEXT, user_specified_caption TEXT, quota_charged_bytes INTEGER, hdr_type INTEGER, gainmap_present INTEGER, face_count_value INTEGER DEFAULT -1,blanford_format INTEGER DEFAULT NULL, optimistic_write_time_ms INTEGER, optimistic_write_sync_version INTEGER, pristine_protobuf BLOB, micro_video_moments_count INTEGER DEFAULT NULL, threepio_metadata_state INTEGER DEFAULT NULL , camera_capture_session_group_id TEXT, has_smpte_2094_50 INTEGER DEFAULT NULL)",
+  "CREATE TABLE shared_media_rollback_store (\n  local_id TEXT UNIQUE PRIMARY KEY NOT NULL,\n  collection_id TEXT,\n  protobuf BLOB,\n  optimistic_write_time_ms INTEGER NOT NULL,\n  optimistic_write_sync_version INTEGER NOT NULL\n)",
+  "CREATE TABLE slomo_transition_edits_table (_id INTEGER PRIMARY KEY, dedup_key TEXT UNIQUE NOT NULL, transition_data BLOB NOT NULL)",
+  "CREATE TABLE stamp_read_state(_id INTEGER PRIMARY KEY, promo_id TEXT UNIQUE NOT NULL, tile_first_impression_date_secs INTEGER NOT NULL, furthest_viewed_item_index INTEGER NOT NULL DEFAULT -1, display_period_count INTEGER NOT NULL DEFAULT 0 )",
+  "CREATE TABLE suggested_actions (_id INTEGER PRIMARY KEY, dedup_key TEXT NOT NULL, suggestion_id TEXT NOT NULL, suggestion_priority FLOAT NOT NULL, suggestion_score FLOAT NOT NULL DEFAULT 0, suggestion_type INTEGER NOT NULL, suggestion_source INTEGER NOT NULL DEFAULT 0, suggestion_state INTEGER NOT NULL, suggestion_reconcile_state INTEGER NOT NULL DEFAULT 0, suggestion_type_metadata_protobuf BLOB DEFAULT NULL, UNIQUE (dedup_key, suggestion_id, suggestion_source))",
+  "CREATE TABLE suggested_actions_item (_id INTEGER PRIMARY KEY, dedup_key TEXT UNIQUE NOT NULL, protobuf BLOB NOT NULL)",
+  "CREATE TABLE suggested_backup_table (dedup_key TEXT UNIQUE NOT NULL, score INTEGER NOT NULL, suggestion_state TEXT NOT NULL DEFAULT 'unscanned', capture_timestamp INTEGER NOT NULL)",
+  "CREATE TABLE suggested_cluster_merge(_id INTEGER PRIMARY KEY, suggestion_media_key TEXT UNIQUE NOT NULL,state INTEGER NOT NULL,source TEXT REFERENCES search_clusters(cluster_media_key) ON DELETE CASCADE,destination TEXT REFERENCES search_clusters(cluster_media_key) ON DELETE CASCADE,similarity FLOAT NOT NULL DEFAULT 0, UNIQUE(source, destination))",
+  "CREATE TABLE suggestion_items(suggestion_id INTEGER NOT NULL, suggestion_media_key TEXT NOT NULL,item_media_key TEXT,item_dedup_key TEXT,is_featured INTEGER NOT NULL,FOREIGN KEY (suggestion_media_key ) REFERENCES suggestions(suggestion_id) ON DELETE CASCADE ON UPDATE CASCADE, CONSTRAINT one_key_not_null CHECK (item_media_key IS NOT NULL OR item_dedup_key IS NOT NULL), CONSTRAINT one_key_null CHECK (item_media_key IS NULL OR item_dedup_key IS NULL))",
+  "CREATE TABLE suggestion_recipients(suggestion_id INTEGER, recipient_type INTEGER NOT NULL,actor_id TEXT,email TEXT,phone_number TEXT,cluster_id TEXT,inference_media_key TEXT, recipient_source INTEGER NOT NULL DEFAULT 0,FOREIGN KEY (suggestion_id ) REFERENCES suggestions(_id) ON DELETE CASCADE ON UPDATE CASCADE )",
+  "CREATE TABLE suggestions(_id INTEGER PRIMARY KEY, suggestion_id TEXT UNIQUE NOT NULL,algorithm_type INTEGER NOT NULL,existing_collection_id TEXT,existing_collection_position FLOAT,existing_collection_sort_key TEXT,state INTEGER NOT NULL,source INTEGER NOT NULL,least_recent_item_timestamp_ms INTEGER,most_recent_item_timestamp_ms INTEGER,creation_time_ms INTEGER NOT NULL DEFAULT 0,start_time_ms INTEGER NOT NULL DEFAULT 0,end_time_ms INTEGER NOT NULL DEFAULT 0,notification_shown INTEGER NOT NULL DEFAULT 0,protobuf BLOB,suggestor_log TEXT,alert_level INTEGER NOT NULL DEFAULT 0,notification_state INTEGER NOT NULL DEFAULT 0,notification_key TEXT,confidence INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE suppressed_promos(\n  suppressable_promotion_id INT NOT NULL PRIMARY KEY\n)",
+  "CREATE TABLE synced_folder_generation (_id INTEGER PRIMARY KEY, generation INTEGER NOT NULL DEFAULT 0) WITHOUT ROWID",
+  "CREATE TABLE synced_folder_media_metadata (access_folder_media_id INTEGER PRIMARY KEY AUTOINCREMENT, folder_media_id TEXT UNIQUE, folder_id TEXT, file_path TEXT NOT NULL, file_path_generation INTEGER, file_path_modified_timestamp INTEGER, dedup_key TEXT NOT NULL, media_store_id INTEGER UNIQUE, media_key TEXT, media_generation INTEGER NOT NULL, file_metadata BLOB, file_metadata_generation INTEGER, file_metadata_modified_timestamp INTEGER, user_metadata BLOB, user_metadata_generation INTEGER, user_metadata_modified_timestamp INTEGER, edited_hash TEXT, edited_hash_generation INTEGER, edited_hash_modified_timestamp INTEGER, folder_media_trash_timestamp INTEGER, folder_media_trash_timestamp_generation INTEGER, folder_media_trash_timestamp_modified_timestamp INTEGER, metadata_hash TEXT NOT NULL, hidden INTEGER NOT NULL DEFAULT 0, pristine_protobuf BLOB, ref_to_hidden INTEGER)",
+  "CREATE TABLE synced_folder_media_tombstone (\n  access_folder_media_id INTEGER PRIMARY KEY,\n  generation INTEGER NOT NULL,\n  timestamp INTEGER\n  ) WITHOUT ROWID",
+  "CREATE TABLE synced_folder_metadata (folder_id TEXT PRIMARY KEY, folder_name TEXT, folder_name_alias TEXT, folder_relative_path TEXT, creation_timestamp TEXT, modified_timestamp TEXT, folder_cover_photo TEXT, media_generation INTEGER, folder_state INTEGER NOT NULL DEFAULT 0, UNIQUE (folder_relative_path, folder_name)) WITHOUT ROWID",
+  "CREATE TABLE synced_folder_tombstone (_id INTEGER PRIMARY KEY AUTOINCREMENT, folder_id TEXT NOT NULL, generation INTEGER NOT NULL, UNIQUE (folder_id))",
+  "CREATE TABLE trash_cleanup_soft_delete_not_trashed (_id INTEGER PRIMARY KEY AUTOINCREMENT,content_uri TEXT NOT NULL)",
+  "CREATE TABLE uncertain_dates_table (\n  dedup_key TEXT UNIQUE NOT NULL\n)",
+  "CREATE TABLE unprocessed_user_suggestions(suggestion_media_key TEXT NOT NULL PRIMARY KEY, user_suggestion_proto BLOB)",
+  "CREATE TABLE upload_batch (_id INTEGER PRIMARY KEY AUTOINCREMENT, created_time INTEGER NOT NULL)",
+  "CREATE TABLE upload_request_media(upload_request_id INTEGER NOT NULL, content_uri TEXT, dedup_key TEXT)",
+  "CREATE TABLE upload_requests(dedup_key TEXT NOT NULL, in_locked_folder INTEGER NOT NULL DEFAULT 0, request_id INTEGER NOT NULL, cancellation_type INTEGER NOT NULL DEFAULT 0,limit_upload_attempts INTEGER NOT NULL DEFAULT 0,upload_attribution INTEGER NOT NULL DEFAULT 0, requested_media_generation INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE widget_media_content (_id INTEGER PRIMARY KEY AUTOINCREMENT,widget_id INTEGER NOT NULL,media_local_id TEXT NOT NULL,  UNIQUE (widget_id, media_local_id))",
+  "CREATE TABLE widgets (widget_id INTEGER PRIMARY KEY, media_id TEXT NOT NULL, configuration_proto BLOB, widget_type INTEGER NOT NUll DEFAULT 0)",
+  "CREATE INDEX album_upload_media_batch_idx ON album_upload_media (batch_id,status)",
+  "CREATE INDEX album_upload_media_status_idx ON album_upload_media (status)",
+  "CREATE INDEX app_packages_package_name_idx ON app_packages (package_name)",
+  "CREATE INDEX assistant_cards_sort_idx ON assistant_cards (priority DESC, display_timestamp_ms DESC)",
+  "CREATE INDEX backup_item_status_index ON backup_item_status (dedup_key, in_locked_folder, state, last_modified_timestamp)",
+  "CREATE INDEX batch_table_batch_id_idx ON device_mgmt_batch(batch_id)",
+  "CREATE INDEX burst_group_id_idx ON burst_media (burst_group_id)",
+  "CREATE INDEX burst_paging_idx ON burst_media (dedup_key, is_primary, burst_group_id, bucket_id)",
+  "CREATE INDEX camera_state_dedup_key_local_media_idx ON local_media(in_camera_folder, state, dedup_key)",
+  "CREATE INDEX cluster_kernel_kernel_media_key_idx ON cluster_kernel(kernel_media_key)",
+  "CREATE INDEX cluster_kernel_media_key_idx ON odfc_tombstone_log (cluster_kernel_media_key)",
+  "CREATE INDEX collection_last_activity_time_idx ON collections (last_activity_time_ms)",
+  "CREATE INDEX collections_active_ongoing_idx ON collections (ongoing_state) WHERE ongoing_state = 2",
+  "CREATE INDEX collections_start_idx ON collections (start DESC)",
+  "CREATE INDEX comment_envelope_timestamp_idx ON comments(envelope_media_key, timestamp)",
+  "CREATE INDEX comment_item_key_idx ON comments(item_media_key)",
+  "CREATE INDEX content_hash_dedup_key_content_hash_idx ON content_hash_dedup_key (content_hash, dedup_key)",
+  "CREATE INDEX content_hash_dedup_key_dedup_key_idx\nON content_hash_dedup_key (dedup_key)",
+  "CREATE INDEX content_hash_dedup_key_local_media_idx ON local_media (content_hash, dedup_key)",
+  "CREATE INDEX content_uri_free_up_space_idx ON device_mgmt_batch(content_uri)",
+  "CREATE INDEX content_uri_local_media_idx ON local_media(content_uri)",
+  "CREATE INDEX cover_item_media_key_idx ON collections (cover_item_media_key)",
+  "CREATE INDEX day_segmented_date_headers_idx ON day_segmented_date_headers (start_time, items_under_header)",
+  "CREATE INDEX day_segmented_date_headers_nd_collapsed_idx ON day_segmented_date_headers_nd_collapsed (start_time, items_under_header)",
+  "CREATE INDEX dedup_designation_idx ON backup_queue (dedup_key, in_locked_folder, designation)",
+  "CREATE INDEX dismissed_time_ms_idx ON promo(dismissed_time_ms)",
+  "CREATE INDEX edit_media_store_fingerprint_idx ON edits (media_store_fingerprint)",
+  "CREATE INDEX edit_media_store_uri_idx ON edits (media_store_uri)",
+  "CREATE INDEX edit_original_fingerprint_idx ON edits (original_fingerprint)",
+  "CREATE INDEX edit_status_idx ON edits (status)",
+  "CREATE INDEX env_cover_item_media_key_idx ON envelopes (cover_item_media_key)",
+  "CREATE INDEX envelope_active_ongoing_idx ON envelopes (ongoing_state) WHERE ongoing_state = 2",
+  "CREATE INDEX envelope_bouquet_end_time_idx ON envelopes (bouquet_end_time_ms DESC)\nWHERE bouquet_end_time_ms IS NOT NULL",
+  "CREATE INDEX envelope_create_time_idx ON envelopes(created_time_ms DESC)",
+  "CREATE INDEX envelope_last_activity_time_idx ON envelopes(last_activity_time_ms DESC)",
+  "CREATE INDEX envelope_member_media_key_sort_key_idx ON envelope_members (envelope_media_key, sort_key ASC)",
+  "CREATE INDEX envelope_short_url_idx ON envelopes(short_url)",
+  "CREATE INDEX fallback_bursts_idx ON burst_media (burst_group_id, burst_group_type, bucket_id, primary_score, dedup_key)",
+  "CREATE INDEX filename_burst_group_id_idx ON burst_media (filename_burst_group_id)",
+  "CREATE INDEX filename_fallback_bursts_idx ON burst_media (filename_burst_group_id, burst_group_type, bucket_id, primary_score, dedup_key)",
+  "CREATE INDEX first_backup_timestamp_idx ON local_media(first_backup_timestamp)",
+  "CREATE INDEX hearts_envelope_idx ON hearts(envelope_media_key,creation_time_ms)",
+  "CREATE INDEX hearts_remote_id_idx ON hearts(remote_id)",
+  "CREATE INDEX icd_canonical_id_idx ON item_collection_data (canonical_id)",
+  "CREATE INDEX icd_collection_id_idx ON item_collection_data (collection_id)",
+  "CREATE INDEX idx_backup_video_compression_state_dedup_key_storage_policy ON backup_video_compression_state (dedup_key, storage_policy)",
+  "CREATE INDEX idx_memories_content_dedup_key ON memories_content (memory_id, item_dedup_key)",
+  "CREATE INDEX idx_memories_content_local_id ON memories_content (memory_id, media_local_id)",
+  "CREATE INDEX idx_memories_pages_memory_id\nON memories_pages (memory_id)",
+  "CREATE INDEX idx_memories_read_state_key ON memories (read_state_key)",
+  "CREATE INDEX idx_upload_request_dedup_key ON upload_requests (dedup_key, in_locked_folder, request_id)",
+  "CREATE INDEX idx_upload_request_id ON upload_requests (request_id)",
+  "CREATE INDEX `index_AutoBestTakeMoment_momentId` ON `AutoBestTakeMoment` (`momentId`)",
+  "CREATE UNIQUE INDEX `index_BbqFaceDetectionProgress_dedupKey` ON `BbqFaceDetectionProgress` (`dedupKey`)",
+  "CREATE INDEX `index_BbqMediaCandidate_hasSeen_score` ON `BbqMediaCandidate` (`hasSeen` ASC, `score` DESC)",
+  "CREATE UNIQUE INDEX `index_LocalBytesMutationData_dedupKey` ON `LocalBytesMutationData` (`dedupKey`)",
+  "CREATE INDEX `index_LocalClusterFace_dedupKey` ON `LocalClusterFace` (`dedupKey`)",
+  "CREATE INDEX `index_LocalClusterFace_kernelId` ON `LocalClusterFace` (`kernelId`)",
+  "CREATE UNIQUE INDEX `index_LocalClusterKernel_kernelId` ON `LocalClusterKernel` (`kernelId`)",
+  "CREATE INDEX `index_LocalClusterKernel_personClusterId` ON `LocalClusterKernel` (`personClusterId`)",
+  "CREATE UNIQUE INDEX `index_LocalVideoTimeline_dedupKey` ON `LocalVideoTimeline` (`dedupKey`)",
+  "CREATE UNIQUE INDEX `index_MediaTombstone_remoteMediaKey` ON `MediaTombstone` (`remoteMediaKey`)",
+  "CREATE INDEX `index_MediaVisualEffect_dedupKey` ON `MediaVisualEffect` (`dedupKey`)",
+  "CREATE UNIQUE INDEX `index_MediaVisualEffect_dedupKey_dataType` ON `MediaVisualEffect` (`dedupKey`, `dataType`)",
+  "CREATE UNIQUE INDEX `index_PostCaptureJobRecord_job_id` ON `PostCaptureJobRecord` (`job_id`)",
+  "CREATE INDEX `index_PostCaptureJobRecord_result_status` ON `PostCaptureJobRecord` (`result_status`)",
+  "CREATE UNIQUE INDEX `index_SpatialMedia_originalMediaDedupKey` ON `SpatialMedia` (`originalMediaDedupKey`)",
+  "CREATE INDEX `index_VellumClip_collection_id` ON `VellumClip` (`collection_id`)",
+  "CREATE UNIQUE INDEX `index_VellumProject_project_uuid` ON `VellumProject` (`project_uuid`)",
+  "CREATE INDEX `index_local_ica_label_mid_model_version_confidence` ON `local_ica_label` (`mid`, `model`, `version`, `confidence`)",
+  "CREATE INDEX index_promo_surfaces_surface ON promo_surfaces (surface)",
+  "CREATE INDEX is_archived_idx ON media(is_archived, is_deleted, is_hidden, capture_timestamp)",
+  "CREATE INDEX is_favorite_idx ON media (is_favorite, is_deleted, is_hidden, capture_timestamp)",
+  "CREATE UNIQUE INDEX local_comment_id_index ON comments(local_comment_id)",
+  "CREATE INDEX local_media_bucket_id_idx ON local_media(bucket_id, dedup_key, state)",
+  "CREATE INDEX local_media_in_camera_folder_bucket_id_idx ON local_media(in_camera_folder, bucket_id)",
+  "CREATE INDEX local_private_media_backup_queue_idx ON local_private_media (size_bytes, utc_timestamp, dedup_key)",
+  "CREATE INDEX local_private_media_composition_type_idx ON local_private_media (composition_type, dedup_key)",
+  "CREATE INDEX local_private_media_content_uri_idx ON local_private_media (content_uri)",
+  "CREATE INDEX local_private_media_dedup_key_idx ON local_private_media (dedup_key)",
+  "CREATE INDEX local_private_media_utc_timestamp_idx ON local_private_media (utc_timestamp, dedup_key)",
+  "CREATE INDEX location_header_date_header_state_idx ON day_segmented_location_headers (timestamp, update_state)",
+  "CREATE INDEX location_header_date_header_time_idx ON day_segmented_location_headers (timestamp, cluster_chip_id)",
+  "CREATE INDEX ls_item_ordering_timestamp_index ON ls_items (ordering_timestamp)",
+  "CREATE INDEX main_job_queue_index ON job_queue_table (subsystem_id)",
+  "CREATE INDEX main_local_media_idx ON local_media(dedup_key, content_uri)",
+  "CREATE INDEX main_remote_media_idx ON remote_media(dedup_key, remote_url)",
+  "CREATE INDEX media_camera_folder_paging_idx ON media (in_camera_folder, is_deleted, is_hidden, capture_timestamp, _id, dedup_key)",
+  "CREATE INDEX media_collection_remote_media_key_idx ON media_collection_key_proxy (remote_media_key)",
+  "CREATE INDEX media_composition_type_idx ON media (composition_type, is_deleted, capture_timestamp, _id, is_hidden)",
+  "CREATE INDEX media_deleted_timestamp_idx ON media (is_deleted, capture_timestamp, _id, is_hidden)",
+  "CREATE INDEX media_location_idx ON media (location_type, is_archived, is_deleted, is_hidden, dedup_key,capture_timestamp)",
+  "CREATE INDEX media_oem_special_type_idx ON media (oem_special_type, is_deleted, capture_timestamp, _id, is_hidden)",
+  "CREATE INDEX media_store_id_dedup_key_local_media_idx ON local_media(media_store_id, dedup_key)",
+  "CREATE INDEX media_sync_main_index ON media_sync_table(url, width, height)",
+  "CREATE INDEX media_type_idx ON media(is_deleted, type, capture_timestamp, is_hidden, has_local, dedup_key, in_camera_folder, _id)",
+  "CREATE INDEX media_vr_type_idx ON media (is_vr, is_deleted, is_hidden, capture_timestamp DESC, _id DESC)",
+  "CREATE UNIQUE INDEX memories_content_idx ON memories_content (memory_id, media_local_id, item_dedup_key, is_thumbnail, is_full_width_thumbnail, is_souvenir)",
+  "CREATE INDEX memories_content_local_id_idx ON memories_content (media_local_id)",
+  "CREATE INDEX memories_content_page_id_idx ON memories_content (page_id)",
+  "CREATE INDEX memories_content_read_state_local_id_idx ON memories_content_read_state (item_local_id)",
+  "CREATE INDEX memories_key_proxy_remote_media_key_idx ON memories_key_proxy (remote_media_key)",
+  "CREATE INDEX memories_on_device_generation_info_idx ON memories (on_device_generation_info)",
+  "CREATE INDEX memories_render_end_idx ON memories (render_end_time_ms)",
+  "CREATE INDEX memories_render_end_time_read_state_key_idx ON memories (render_end_time_ms, read_state_key)",
+  "CREATE INDEX memories_render_start_idx ON memories (render_start_time_ms)",
+  "CREATE INDEX memories_subjects_memory_id_cluster_media_key_idx\n        ON memories_subjects (memory_id, cluster_media_key)",
+  "CREATE INDEX min_upload_utc_timestamp_idx ON media(is_deleted, is_hidden, min_upload_utc_timestamp DESC, utc_timestamp DESC)",
+  "CREATE INDEX ondevicemi_dedup_model_idx ON on_device_mi(dedup_key , model)",
+  "CREATE INDEX parent_collection_id_idx ON memories (parent_collection_id)",
+  "CREATE INDEX pending_high_priority_suggestions_idx ON suggested_actions(dedup_key, suggestion_reconcile_state, suggestion_state, suggestion_priority DESC )",
+  "CREATE INDEX pfc_face_media_key_idx ON pfc_face(face_media_key)",
+  "CREATE INDEX pfc_face_status_id_idx ON pfc_face(photo_clustering_status_id)",
+  "CREATE INDEX photo_clustering_status_state_source_idx ON photo_clustering_status(processing_state, source)",
+  "CREATE UNIQUE INDEX photos_validation_summary_dedup_key_idx ON photos_validation_summary (dedup_key)",
+  "CREATE INDEX printing_media_draft_idx ON printing_media(draft_media_key)",
+  "CREATE INDEX printing_orders_last_edited_time_ms_and_draft_status_idx ON printing_orders(last_edited_time_ms DESC)WHERE order_status = 5",
+  "CREATE INDEX printing_orders_last_edited_time_ms_and_valid_order_status_idx ON printing_orders(last_edited_time_ms DESC) WHERE order_status NOT IN (0, 1, 9, 5, 10)",
+  "CREATE INDEX printing_suggestions_type_state_index ON printing_suggestions (type, suggestion_state)",
+  "CREATE INDEX product_id_idx ON printing_orders(product_id)",
+  "CREATE INDEX quick_actions_pinned_order_score_idx ON quick_actions (pinned_order_score) WHERE pinned_order_score IS NOT NULL",
+  "CREATE INDEX remote_composition_type_dedup_key_idx ON remote_media(composition_type, dedup_key)",
+  "CREATE INDEX remote_locked_media_dedup_idx ON remote_locked_media (dedup_key)",
+  "CREATE INDEX remote_media_av_type_idx ON remote_media(type, state, is_hidden)",
+  "CREATE INDEX remote_media_collection_idx ON remote_media(collection_id)",
+  "CREATE INDEX remote_media_inferred_location_idx ON remote_media (dedup_key, state, inferred_latitude, inferred_longitude)",
+  "CREATE INDEX remote_media_is_hidden_idx ON remote_media (is_hidden)",
+  "CREATE INDEX remote_media_key_idx ON media_key_proxy (remote_media_key)",
+  "CREATE INDEX remote_media_location_idx ON remote_media (dedup_key, state, latitude, longitude)",
+  "CREATE INDEX remote_media_location_source_idx ON remote_media (location_source, state)",
+  "CREATE INDEX remote_media_oem_state_idx ON remote_media (oem_state) WHERE oem_state IS NOT NULL",
+  "CREATE INDEX remote_media_table_key_idx ON remote_media (remote_media_key)",
+  "CREATE INDEX render_type_is_user_saved_idx ON memories (render_type, is_user_saved)",
+  "CREATE INDEX resolve_remote_media_idx ON remote_media(dedup_key, media_key)",
+  "CREATE INDEX search_cluster_visibility_idx ON search_clusters(type, visibility, hide_reason)",
+  "CREATE INDEX search_clusters_label_idx ON search_clusters(label COLLATE NOCASE)",
+  "CREATE INDEX search_clusters_media_key_idx ON search_clusters(cluster_media_key COLLATE NOCASE)",
+  "CREATE INDEX search_clusters_ranking_type_idx ON search_cluster_ranking(ranking_type)",
+  "CREATE INDEX search_grid_suggestions_end_time_ms_idx ON search_grid_suggestions (end_time_ms)",
+  "CREATE INDEX search_grid_suggestions_start_time_ms_idx ON search_grid_suggestions (start_time_ms)",
+  "CREATE INDEX search_refinements_parent_cluster_idx ON search_refinements(parent_cluster_id)",
+  "CREATE INDEX search_results_all_media_id_idx ON search_results(all_media_id)",
+  "CREATE INDEX search_results_cluster_id_idx ON search_results(search_cluster_id)",
+  "CREATE INDEX search_results_dedup_key_idx ON search_results(dedup_key)",
+  "CREATE INDEX search_results_location_header_idx ON search_results(capture_day, all_media_id, search_cluster_id)",
+  "CREATE INDEX share_suggestions_suggestion_type_collection_media_key_index \nON share_suggestions(suggestion_type, target_collection_media_key) \nWHERE target_collection_media_key IS NOT NULL",
+  "CREATE INDEX shared_media_collection_remote_media_key_idx\nON shared_media (collection_id, remote_media_key)",
+  "CREATE INDEX shared_media_collection_timestamp_idx ON shared_media (collection_id, server_creation_timestamp)",
+  "CREATE INDEX shared_media_dedup_idx ON shared_media (dedup_key, collection_id)",
+  "CREATE INDEX shared_media_media_key_idx ON shared_media (media_key)",
+  "CREATE INDEX shared_media_server_creation_timestamp_idx ON shared_media (server_creation_timestamp)",
+  "CREATE INDEX slot_id_start_time_items_index ON main_grid_queried_date_headers (slot_id, start_time, items_under_header)",
+  "CREATE INDEX state_timestamp_index ON backup_item_status (state, last_modified_timestamp)",
+  "CREATE INDEX suggested_action_by_id ON suggested_actions(suggestion_id, suggestion_type, suggestion_source)",
+  "CREATE INDEX suggestion_most_recent_timestamp_idx ON suggestions(most_recent_item_timestamp_ms DESC)",
+  "CREATE INDEX synced_folder_media_metadata_dedup_key_idx ON synced_folder_media_metadata (dedup_key)",
+  "CREATE INDEX synced_folder_media_metadata_folder_id_idx ON synced_folder_media_metadata (folder_id)",
+  "CREATE INDEX synced_folder_media_metadata_media_key_idx ON synced_folder_media_metadata (media_key)",
+  "CREATE INDEX upload_request_media_dedup_key_idx ON upload_request_media (dedup_key)",
+  "CREATE INDEX upload_request_media_request_id_idx ON upload_request_media (upload_request_id)",
+  "CREATE INDEX upload_request_type_index ON backup_item_status (upload_request_type)",
+  "CREATE INDEX utc_timestamp_dedup_key_local_locked_media_idx ON account_local_locked_media (utc_timestamp, dedup_key)",
+  "CREATE INDEX utc_timestamp_dedup_key_local_media_idx ON local_media (utc_timestamp, dedup_key)",
+  "CREATE TRIGGER search_clusters_fts4_delete_trigger AFTER DELETE ON search_clusters BEGIN DELETE FROM search_clusters_fts4 WHERE docid = old._id; END",
+  "CREATE TRIGGER search_clusters_fts4_insert_trigger AFTER INSERT ON search_clusters BEGIN INSERT INTO search_clusters_fts4(docid,label) VALUES (new._id, new.label); END",
+  "CREATE TRIGGER search_clusters_fts4_update_trigger AFTER UPDATE ON search_clusters BEGIN UPDATE search_clusters_fts4 SET label = new.label, docid = new._id WHERE docid = old._id; END",
+  "CREATE TRIGGER shared_media_autoincrement_id AFTER INSERT ON shared_media BEGIN UPDATE shared_media SET _id = (SELECT seq + 1 FROM sqlite_sequence WHERE name = 'shared_media') WHERE _id = NEW._id;UPDATE sqlite_sequence SET seq = seq + 1 WHERE name = 'shared_media';END",
+  "CREATE VIEW album_feed_view AS SELECT 'MEDIA' AS type, _id AS _id, collection_id AS envelope_media_key, server_creation_timestamp AS timestamp, media_key AS item_media_key FROM shared_media UNION ALL SELECT 'COMMENT' AS type, _id AS _id, envelope_media_key AS envelope_media_key, timestamp AS timestamp, item_media_key AS item_media_key FROM comments WHERE is_soft_deleted=0 UNION ALL SELECT 'HEART' AS type, _id AS _id, envelope_media_key AS envelope_media_key, creation_time_ms AS timestamp, item_media_key AS item_media_key FROM hearts WHERE is_soft_deleted=0 ORDER BY timestamp",
+  "CREATE VIEW collection_covers AS  SELECT collections._id AS _id, collections.collection_media_key AS collection_media_key, collections.collection_album_id AS collection_album_id, collections.cover_item_media_key AS cover_item_media_key, collections.start AS start, collections.end AS end, collections.last_activity_time_ms AS last_activity_time_ms, collections.title_text AS title, collections.total_items AS total_items, collections.associated_envelope_media_key AS associated_envelope_media_key, collections.composition_state2 AS composition_state, collections.type AS type, collections.audience AS audience, collections.is_hidden AS is_hidden, collections.is_soft_deleted AS is_soft_deleted, collections.display_mode AS display_mode, collections.sort_order AS sort_order, collections.is_custom_ordered AS is_custom_ordered, collections.ahi_notifications_enabled AS ahi_notifications_enabled, collections.has_seen_invite_promo AS has_seen_invite_promo, collections.has_dismissed_shortcut_sharing AS has_dismissed_shortcut_sharing, collections.can_edit_days AS can_edit_days, collections.narrative AS narrative, collections.ongoing_state AS ongoing_state, collections.ongoing_collection_type AS ongoing_collection_type, collections.is_face_cluster_share_chip_dismissed AS is_face_cluster_share_chip_dismissed, collections.last_view_time_ms AS last_view_time_ms, collections.album_theme AS album_theme, collections.creator_project_info AS creator_project_info, remote_media.remote_url AS cover_url, remote_media.width AS cover_width, remote_media.height AS cover_height, remote_media.duration AS duration, remote_media.is_edited AS is_remote_edited, local_media.content_uri AS alternate_local_cover_uri, local_media.signature AS signature, media._id AS cover_item_media_id, media.type AS cover_item_media_type, media.capture_timestamp AS cover_item_capture_timestamp, media.canonical_media_key AS cover_item_canonical_media_key, media.canonical_content_version AS cover_item_canonical_content_version  FROM collections LEFT JOIN media_key_proxy ON (media_key_proxy.local_id IN(collections.cover_item_media_key) OR media_key_proxy.remote_media_key IN(collections.cover_item_media_key))  LEFT JOIN remote_media ON remote_media.media_key IN(collections.cover_item_media_key,media_key_proxy.local_id,media_key_proxy.remote_media_key)  LEFT JOIN local_media ON remote_media.dedup_key = local_media.dedup_key  LEFT JOIN media USING (dedup_key)  GROUP BY collection_media_key",
+  "CREATE VIEW comments_view AS  SELECT c.*, em.given_name AS actor_given_name, em.display_name AS actor_display_name, em.gaia_id AS actor_gaia_id, em.profile_photo_url AS actor_profile_photo_url, et.auth_key AS envelope_auth_key, sm._id AS item_id, sm.type AS item_type, sm.remote_url AS item_uri, sm.remote_media_key AS item_remote_media_key, sm.content_version AS item_content_version, sm.timezone_offset AS item_timezone_offset, sm.utc_timestamp AS item_timestamp FROM comments AS c INNER JOIN envelope_members AS em ON c.envelope_media_key=em.envelope_media_key AND c.actor_media_key=em.actor_id LEFT JOIN envelopes AS et ON c.envelope_media_key=et.media_key LEFT JOIN shared_media AS sm ON c.envelope_media_key=sm.collection_id AND c.item_media_key=sm.remote_media_key",
+  "CREATE VIEW envelope_covers AS SELECT envelopes._id AS _id, envelopes.media_key AS envelope_media_key, envelopes.title AS title, envelopes.auth_key AS auth_key, envelopes.is_hidden AS is_hidden, envelopes.is_joined AS is_joined, envelopes.is_media_location_shared AS is_media_location_shared, envelopes.is_notification_muted AS is_notification_muted, envelopes.is_collaborative AS is_collaborative, envelopes.can_add_comment AS can_add_comment, envelopes.comment_count AS comment_count, envelopes.can_add_content AS can_add_content, envelopes.can_set_cover AS can_set_cover, envelopes.can_add_heart AS can_add_heart, envelopes.can_link_share AS can_link_share, envelopes.show_in_sharing_tab AS show_in_sharing_tab, envelopes.display_mode AS display_mode, envelopes.write_time_ms AS write_time_ms, envelopes.start_time_ms AS start_time_ms, envelopes.end_time_ms AS end_time_ms, envelopes.created_time_ms AS created_time_ms, envelopes.last_activity_time_ms AS last_activity_time_ms, envelopes.newest_operation_time_ms AS newest_operation_time_ms, envelopes.type AS type, envelopes.protobuf AS protobuf, envelopes.short_url AS short_url, envelopes.total_item_count AS total_item_count, envelopes.total_recipient_count AS total_recipient_count, envelopes.should_show_message AS should_show_message, envelopes.share_message AS share_message, envelopes.authkey_recipient_inviter_actor_id AS authkey_recipient_inviter_actor_id, envelopes.authkey_recipient_actor_id AS authkey_recipient_actor_id, envelopes.owner_actor_id AS owner_actor_id, envelopes.viewer_actor_id AS viewer_actor_id, envelopes.cover_item_media_key AS cover_item_media_key, envelopes.sort_order AS sort_order, envelopes.is_custom_ordered AS is_custom_ordered, envelopes.mark_as_read_time_ms AS mark_as_read_time_ms, envelopes.total_contributor_count AS total_contributor_count, shared_media.is_edited AS is_remote_edited, local_media.content_uri AS alternate_local_cover_uri, local_media.signature AS signature, envelopes.unseen_count AS unseen_count, envelopes.create_action_id AS create_action_id, envelopes.create_state AS create_state, envelopes.has_seen_suggested_add AS has_seen_suggested_add, envelopes.num_pending_actions AS num_pending_actions, envelopes.ahi_notifications_enabled AS ahi_notifications_enabled, envelopes.abuse_warning_severity AS abuse_warning_severity, envelopes.narrative AS narrative, envelopes.ongoing_state AS ongoing_state, envelopes.ongoing_collection_type AS ongoing_collection_type, envelopes.is_my_week AS is_my_week, envelopes.album_theme AS album_theme, shared_media.remote_url AS cover_url, shared_media._id AS cover_item_media_id, shared_media.type AS cover_item_media_type, shared_media.utc_timestamp AS cover_item_utc_timestamp, shared_media.width AS cover_width, shared_media.height AS cover_height, shared_media.remote_media_key AS cover_item_remote_media_key, shared_media.content_version AS cover_item_content_version , owner_member.display_name AS owner_display_name, owner_member.gaia_id AS owner_gaia_id, owner_member.profile_photo_url AS owner_profile_photo_url, viewer_member.display_name AS viewer_display_name, viewer_member.gaia_id AS viewer_gaia_id, viewer_member.profile_photo_url AS viewer_profile_photo_url, viewer_member.last_view_time_ms AS viewer_last_view_time_ms, viewer_member.inviter_actor_id AS viewer_inviter_actor_id, viewer_member.invite_time_ms AS viewer_invite_time_ms, viewer_member.is_auto_add_enabled AS viewer_is_auto_add_enabled FROM envelopes LEFT JOIN media_key_proxy ON (media_key_proxy.local_id IN(envelopes.cover_item_media_key) OR media_key_proxy.remote_media_key IN(envelopes.cover_item_media_key))  LEFT JOIN shared_media ON shared_media.media_key IN(envelopes.cover_item_media_key,media_key_proxy.local_id,media_key_proxy.remote_media_key)  LEFT JOIN envelope_members AS owner_member ON (owner_member.actor_id = envelopes.owner_actor_id AND owner_member.envelope_media_key = envelopes.media_key)  LEFT JOIN envelope_members AS viewer_member ON (viewer_member.actor_id = envelopes.viewer_actor_id AND viewer_member.envelope_media_key = envelopes.media_key) LEFT JOIN local_media ON (local_media.dedup_key = shared_media.dedup_key)  GROUP BY envelopes.media_key",
+  "CREATE VIEW hearts_view AS  SELECT h.*, em.given_name AS actor_given_name, em.display_name AS actor_display_name, em.gaia_id AS actor_gaia_id, em.profile_photo_url AS actor_profile_photo_url, et.auth_key AS envelope_auth_key, sm._id AS item_id, sm.utc_timestamp AS item_timestamp, sm.timezone_offset AS item_timezone_offset, sm.type AS item_type, sm.remote_url AS item_uri, sm.remote_media_key AS item_remote_media_key, sm.content_version AS item_content_version FROM hearts AS h INNER JOIN envelope_members AS em ON h.envelope_media_key=em.envelope_media_key AND h.actor_id=em.actor_id LEFT JOIN envelopes AS et ON h.envelope_media_key=et.media_key LEFT JOIN shared_media AS sm ON h.envelope_media_key=sm.collection_id AND h.item_media_key=sm.media_key",
+  "CREATE VIEW server_suggestion_item_details AS SELECT suggestion_items.item_media_key AS item_media_id, suggestion_items.item_dedup_key AS item_dedup_key, suggestions.most_recent_item_timestamp_ms AS most_recent_item_timestamp_ms, suggestions.start_time_ms AS start_time_ms, suggestions.end_time_ms AS end_time_ms, suggestions.source AS source, suggestions.state AS state, shared_media.owner_media_key AS owner_media_key FROM suggestion_items INNER JOIN suggestions ON suggestions.suggestion_id = suggestion_items.suggestion_media_key LEFT JOIN shared_media ON shared_media.media_key = suggestion_items.item_media_key WHERE suggestions.source = 1",
+  "CREATE VIEW shared_media_view AS SELECT envelopes._id AS envelope_collection_id, envelopes.media_key AS envelope_media_key, envelopes.auth_key AS envelope_auth_key, envelopes.viewer_actor_id AS viewer_actor_id, shared_media.*, envelope_members.display_name AS contributor_display_name, envelope_members.gaia_id AS contributor_gaia_id, envelope_members.profile_photo_url AS contributor_profile_photo_url FROM envelopes INNER JOIN shared_media ON shared_media.collection_id = envelopes.media_key LEFT JOIN envelope_members ON shared_media.collection_id = envelope_members.envelope_media_key AND shared_media.owner_media_key = envelope_members.actor_id",
+  "CREATE VIEW suggestion_recipient_actor AS SELECT suggestion_recipients.suggestion_id AS suggestion_id, suggestion_recipients.recipient_type AS recipient_type, suggestion_recipients.email AS email, suggestion_recipients.phone_number AS phone_number, suggestion_recipients.cluster_id AS cluster_id, suggestion_recipients.inference_media_key AS inferred_recipient_key, suggestion_recipients.recipient_source AS recipient_source, search_clusters.label AS cluster_label, search_clusters.iconic_image_uri AS cluster_iconic_image_uri, suggestion_recipients.actor_id AS actor_id, actors.gaia_id AS gaia_id, actors.profile_photo_url AS profile_photo_url, actors.display_name AS display_name, actors.given_name AS given_name  FROM suggestion_recipients LEFT JOIN actors ON suggestion_recipients.actor_id = actors.actor_media_key LEFT JOIN search_clusters ON suggestion_recipients.cluster_id = search_clusters.cluster_media_key"
+ ],
+ "tables": [
+  {
+   "name": "AgenticSuggestion",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "AutoBestTakeMoment",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "BackupFaceCluster",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "BbqFaceDetectionProgress",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "BbqMediaCandidate",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "BouquetJoinSheetAcknowledgment",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "BouquetReviewOptOut",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "FiloliCandidate",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "JettyScannedMedia",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "LocalBytesMutationData",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "LocalClusterFace",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "LocalClusterKernel",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "LocalClusterMedia",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "LocalVideoTimeline",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "MediaTombstone",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "MediaVisualEffect",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "MusaTemplate",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "PostCaptureJobRecord",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "ServerTriggeredReuploadMedia",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "SpatialMedia",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "TopPersonClusteringProgress",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "UnprocessedMediaRowMutation",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "VellumClip",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "VellumKnownMedia",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "VellumProject",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "access_media_tombstone",
+   "rows": 10682,
+   "avgRowBytes": 83,
+   "insert": 17,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "account_local_locked_media",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "account_locked_folder_metadata",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "action_queue",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "actors",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "album_enrichments",
+   "rows": 46,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "album_state",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "album_upload_media",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "all_media_count",
+   "rows": 1,
+   "avgRowBytes": 8,
+   "insert": 0,
+   "update": 1,
+   "delete": 0
+  },
+  {
+   "name": "all_media_count_nd_collapsed",
+   "rows": 1,
+   "avgRowBytes": 8,
+   "insert": 0,
+   "update": 1,
+   "delete": 0
+  },
+  {
+   "name": "ambient_memories_content",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "android_metadata",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "app_packages",
+   "rows": 46,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "assistant_cards",
+   "rows": 27,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "assistant_collections",
+   "rows": 27,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "assistant_media",
+   "rows": 103,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "auto_add_clusters",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "backup_folders",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "backup_item_status",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "backup_progress",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "backup_queue",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "backup_video_compression_state",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "burst_media",
+   "rows": 2234,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "cleanup_items",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "cloud_picker_tombstone",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "cloud_picker_version",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "cluster_kernel",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "collage_templates",
+   "rows": 2,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "collections",
+   "rows": 50,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "comments",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "confetti_xp",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "content_hash_dedup_key",
+   "rows": 11849,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "curated_wallpapers_media",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "day_segmented_date_headers",
+   "rows": 245,
+   "avgRowBytes": 16,
+   "insert": 1,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "day_segmented_date_headers_nd_collapsed",
+   "rows": 245,
+   "avgRowBytes": 16,
+   "insert": 1,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "day_segmented_location_headers",
+   "rows": 108,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "device_mgmt_batch",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "device_mgmt_batch_type",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "download",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "download_status",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "editdownloads",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "edits",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "edits_tombstone_log",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "empty_entity",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "envelope_forbidden_actions",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "envelope_members",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "envelopes",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "envelopes_sync",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "face_details",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "gallery_api_metadata_sync_state",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "guided_confirmation",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "header_map",
+   "rows": 4,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "hearts",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "item_collection_data",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "item_collection_data_rollback_store",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "job_queue_table",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "kefir_template_chips_create_tab",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "kefir_template_chips_playground",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "kefir_templates_create_tab",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "kefir_templates_playground",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "local_face_metadata",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "local_ica_label",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "local_image_safety",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "local_media",
+   "rows": 947,
+   "avgRowBytes": 537,
+   "insert": 6,
+   "update": 1,
+   "delete": 0
+  },
+  {
+   "name": "local_notification_payloads",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "local_private_media",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "local_saliency_result",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "local_showcase_table",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "ls_items",
+   "rows": 36,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "main_grid_date_headers",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "main_grid_queried_count",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "main_grid_queried_date_headers",
+   "rows": 980,
+   "avgRowBytes": 24,
+   "insert": 72,
+   "update": 0,
+   "delete": 68
+  },
+  {
+   "name": "media",
+   "rows": 13046,
+   "avgRowBytes": 236,
+   "insert": 6,
+   "update": 910,
+   "delete": 0
+  },
+  {
+   "name": "media_collection_key_proxy",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "media_collection_tombstone_log",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "media_generation",
+   "rows": 1,
+   "avgRowBytes": 16,
+   "insert": 0,
+   "update": 1,
+   "delete": 0
+  },
+  {
+   "name": "media_key_proxy",
+   "rows": 17591,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "media_share_api_requests_v2",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "media_sync_table",
+   "rows": 5790,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "media_tombstone_log",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "memories",
+   "rows": 104,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "memories_carousel_schedule",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "memories_content",
+   "rows": 1492,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "memories_content_info",
+   "rows": 56,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "memories_content_read_state",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "memories_key_proxy",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "memories_music_evicted_tracks",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "memories_pages",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "memories_promos",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "memories_read_items_pending",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "memories_subjects",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "memories_title_suggestions",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "metadata_sync",
+   "rows": 7,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "mobile_ica_scan",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "notification_throttling",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "obsolete_processor_ids",
+   "rows": 76,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "odfc_tombstone_log",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "odfc_unexamined_media",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "offline_commit_queue",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "on_device_mi",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "ongoing_candidate_media",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "os_migration_album_mapping",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "out_of_sync_suggested_action",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "partition_tables",
+   "rows": 156,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "partition_versions",
+   "rows": 16,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "partition_views",
+   "rows": 8,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "pending_suggested_action",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "permanent_delete_media_id_consent",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "pfc_face",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "photo_clustering_status",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "photos_validation_summary",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "print_subscriptions",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "printing_layouts",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "printing_media",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "printing_orders",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "printing_promotions",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "printing_proto_dump",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "printing_suggestions",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "promo",
+   "rows": 129,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "promo_surfaces",
+   "rows": 8,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "quick_actions",
+   "rows": 3,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "remote_locked_media",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "remote_media",
+   "rows": 17591,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "remote_media_rollback_store",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "retail_prints_order_info",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "room_master_table",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "search_cluster_ranking",
+   "rows": 1503,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "search_clusters",
+   "rows": 1546,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "search_grid_suggestions",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "search_proto_store",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "search_refinements",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "search_results",
+   "rows": 28758,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "selective_backup",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "server_promo",
+   "rows": 8,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "settings",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "share_suggestions",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "shared_media",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "shared_media_rollback_store",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "slomo_transition_edits_table",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "stamp_read_state",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "suggested_actions",
+   "rows": 7822,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "suggested_actions_item",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "suggested_backup_table",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "suggested_cluster_merge",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "suggestion_items",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "suggestion_recipients",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "suggestions",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "suppressed_promos",
+   "rows": 2,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "synced_folder_generation",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "synced_folder_media_metadata",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "synced_folder_media_tombstone",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "synced_folder_metadata",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "synced_folder_tombstone",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trash_cleanup_soft_delete_not_trashed",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "uncertain_dates_table",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "unprocessed_user_suggestions",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "upload_batch",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "upload_request_media",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "upload_requests",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "widget_media_content",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "widgets",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  }
+ ],
+ "framesPerOp": 2.8405529953917052,
+ "opsPerCommit": 68
+}

@@ -1,0 +1,303 @@
+{
+ "create": [
+  "CREATE TABLE \"ads\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"ad_server_id\" TEXT, \"stored_ad_proto\" BLOB, \"rank\" TEXT)",
+  "CREATE TABLE android_metadata (locale TEXT)",
+  "CREATE TABLE \"cluster_tombstones\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"server_perm_id\" TEXT, \"write_sequence_id\" INTEGER)",
+  "CREATE TABLE \"clusters\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"server_perm_id\" TEXT, \"cluster_config_proto\" BLOB, \"grouped_in_inbox\" INTEGER, \"write_sequence_id\" INTEGER, \"eviction_eligibility\" INTEGER, \"server_version\" INTEGER, \"type\" INTEGER)",
+  "CREATE TABLE \"entity_changes_to_sync_up\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"change_id\" INTEGER, \"change_proto\" BLOB, \"entity_type\" TEXT, \"entity_server_perm_id\" TEXT)",
+  "CREATE TABLE \"entity_sync_state\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"low_watermark\" TEXT, \"high_watermark\" TEXT, \"continuation_token\" TEXT, \"entity_name\" TEXT)",
+  "CREATE TABLE \"filters\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"server_perm_id\" TEXT, \"filter_proto\" BLOB, \"write_sequence_id\" INTEGER)",
+  "CREATE TABLE \"item_changes\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"change_type\" INTEGER, \"is_local_only\" INTEGER, \"items_row_id\" INTEGER REFERENCES \"items\"(\"row_id\"), \"change_proto\" BLOB, \"change_state\" INTEGER, \"was_rolled_back\" INTEGER, \"change_order\" INTEGER, \"local_apply_time_ms\" INTEGER, \"has_fence_before\" INTEGER, \"has_fence_after\" INTEGER, \"applied_change\" BLOB, \"change_group_id\" INTEGER, \"server_version\" INTEGER, \"retryable_error_count\" INTEGER, \"next_retry_timestamp_ms\" INTEGER, \"acked_item_server_perm_ids\" BLOB, \"clusters_row_id\" INTEGER REFERENCES \"clusters\"(\"row_id\"), \"local_apply_time_ms_2\" INTEGER, \"server_version_2\" INTEGER, \"next_retry_timestamp_ms_2\" INTEGER)",
+  "CREATE TABLE \"item_message_attachments\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"item_messages_row_id\" INTEGER REFERENCES \"item_messages\"(\"row_id\"), \"is_synced\" INTEGER, \"attachment_url\" TEXT, \"attachment_cache_key\" TEXT, \"attachment_file_name\" TEXT, \"attachment_hash\" TEXT, \"message_synced_time_ms\" INTEGER)",
+  "CREATE TABLE \"item_message_doc_attachments\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"message_server_perm_id\" TEXT, \"doc_id\" TEXT, \"mime_type\" TEXT, \"message_received_time\" INTEGER, \"message_synced_time_ms\" INTEGER, \"resource_key\" TEXT)",
+  "CREATE TABLE \"item_message_tombstones\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"server_perm_id\" TEXT, \"write_sequence_id\" INTEGER, \"item_server_perm_id\" TEXT)",
+  "CREATE TABLE \"item_messages\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"server_perm_id\" TEXT, \"items_row_id\" INTEGER REFERENCES \"items\"(\"row_id\"), \"message_proto\" BLOB, \"zipped_message_proto\" BLOB, \"is_missing_details\" INTEGER, \"write_sequence_id\" INTEGER, \"message_details_external_storage_id\" TEXT, \"is_invalidated\" INTEGER, \"legacy_storage_id\" INTEGER)",
+  "CREATE TABLE \"item_sync_reasons\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"items_row_id\" INTEGER REFERENCES \"items\"(\"row_id\"), \"sync_reasons_row_id\" INTEGER REFERENCES \"sync_reasons\"(\"row_id\"), \"subscription_rank\" TEXT)",
+  "CREATE TABLE \"item_tombstones\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"server_perm_id\" TEXT, \"write_sequence_id\" INTEGER)",
+  "CREATE TABLE \"item_visibility\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"items_row_id\" INTEGER REFERENCES \"items\"(\"row_id\"), \"clusters_row_id\" INTEGER REFERENCES \"clusters\"(\"row_id\"), \"view_type\" INTEGER, \"rank\" TEXT, \"cluster_rank\" TEXT, \"write_sequence_id\" INTEGER, \"do_not_show_before_timestamp_ms\" INTEGER, \"do_not_show_after_timestamp_ms\" INTEGER, \"nested_cluster_row_id\" INTEGER, \"display_timestamp_ms\" INTEGER, \"messages_in_view_bitmap\" INTEGER)",
+  "CREATE TABLE \"item_visibility_tombstones\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"view_type\" INTEGER, \"write_sequence_id\" INTEGER)",
+  "CREATE TABLE \"item_visibility_update_work\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"last_affected_item_row_id\" INTEGER, \"update_context\" BLOB, \"is_all_items_recalculation\" INTEGER)",
+  "CREATE TABLE \"items\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"server_perm_id\" TEXT, \"item_summary_proto\" BLOB, \"recurrence_id\" TEXT, \"hidden\" INTEGER, \"write_sequence_id\" INTEGER, \"server_version\" INTEGER, \"parent_server_perm_id\" TEXT, \"legacy_storage_id\" INTEGER, \"legacy_first_message_storage_id\" INTEGER)",
+  "CREATE TABLE \"items_sync_state\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"initial_sync_completed\" INTEGER, \"last_sync_time_ms\" INTEGER, \"low_watermark\" INTEGER, \"high_watermark\" INTEGER, \"highest_synced_version\" INTEGER, \"last_sync_targets\" BLOB, \"resync_in_progress\" INTEGER, \"last_per_label_items_sync_settings\" BLOB, \"last_entities_as_items_sync_settings\" BLOB, \"highest_synced_version_2\" INTEGER, \"initial_sync_start_time_ms\" INTEGER)",
+  "CREATE TABLE \"label_counts\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"label_server_perm_id\" TEXT, \"unread_count\" INTEGER, \"total_count\" INTEGER, \"unseen_count\" INTEGER)",
+  "CREATE TABLE \"local_bulk_op_work\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"item_changes_row_id\" INTEGER REFERENCES \"item_changes\"(\"row_id\"), \"work_type\" INTEGER, \"affected_item_server_perm_ids\" BLOB, \"remaining_affected_item_count\" INTEGER, \"has_items_to_create\" INTEGER)",
+  "CREATE TABLE \"pending_attachments\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"item_messages_row_id\" INTEGER REFERENCES \"item_messages\"(\"row_id\"), \"attachment_id\" TEXT NOT NULL, \"file_name\" TEXT NOT NULL, \"local_file_uri\" TEXT NOT NULL, \"upload_type\" INTEGER NOT NULL, \"upload_session_uri\" TEXT NOT NULL, \"upload_status\" INTEGER, \"pending_attachment_details\" BLOB)",
+  "CREATE TABLE \"schema_version\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"version\" INTEGER)",
+  "CREATE TABLE \"settings\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"server_perm_id\" TEXT, \"settings_proto\" BLOB, \"is_dirty\" INTEGER)",
+  "CREATE TABLE \"sync_reasons\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"view_type\" INTEGER, \"clusters_row_id\" INTEGER REFERENCES \"clusters\"(\"row_id\"), \"sync_reason_type\" INTEGER, \"server_version\" INTEGER, \"page_id\" TEXT, \"items_row_id\" INTEGER REFERENCES \"items\"(\"row_id\"), \"server_version_2\" INTEGER)",
+  "CREATE TABLE \"system_properties\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"key\" INTEGER, \"property\" BLOB)",
+  "CREATE TABLE \"write_sequence_id\" (\"row_id\" INTEGER PRIMARY KEY ON CONFLICT ABORT AUTOINCREMENT, \"constant_key\" INTEGER)",
+  "CREATE UNIQUE INDEX \"IDXU_ads_ad_server_id_asc\" ON \"ads\" (\"ad_server_id\" ASC)",
+  "CREATE UNIQUE INDEX \"IDXU_clusters_server_perm_id_asc\" ON \"clusters\" (\"server_perm_id\" ASC)",
+  "CREATE UNIQUE INDEX \"IDXU_entity_changes_to_sync_up_change_id_asc\" ON \"entity_changes_to_sync_up\" (\"change_id\" ASC)",
+  "CREATE UNIQUE INDEX \"IDXU_entity_sync_state_entity_name_asc\" ON \"entity_sync_state\" (\"entity_name\" ASC)",
+  "CREATE UNIQUE INDEX \"IDXU_filters_server_perm_id_asc\" ON \"filters\" (\"server_perm_id\" ASC)",
+  "CREATE UNIQUE INDEX \"IDXU_item_messages_server_perm_id_asc\" ON \"item_messages\" (\"server_perm_id\" ASC)",
+  "CREATE UNIQUE INDEX \"IDXU_item_sync_reasons_items_row_id_asc_sync_reasons_row_id_asc\" ON \"item_sync_reasons\" (\"items_row_id\" ASC, \"sync_reasons_row_id\" ASC)",
+  "CREATE UNIQUE INDEX \"IDXU_items_server_perm_id_asc\" ON \"items\" (\"server_perm_id\" ASC)",
+  "CREATE UNIQUE INDEX \"IDXU_settings_server_perm_id_asc\" ON \"settings\" (\"server_perm_id\" ASC)",
+  "CREATE UNIQUE INDEX \"IDXU_sync_reasons_view_type_asc_clusters_row_id_asc_items_row_id_asc_sync_reason_type_asc_page_id_asc\" ON \"sync_reasons\" (\"view_type\" ASC, \"clusters_row_id\" ASC, \"items_row_id\" ASC, \"sync_reason_type\" ASC, \"page_id\" ASC)",
+  "CREATE UNIQUE INDEX \"IDXU_system_properties_key_asc\" ON \"system_properties\" (\"key\" ASC)",
+  "CREATE INDEX \"IDX_clusters_eviction_eligibility_asc\" ON \"clusters\" (\"eviction_eligibility\" ASC)",
+  "CREATE INDEX \"IDX_clusters_type_asc\" ON \"clusters\" (\"type\" ASC)",
+  "CREATE INDEX \"IDX_clusters_write_sequence_id_asc\" ON \"clusters\" (\"write_sequence_id\" ASC)",
+  "CREATE INDEX \"IDX_entity_changes_to_sync_up_entity_server_perm_id_asc\" ON \"entity_changes_to_sync_up\" (\"entity_server_perm_id\" ASC)",
+  "CREATE INDEX \"IDX_filters_write_sequence_id_asc\" ON \"filters\" (\"write_sequence_id\" ASC)",
+  "CREATE INDEX \"IDX_item_changes_change_group_id_asc\" ON \"item_changes\" (\"change_group_id\" ASC)",
+  "CREATE INDEX \"IDX_item_changes_clusters_row_id_asc\" ON \"item_changes\" (\"clusters_row_id\" ASC)",
+  "CREATE INDEX \"IDX_item_changes_items_row_id_asc\" ON \"item_changes\" (\"items_row_id\" ASC)",
+  "CREATE INDEX \"IDX_item_message_attachments_is_synced_asc\" ON \"item_message_attachments\" (\"is_synced\" ASC)",
+  "CREATE INDEX \"IDX_item_message_attachments_item_messages_row_id_asc\" ON \"item_message_attachments\" (\"item_messages_row_id\" ASC)",
+  "CREATE INDEX \"IDX_item_message_attachments_message_synced_time_ms_asc\" ON \"item_message_attachments\" (\"message_synced_time_ms\" ASC)",
+  "CREATE INDEX \"IDX_item_message_doc_attachments_message_received_time_asc\" ON \"item_message_doc_attachments\" (\"message_received_time\" ASC)",
+  "CREATE INDEX \"IDX_item_message_doc_attachments_message_server_perm_id_asc\" ON \"item_message_doc_attachments\" (\"message_server_perm_id\" ASC)",
+  "CREATE INDEX \"IDX_item_messages_is_invalidated_asc\" ON \"item_messages\" (\"is_invalidated\" ASC)",
+  "CREATE INDEX \"IDX_item_messages_is_missing_details_asc\" ON \"item_messages\" (\"is_missing_details\" ASC)",
+  "CREATE INDEX \"IDX_item_messages_items_row_id_asc\" ON \"item_messages\" (\"items_row_id\" ASC)",
+  "CREATE INDEX \"IDX_item_messages_legacy_storage_id_asc\" ON \"item_messages\" (\"legacy_storage_id\" ASC)",
+  "CREATE INDEX \"IDX_item_messages_write_sequence_id_asc\" ON \"item_messages\" (\"write_sequence_id\" ASC)",
+  "CREATE INDEX \"IDX_item_sync_reasons_items_row_id_asc\" ON \"item_sync_reasons\" (\"items_row_id\" ASC)",
+  "CREATE INDEX \"IDX_item_sync_reasons_sync_reasons_row_id_asc\" ON \"item_sync_reasons\" (\"sync_reasons_row_id\" ASC)",
+  "CREATE INDEX \"IDX_item_sync_reasons_sync_reasons_row_id_asc_subscription_rank_asc\" ON \"item_sync_reasons\" (\"sync_reasons_row_id\" ASC, \"subscription_rank\" ASC)",
+  "CREATE INDEX \"IDX_item_visibility_clusters_row_id_asc\" ON \"item_visibility\" (\"clusters_row_id\" ASC)",
+  "CREATE INDEX \"IDX_item_visibility_items_row_id_asc\" ON \"item_visibility\" (\"items_row_id\" ASC)",
+  "CREATE INDEX \"IDX_item_visibility_update_work_is_all_items_recalculation_asc\" ON \"item_visibility_update_work\" (\"is_all_items_recalculation\" ASC)",
+  "CREATE INDEX \"IDX_item_visibility_view_type_asc_clusters_row_id_asc_rank_asc_items_row_id_asc\" ON \"item_visibility\" (\"view_type\" ASC, \"clusters_row_id\" ASC, \"rank\" ASC, \"items_row_id\" ASC)",
+  "CREATE INDEX \"IDX_item_visibility_view_type_asc_write_sequence_id_asc\" ON \"item_visibility\" (\"view_type\" ASC, \"write_sequence_id\" ASC)",
+  "CREATE INDEX \"IDX_item_visibility_write_sequence_id_asc\" ON \"item_visibility\" (\"write_sequence_id\" ASC)",
+  "CREATE INDEX \"IDX_items_legacy_first_message_storage_id_asc\" ON \"items\" (\"legacy_first_message_storage_id\" ASC)",
+  "CREATE INDEX \"IDX_items_legacy_storage_id_asc\" ON \"items\" (\"legacy_storage_id\" ASC)",
+  "CREATE INDEX \"IDX_items_parent_server_perm_id_asc\" ON \"items\" (\"parent_server_perm_id\" ASC)",
+  "CREATE INDEX \"IDX_items_recurrence_id_asc\" ON \"items\" (\"recurrence_id\" ASC)",
+  "CREATE INDEX \"IDX_items_write_sequence_id_asc\" ON \"items\" (\"write_sequence_id\" ASC)",
+  "CREATE INDEX \"IDX_local_bulk_op_work_item_changes_row_id_asc\" ON \"local_bulk_op_work\" (\"item_changes_row_id\" ASC)",
+  "CREATE INDEX \"IDX_pending_attachments_attachment_id_asc\" ON \"pending_attachments\" (\"attachment_id\" ASC)",
+  "CREATE INDEX \"IDX_pending_attachments_item_messages_row_id_asc\" ON \"pending_attachments\" (\"item_messages_row_id\" ASC)",
+  "CREATE INDEX \"IDX_sync_reasons_clusters_row_id_asc\" ON \"sync_reasons\" (\"clusters_row_id\" ASC)",
+  "CREATE INDEX \"IDX_sync_reasons_items_row_id_asc\" ON \"sync_reasons\" (\"items_row_id\" ASC)",
+  "CREATE INDEX \"cluster_tombstones_write_sequence_id_server_perm_id_index\" ON \"cluster_tombstones\" (\"write_sequence_id\" ASC, \"server_perm_id\" ASC)",
+  "CREATE INDEX \"item_message_tombstones_write_sequence_id_server_perm_id_index\" ON \"item_message_tombstones\" (\"write_sequence_id\" ASC, \"server_perm_id\" ASC)",
+  "CREATE INDEX \"item_tombstones_write_sequence_id_server_perm_id_index\" ON \"item_tombstones\" (\"write_sequence_id\" ASC, \"server_perm_id\" ASC)",
+  "CREATE INDEX \"item_visibility_tombstones_write_sequence_id_view_type_index\" ON \"item_visibility_tombstones\" (\"write_sequence_id\" ASC, \"view_type\" ASC)"
+ ],
+ "tables": [
+  {
+   "name": "ads",
+   "rows": 8,
+   "avgRowBytes": 96186,
+   "insert": 8,
+   "update": 0,
+   "delete": 8
+  },
+  {
+   "name": "android_metadata",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "cluster_tombstones",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "clusters",
+   "rows": 18,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "entity_changes_to_sync_up",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "entity_sync_state",
+   "rows": 1,
+   "avgRowBytes": 35,
+   "insert": 0,
+   "update": 1,
+   "delete": 0
+  },
+  {
+   "name": "filters",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "item_changes",
+   "rows": 3,
+   "avgRowBytes": 403,
+   "insert": 3,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "item_message_attachments",
+   "rows": 67,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "item_message_doc_attachments",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "item_message_tombstones",
+   "rows": 0,
+   "avgRowBytes": 0,
+   "insert": 0,
+   "update": 0,
+   "delete": 1
+  },
+  {
+   "name": "item_messages",
+   "rows": 204,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "item_sync_reasons",
+   "rows": 466,
+   "avgRowBytes": 43,
+   "insert": 269,
+   "update": 0,
+   "delete": 3
+  },
+  {
+   "name": "item_tombstones",
+   "rows": 0,
+   "avgRowBytes": 0,
+   "insert": 0,
+   "update": 0,
+   "delete": 1
+  },
+  {
+   "name": "item_visibility",
+   "rows": 4778,
+   "avgRowBytes": 68,
+   "insert": 2861,
+   "update": 0,
+   "delete": 567
+  },
+  {
+   "name": "item_visibility_tombstones",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "item_visibility_update_work",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "items",
+   "rows": 395,
+   "avgRowBytes": 1269,
+   "insert": 195,
+   "update": 51,
+   "delete": 0
+  },
+  {
+   "name": "items_sync_state",
+   "rows": 1,
+   "avgRowBytes": 182,
+   "insert": 1,
+   "update": 0,
+   "delete": 1
+  },
+  {
+   "name": "label_counts",
+   "rows": 39,
+   "avgRowBytes": 34,
+   "insert": 39,
+   "update": 0,
+   "delete": 39
+  },
+  {
+   "name": "local_bulk_op_work",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "pending_attachments",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "schema_version",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "settings",
+   "rows": 349,
+   "avgRowBytes": 103,
+   "insert": 0,
+   "update": 1,
+   "delete": 0
+  },
+  {
+   "name": "sync_reasons",
+   "rows": 2,
+   "avgRowBytes": 25,
+   "insert": 1,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "system_properties",
+   "rows": 21,
+   "avgRowBytes": 148,
+   "insert": 0,
+   "update": 4,
+   "delete": 0
+  },
+  {
+   "name": "write_sequence_id",
+   "rows": 1,
+   "avgRowBytes": 16,
+   "insert": 1,
+   "update": 0,
+   "delete": 1
+  }
+ ],
+ "framesPerOp": 0.21301775147928995,
+ "opsPerCommit": 131
+}

@@ -1,0 +1,178 @@
+{
+ "create": [
+  "CREATE TABLE asset(assetID INTEGER NOT NULL,valid INTEGER NOT NULL DEFAULT 0,uri TEXT,sha256 TEXT,type INTEGER,reserved TEXT, PRIMARY KEY(assetID))",
+  "CREATE TABLE brief(field INTEGER PRIMARY KEY,type INTEGER NOT NULL,multiSection INTEGER NOT NULL DEFAULT 0,sectionIndex BLOB NOT NULL,docIDs BLOB NOT NULL,valueIndexes BLOB,valueSet BLOB NOT NULL)",
+  "CREATE TABLE brief_value(address INTEGER PRIMARY KEY,docIDs BLOB NOT NULL,valueIndexes BLOB,valueSet BLOB NOT NULL)",
+  "CREATE TABLE chunkinfo(chunkID INTEGER NOT NULL,docID INTEGER NOT NULL,assetID INTEGER,valid INTEGER NOT NULL DEFAULT 0,termSum INTEGER NOT NULL DEFAULT 0, content BLOB, title TEXT, lastModified INTEGER, folderId TEXT, localId TEXT,textReviewResult INTEGER DEFAULT -1, PRIMARY KEY(chunkID))",
+  "CREATE TABLE chunkinvlist(term TEXT,field INTEGER,chunkFeq INTEGER NOT NULL,sectionIndex BLOB NOT NULL,chunkList BLOB NOT NULL, PRIMARY KEY(term, field))",
+  "CREATE TABLE chunkinvlist_chunklist(address INTEGER PRIMARY KEY,chunkList BLOB NOT NULL)",
+  "CREATE TABLE chunkvector(chunkID INTEGER NOT NULL,field INTEGER NOT NULL,sparseweight BLOB,embedding BLOB NOT NULL, PRIMARY KEY(chunkID, field))",
+  "CREATE TABLE dataRecord(docID INTEGER NOT NULL,deleteFlag INTEGER NOT NULL DEFAULT 0,content TEXT NOT NULL, PRIMARY KEY(docID))",
+  "CREATE TABLE docvector(docID INTEGER NOT NULL,field INTEGER NOT NULL,sparseweight BLOB,embedding BLOB NOT NULL, PRIMARY KEY(docID, field))",
+  "CREATE TABLE extract_text_invlist(textType INTEGER,extractText TEXT,docList BLOB NOT NULL,textEmbedding BLOB,sparseWeight BLOB,lastModified INTEGER DEFAULT 0,frozen INTEGER NOT NULL DEFAULT 0,pushCount INTEGER NOT NULL DEFAULT 0,validPush INTEGER NOT NULL DEFAULT 0,invalidPush INTEGER NOT NULL DEFAULT 0,lastPushEvent INTEGER,lastPushTime INTEGER DEFAULT 0, PRIMARY KEY(textType, extractText))",
+  "CREATE TABLE invlist(term TEXT,field INTEGER,docFreq INTEGER NOT NULL,multiSection INTEGER NOT NULL DEFAULT 0,sectionIndex BLOB NOT NULL,docList BLOB NOT NULL, PRIMARY KEY(term, field))",
+  "CREATE TABLE invlist_doclist(address INTEGER PRIMARY KEY,docList BLOB NOT NULL)",
+  "CREATE TABLE metainfo(docID INTEGER PRIMARY KEY,valid INTEGER NOT NULL DEFAULT 0,identification TEXT, checksum INTEGER NOT NULL,lastModified INTEGER,highlightType INTEGER NOT NULL,highlight TEXT, create_timeCom INTEGER, encryptedCom INTEGER, folder_idCom TEXT, folder_nameCom TEXT, local_idCom TEXT, recycle_timeCom INTEGER, textCom TEXT, titleCom TEXT, update_timeCom INTEGER,textReviewResult INTEGER DEFAULT -1)",
+  "CREATE TABLE metainfo_deleted(id INTEGER PRIMARY KEY,number INTEGER NOT NULL,docIDs BLOB NOT NULL)",
+  "CREATE TABLE prefs(vKey TEXT PRIMARY KEY,vValue TEXT,category TEXT NOT NULL)",
+  "CREATE TABLE thumbnail(docId INTEGER NOT NULL,uri TEXT NOT NULL,valid INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE version(versionName TEXT,versionCode INTEGER,md5 TEXT,timestamp INTEGER)",
+  "CREATE INDEX asset_valid_index ON asset(valid)",
+  "CREATE INDEX chunkinfo_docid_index ON chunkinfo(docID)",
+  "CREATE INDEX dataRecord_docid_index ON dataRecord(docID)",
+  "CREATE INDEX extract_text_invlist_frozen_index ON extract_text_invlist(frozen)",
+  "CREATE INDEX metainfo_identification_index ON metainfo(identification)",
+  "CREATE INDEX metainfo_last_modify_com_index ON metainfo(update_timeCom)",
+  "CREATE INDEX metainfo_valid_index ON metainfo(valid)",
+  "CREATE TRIGGER asset_delete_trigger AFTER DELETE ON chunkinfo FOR EACH ROW  BEGIN DELETE FROM asset WHERE assetID=OLD.assetID; END",
+  "CREATE TRIGGER asset_update_trigger AFTER UPDATE OF valid ON chunkinfo FOR EACH ROW  BEGIN UPDATE asset SET valid=1 WHERE assetID=OLD.assetID AND NEW.valid=1; END",
+  "CREATE TRIGGER chunkinfo_trigger AFTER UPDATE OF valid ON metainfo FOR EACH ROW  BEGIN UPDATE chunkinfo SET valid=1 WHERE docID=OLD.docID AND NEW.valid=0; END",
+  "CREATE TRIGGER chunkvector_delete_trigger AFTER DELETE ON chunkinfo FOR EACH ROW BEGIN DELETE FROM chunkvector WHERE chunkvector.chunkID=OLD.chunkID; END",
+  "CREATE TRIGGER chunkvector_valid_trigger AFTER UPDATE OF valid ON chunkinfo FOR EACH ROW WHEN NEW.valid=1 BEGIN DELETE FROM chunkvector WHERE chunkvector.chunkID=OLD.chunkID; END",
+  "CREATE TRIGGER dataRecord_trigger AFTER UPDATE OF valid ON metainfo FOR EACH ROW WHEN NEW.valid=0 BEGIN DELETE FROM dataRecord WHERE docID=OLD.docID; END",
+  "CREATE TRIGGER docvector_delete_trigger AFTER DELETE ON chunkinfo FOR EACH ROW BEGIN DELETE FROM docvector WHERE docvector.docID=OLD.docID; END",
+  "CREATE TRIGGER docvector_valid_trigger AFTER UPDATE OF valid ON chunkinfo FOR EACH ROW WHEN NEW.valid=1 BEGIN DELETE FROM docvector WHERE docvector.docID=OLD.docID; END",
+  "CREATE TRIGGER metainfo_trigger AFTER UPDATE OF valid ON metainfo BEGIN UPDATE metainfo SET lastModified=(strftime('%s','now')) WHERE docID=old.docID; END",
+  "CREATE TRIGGER valid_with_metainfo_trigger AFTER UPDATE OF valid ON metainfo WHEN NEW.valid=0 BEGIN UPDATE thumbnail SET valid = 0 WHERE docId=old.docId; END"
+ ],
+ "tables": [
+  {
+   "name": "asset",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "brief",
+   "rows": 7,
+   "avgRowBytes": 378,
+   "insert": 0,
+   "update": 7,
+   "delete": 0
+  },
+  {
+   "name": "brief_value",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "chunkinfo",
+   "rows": 23,
+   "avgRowBytes": 44,
+   "insert": 1,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "chunkinvlist",
+   "rows": 136,
+   "avgRowBytes": 41,
+   "insert": 0,
+   "update": 5,
+   "delete": 0
+  },
+  {
+   "name": "chunkinvlist_chunklist",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "chunkvector",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "dataRecord",
+   "rows": 1,
+   "avgRowBytes": 1373,
+   "insert": 1,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "docvector",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "extract_text_invlist",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "invlist",
+   "rows": 144,
+   "avgRowBytes": 49,
+   "insert": 0,
+   "update": 10,
+   "delete": 0
+  },
+  {
+   "name": "invlist_doclist",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "metainfo",
+   "rows": 23,
+   "avgRowBytes": 735,
+   "insert": 2,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "metainfo_deleted",
+   "rows": 1,
+   "avgRowBytes": 20,
+   "insert": 1,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "prefs",
+   "rows": 13,
+   "avgRowBytes": 38,
+   "insert": 7,
+   "update": 0,
+   "delete": 7
+  },
+  {
+   "name": "thumbnail",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "version",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  }
+ ],
+ "framesPerOp": 1.1951219512195121,
+ "opsPerCommit": 3
+}

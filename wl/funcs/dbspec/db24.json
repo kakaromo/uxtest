@@ -1,0 +1,1171 @@
+{
+ "create": [
+  "CREATE TABLE agg_audio_app_daily(start_ts INT, end_ts INT, timestamp INT, name TEXT, foreground_duration INT, foreground_energy INT,background_duration INT, background_energy INT,screen_on_duration INT, screen_on_energy INT, screen_off_duration INT, screen_off_energy INT)",
+  "CREATE TABLE agg_audio_app_hourly(start_ts INT, end_ts INT, timestamp INT, name TEXT, foreground_duration INT, foreground_energy INT, background_duration INT, background_energy INT,screen_on_duration INT, screen_on_energy INT, screen_off_duration INT, screen_off_energy INT)",
+  "CREATE TABLE agg_audio_device_daily(start_ts INT, end_ts INT, timestamp INT, foreground_duration INT, foreground_energy INT, background_duration INT, background_energy INT,screen_on_duration INT, screen_on_energy INT, screen_off_duration INT, screen_off_energy INT)",
+  "CREATE TABLE agg_audio_volume_app_daily(start_ts INT, end_ts INT, timestamp INT, screen_mode INT, charger_mode INT, name TEXT, device INT, volume INT, total_du INT)",
+  "CREATE TABLE agg_audio_volume_app_hourly(start_ts INT, end_ts INT, timestamp INT, screen_mode INT, charger_mode INT, name TEXT, device INT, volume INT, total_du INT)",
+  "CREATE TABLE agg_battery_app_daily(start_ts INT, end_ts INT, timestamp INT,name TEXT, screen_mode INT, power_mode INT, screen_id INT,foreground_duration INT, foreground_energy INT )",
+  "CREATE TABLE agg_battery_app_hourly(start_ts INT, end_ts INT, timestamp INT,name TEXT, screen_mode INT, power_mode INT, screen_id INT,foreground_duration INT, foreground_energy INT )",
+  "CREATE TABLE agg_battery_device_daily(start_ts INT, end_ts INT, timestamp INT, screen_id INT, battery_fcc INT,discharge_screen_on_duration INT, discharge_screen_on_fuel_gauge INT, discharge_screen_on_level INT, discharge_screen_off_duration INT, discharge_screen_off_fuel_gauge INT, discharge_screen_off_level INT, charge_screen_on_duration INT, charge_screen_on_fuel_gauge INT, charge_screen_on_level INT, charge_screen_off_duration INT, charge_screen_off_fuel_gauge INT, charge_screen_off_level INT)",
+  "CREATE TABLE agg_battery_device_hourly(start_ts INT, end_ts INT, timestamp INT, screen_id INT,discharge_screen_on_duration INT, discharge_screen_on_fuel_gauge INT, discharge_screen_on_level INT, discharge_screen_off_duration INT, discharge_screen_off_fuel_gauge INT, discharge_screen_off_level INT, charge_screen_on_duration INT, charge_screen_on_fuel_gauge INT, charge_screen_on_level INT, charge_screen_off_duration INT, charge_screen_off_fuel_gauge INT, charge_screen_off_level INT)",
+  "CREATE TABLE agg_battery_sleep_daily(start_ts INT, end_ts INT, timestamp INT,cnt_5min INT, cnt_30min INT, cnt_60min INT,cnt_120min INT, energy_120min INT, duration_120min INT,cnt_300min INT, energy_300min INT, duration_300min INT,cnt_gt_300min INT, energy_gt_300min INT, duration_gt_300min INT,dischg_off_eg INT, dischg_off_du INT)",
+  "CREATE TABLE agg_battery_sleep_hourly(start_ts INT, end_ts INT, screen_off_start_ts INT, screen_off_end_ts INT, timestamp INT,cnt_5min INT, cnt_30min INT, cnt_60min INT,cnt_120min INT, energy_120min INT, duration_120min INT,cnt_300min INT, energy_300min INT, duration_300min INT,cnt_gt_300min INT, energy_gt_300min INT, duration_gt_300min INT,dischg_off_eg INT, dischg_off_du INT)",
+  "CREATE TABLE agg_binderagent_daily(date CHAR(0),start_ts INT,end_ts INT,upload INT,binder_stats CHAR(0),version INT)",
+  "CREATE TABLE agg_binderstats_binderagent_hourly(start_ts INT,end_ts INT,screen_mode INT,ground_mode INT,service_name CHAR(0),service_proc_name CHAR(0),caller_uid_name CHAR(0),caller_proc_name CHAR(0),caller_thread_name CHAR(0),caller_calltimes INT)",
+  "CREATE TABLE agg_camera_app_daily(start_ts INT, end_ts INT, timestamp INT, camera_id TEXT, name TEXT, foreground_duration INT, foreground_energy INT,background_duration INT, background_energy INT,screen_on_duration INT, screen_on_energy INT, screen_off_duration INT, screen_off_energy INT)",
+  "CREATE TABLE agg_camera_app_hourly(start_ts INT, end_ts INT, timestamp INT, camera_id TEXT, name TEXT, foreground_duration INT, foreground_energy INT, background_duration INT, background_energy INT,screen_on_duration INT, screen_on_energy INT, screen_off_duration INT, screen_off_energy INT)",
+  "CREATE TABLE agg_camera_device_daily(start_ts INT, end_ts INT, timestamp INT, camera_id TEXT, foreground_duration INT, foreground_energy INT, background_duration INT,background_energy INT, screen_on_duration INT, screen_on_energy INT, screen_off_duration INT, screen_off_energy INT)",
+  "CREATE TABLE agg_cpu_app_daily(start_ts INT, end_ts INT, timestamp INT, uid INT, name TEXT,foreground_duration INT, foreground_energy INT, background_duration INT, background_energy INT,screen_on_duration INT, screen_on_energy INT, screen_off_duration INT, screen_off_energy INT)",
+  "CREATE TABLE agg_cpu_app_hourly(start_ts INT, end_ts INT, timestamp INT, uid INT, name TEXT,foreground_duration INT, foreground_energy INT, background_duration INT, background_energy INT,screen_on_duration INT, screen_on_energy INT, screen_off_duration INT, screen_off_energy INT)",
+  "CREATE TABLE agg_cpu_device_daily(start_ts INT, end_ts INT, timestamp INT,foreground_duration INT, foreground_energy INT, background_duration INT, background_energy INT,screen_on_duration INT, screen_on_energy INT, screen_off_duration INT, screen_off_energy INT)",
+  "CREATE TABLE agg_cpu_frequency_app_daily(start_ts INT,end_ts INT,timestamp INT,top_app INT,cluster_fg_du INT,cluster_bg_du INT,power_table INT)",
+  "CREATE TABLE agg_ddr_app_daily(start_ts INT, end_ts INT, timestamp INT, name TEXT, screen_on_energy INT, screen_off_energy INT)",
+  "CREATE TABLE agg_ddr_app_hourly(start_ts INT, end_ts INT, timestamp INT, name TEXT, screen_on_energy INT, screen_off_energy INT)",
+  "CREATE TABLE agg_ddr_device_daily(start_ts INT, end_ts INT, timestamp INT, screen_on_energy INT, screen_off_energy INT)",
+  "CREATE TABLE agg_displayAgent_brightness_hourly(start_ts INT,end_ts INT,total_du INT,screen_id INT,app INT,brightness INT,brightmode INT)",
+  "CREATE TABLE agg_display_app_daily(start_ts INT,end_ts INT,timestamp INT,screen_id INT,name INT,duration INT,energy INT,mode INT)",
+  "CREATE TABLE agg_display_app_hourly(start_ts INT,end_ts INT,timestamp INT,screen_id INT,name INT,duration INT,energy INT,mode INT)",
+  "CREATE TABLE agg_display_device_daily(start_ts INT,end_ts INT,timestamp INT,screen_id INT,duration INT,energy INT,screen_off_duration INT,screen_off_energy INT)",
+  "CREATE TABLE agg_flashlight_app_daily(start_ts INT, end_ts INT, timestamp INT, name TEXT, foreground_duration INT, foreground_energy INT,background_duration INT, background_energy INT,screen_on_duration INT, screen_on_energy INT, screen_off_duration INT, screen_off_energy INT)",
+  "CREATE TABLE agg_flashlight_app_hourly(start_ts INT, end_ts INT, timestamp INT, name TEXT, foreground_duration INT, foreground_energy INT, background_duration INT, background_energy INT,screen_on_duration INT, screen_on_energy INT, screen_off_duration INT, screen_off_energy INT)",
+  "CREATE TABLE agg_flashlight_device_daily(start_ts INT, end_ts INT, timestamp INT, foreground_duration INT, foreground_energy INT, background_duration INT, background_energy INT,screen_on_duration INT, screen_on_energy INT, screen_off_duration INT, screen_off_energy INT)",
+  "CREATE TABLE agg_foreign_event_daily(upload INT, date INT, start_ts INT, end_ts INT, foreign_msg TEXT, version INT)",
+  "CREATE TABLE agg_gpu_app_daily(start_ts INT, end_ts INT, timestamp INT, name TEXT, duration INT, usage INT, energy INT)",
+  "CREATE TABLE agg_gpu_app_hourly(start_ts INT, end_ts INT, timestamp INT, name TEXT, duration INT, usage INT, energy INT)",
+  "CREATE TABLE agg_gpu_device_daily(start_ts INT, end_ts INT, timestamp INT, duration INT, usage INT, energy INT)",
+  "CREATE TABLE agg_metaAgent_daily(upload INT, date TEXT, start_ts INT, end_ts INT, sysInfo TEXT, obrainInfo TEXT, version INT)",
+  "CREATE TABLE agg_modem_app_daily(start_ts INT, end_ts INT, timestamp INT, name TEXT, foreground_duration INT, foreground_tx_bytes INT, foreground_rx_bytes INT, foreground_energy INT, background_duration INT, background_tx_bytes INT, background_rx_bytes INT, background_energy INT, screen_on_duration INT, screen_on_tx_bytes INT, screen_on_rx_bytes INT, screen_on_energy INT, screen_off_duration INT, screen_off_tx_bytes INT, screen_off_rx_bytes INT, screen_off_energy INT)",
+  "CREATE TABLE agg_modem_app_hourly(start_ts INT, end_ts INT, timestamp INT, name TEXT, foreground_duration INT, foreground_tx_bytes INT, foreground_rx_bytes INT, foreground_energy INT, background_duration INT, background_tx_bytes INT, background_rx_bytes INT, background_energy INT, screen_on_duration INT, screen_on_tx_bytes INT, screen_on_rx_bytes INT, screen_on_energy INT, screen_off_duration INT, screen_off_tx_bytes INT, screen_off_rx_bytes INT, screen_off_energy INT)",
+  "CREATE TABLE agg_modem_state_device_daily(start_ts INT, end_ts INT, timestamp INT, charge INT, screen INT, ground INT, network_type INT, signal_level INT, band TEXT, incall_duration INT, rx_bytes INT, tx_bytes INT, sleep_time INT, rx_4g_time INT, rx_5g_time INT, tx_4g_time INT, tx_5g_time INT, duplex_mode INT, data_activity INT, transceiver_eg INT, pa_eg INT, modem_eg INT, energy INT,lvl0_duration INT,lvl1_duration INT,lvl2_duration INT,lvl3_duration INT,lvl4_duration INT,lvl0_5g_duration INT,lvl1_5g_duration INT,lvl2_5g_duration INT,lvl3_5g_duration INT,lvl4_5g_duration INT)",
+  "CREATE TABLE agg_modem_state_device_hourly(start_ts INT, end_ts INT, timestamp INT, charge INT, screen INT, ground INT, network_type INT, signal_level INT, band TEXT, incall_duration INT, rx_bytes INT, tx_bytes INT, sleep_time INT, rx_4g_time INT, rx_5g_time INT, tx_4g_time INT, tx_5g_time INT, duplex_mode INT, data_activity INT, transceiver_eg INT, pa_eg INT, modem_eg INT, energy INT,lvl0_duration INT,lvl1_duration INT,lvl2_duration INT,lvl3_duration INT,lvl4_duration INT,lvl0_5g_duration INT,lvl1_5g_duration INT,lvl2_5g_duration INT,lvl3_5g_duration INT,lvl4_5g_duration INT)",
+  "CREATE TABLE agg_screen_brightness_fps_app_daily(start_ts INT,end_ts INT,timestamp INT,screen_mode INT,power_mode INT,name INT,brightness INT,fps INT,render_fps INT,total_du INT)",
+  "CREATE TABLE agg_screen_brightness_fps_app_hourly(start_ts INT,end_ts INT,timestamp INT,screen_mode INT,power_mode INT,name INT,brightness INT,fps INT,render_fps INT,total_du INT)",
+  "CREATE TABLE agg_thermalAgent_analysis(start_ts INT, end_ts INT, analysis TEXT)",
+  "CREATE TABLE agg_thermalAgent_daily(upload INT, date TEXT, start_ts INT, end_ts INT, histogram INT, top_app TEXT, analysis TEXT, version INT)",
+  "CREATE TABLE agg_thermalAgent_hourly(start_ts INT, end_ts INT, fg_app TEXT, screen_mode INT, power_mode INT, thermal_mode INT, network_type INT, zone_name TEXT, max_temp INT, up_trend INT, down_trend INT, keep_trend INT, max_rate REAL,zone0 INT,zone1 INT,zone2 INT,zone3 INT,zone4 INT,zone5 INT,zone6 INT,zone7 INT,zone8 INT,zone9 INT,zone10 INT,zone11 INT,zone12 INT,zone13 INT)",
+  "CREATE TABLE agg_ufs_app_daily(start_ts INT, end_ts INT, timestamp INT, name TEXT, foreground_duration INT, foreground_energy INT,background_duration INT, background_energy INT,screen_on_duration INT, screen_on_energy INT, screen_off_duration INT, screen_off_energy INT)",
+  "CREATE TABLE agg_ufs_app_hourly(start_ts INT, end_ts INT, timestamp INT, name TEXT, foreground_duration INT, foreground_energy INT,background_duration INT, background_energy INT,screen_on_duration INT, screen_on_energy INT, screen_off_duration INT, screen_off_energy INT)",
+  "CREATE TABLE agg_ufs_device_daily(start_ts INT, end_ts INT, timestamp INT, foreground_duration INT, foreground_energy INT,background_duration INT, background_energy INT,screen_on_duration INT, screen_on_energy INT, screen_off_duration INT, screen_off_energy INT)",
+  "CREATE TABLE agg_uidstate_cpuagent_hourly(start_ts INT,end_ts INT,power_mode INT,screen_mode INT,thermal_mode INT,ground_mode INT,type INT,pid_name INT,tgid_name INT,uid_name INT,wall_du INT,total_eg INT,pmu_total_eg INT,c0_0_du INT,c0_1_du INT,c0_2_du INT,c0_3_du INT,c0_4_du INT,c0_5_du INT,c0_6_du INT,c0_7_du INT,c0_8_du INT,c0_9_du INT,c0_10_du INT,c0_11_du INT,c0_12_du INT,c0_13_du INT,c0_14_du INT,c0_15_du INT,c0_16_du INT,c0_17_du INT,c0_18_du INT,c0_19_du INT,c0_20_du INT,c0_21_du INT,c0_22_du INT,c0_23_du INT,c0_24_du INT,c0_25_du INT,c0_26_du INT,c0_27_du INT,c1_0_du INT,c1_1_du INT,c1_2_du INT,c1_3_du INT,c1_4_du INT,c1_5_du INT,c1_6_du INT,c1_7_du INT,c1_8_du INT,c1_9_du INT,c1_10_du INT,c1_11_du INT,c1_12_du INT,c1_13_du INT,c1_14_du INT,c1_15_du INT,c1_16_du INT,c1_17_du INT,c1_18_du INT,c1_19_du INT,c1_20_du INT,c1_21_du INT,c1_22_du INT,c1_23_du INT,c1_24_du INT,c1_25_du INT,c1_26_du INT,c0_duration INT,c1_duration INT,total_duration INT)",
+  "CREATE TABLE agg_wifi_app_daily(start_ts INT, end_ts INT, timestamp INT, name TEXT, foreground_duration INT, foreground_tx_bytes INT, foreground_rx_bytes INT, foreground_energy INT, background_duration INT, background_tx_bytes INT, background_rx_bytes INT, background_energy INT, screen_on_duration INT, screen_on_tx_bytes INT, screen_on_rx_bytes INT, screen_on_energy INT, screen_off_duration INT, screen_off_tx_bytes INT, screen_off_rx_bytes INT, screen_off_energy INT)",
+  "CREATE TABLE agg_wifi_app_hourly(start_ts INT, end_ts INT, timestamp INT, name TEXT, foreground_duration INT, foreground_tx_bytes INT, foreground_rx_bytes INT, foreground_energy INT, background_duration INT, background_tx_bytes INT, background_rx_bytes INT, background_energy INT, screen_on_duration INT, screen_on_tx_bytes INT, screen_on_rx_bytes INT, screen_on_energy INT, screen_off_duration INT, screen_off_tx_bytes INT, screen_off_rx_bytes INT, screen_off_energy INT)",
+  "CREATE TABLE agg_wifi_state_device_daily(start_ts INT, end_ts INT, timestamp INT, charge INT, screen INT, ground INT, enable INT,tx_bytes INT, rx_bytes INT, tx_packet INT, rx_packet INT,tx_time INT, rx_time INT, idle_time INT, hotspot INT, band TEXT, band_width INT, standard TEXT, antenna INT, rssi INT, energy INT)",
+  "CREATE TABLE agg_wifi_state_device_hourly(start_ts INT, end_ts INT, timestamp INT, charge INT, screen INT, ground INT, enable INT,tx_bytes INT, rx_bytes INT, tx_packet INT, rx_packet INT,tx_time INT, rx_time INT, idle_time INT, hotspot INT, band TEXT, band_width INT, standard TEXT, antenna INT, rssi INT, energy INT)",
+  "CREATE TABLE comp_audioPower_audioAgent_intv(wall_start_ts INT, wall_end_ts INT, start_ts INT, end_ts INT, duration INT, app TEXT, player_app TEXT, ground_mode INT, screen_mode INT, power_mode INT, thermal_mode INT, audio_number INT, volume INT, channel INT, whole_eg INT)",
+  "CREATE TABLE comp_batteryAgent_appPower_intv(wall_start_ts INT, wall_end_ts INT, start_ts INT, end_ts INT, time_delta INT, app TEXT, power_mode INT, screen_mode INT, thermal_mode INT, screen_id INT,battery_passed_chgq_reset_count_delta INT, battery_level INT, battery_level_delta INT, input_usb_eg INT, whole_eg INT, rm_delta INT,fcc_jump INT, passchq_jump INT, charge_tech INT, fast_chg_type INT)",
+  "CREATE TABLE comp_batteryAgent_mode_intv(wall_start_ts INT, wall_end_ts INT, start_ts INT, end_ts INT, time_delta INT, power_mode INT, screen_mode INT, thermal_mode INT, battery_passed_chgq_reset_count_delta INT, battery_level INT, battery_level_delta INT, input_usb_eg INT, whole_eg INT, rm_delta INT,fcc_jump INT, passchq_jump INT, charge_tech INT, fast_chg_type INT)",
+  "CREATE TABLE comp_binderstats_binderagent_backward(wall_start_ts INT,wall_end_ts INT,start_ts INT,end_ts INT,screen_mode INT,foreground_app CHAR(0),service_name CHAR(0),service_proc_name CHAR(0),service_calltimes INT,caller_uid_names CHAR(0),caller_proc_names CHAR(0),caller_thread_names CHAR(0),caller_calltimes CHAR(0))",
+  "CREATE TABLE comp_cameraAgent_appPower_intv(wall_start_ts INT, wall_end_ts INT, start_ts INT, end_ts INT, time_delta INT, app TEXT, power_mode INT, screen_mode INT, thermal_mode INT, ground_mode INT, camera_app TEXT, camera_starttime INT, duration INT, camera_number INT, fps INT, camera_id TEXT, resolution TEXT, camera_eg INT, laser_eg INT, osi_eg INT, motor_eg INT)",
+  "CREATE TABLE comp_cameraAgent_explorer(wall_start_ts INT, wall_end_ts INT, start_ts INT, end_ts INT, time_delta INT, app TEXT, power_mode INT, screen_mode INT, thermal_mode INT, ground_mode INT, operationMode INT, explorer_start_ts INT, explorer_end_ts INT, moduleId INT, majorType INT, minorType INT,level INT, action INT, HDRRunTimes INT, AINRRunTimes INT, HDR_AINRRunTimes INT, OtherModeRunTimes INT,HDRDuration INT, AINRDuration INT, HDR_AINRDuration INT, OtherModeDuration INT,sensorDur_0 INT,sensorDur_1 INT,sensorDur_2 INT,sensorDur_3 INT,sensorDur_4 INT,sensorDur_5 INT,sensorDur_6 INT,sensorDur_7 INT,DDRTemp_0 CHAR(24),DDRTemp_1 CHAR(24),NPUTemp_0 CHAR(24),NPUTemp_1 CHAR(24),ISPTemp_0 CHAR(24),ISPTemp_1 CHAR(24),MAXCPUTemp_0 CHAR(24),MAXCPUTemp_1 CHAR(24),surfaceTemp_0 CHAR(24),surfaceTemp_1 CHAR(24))",
+  "CREATE TABLE comp_cellularUidState_backward(start_ts INT, end_ts INT, wall_start_ts INT, wall_end_ts INT, busy_du INT, power_mode INT, thermal_mode INT, screen_mode INT, incall_du INT, uid INT, name TEXT, ground_mode INT, rx_trans_byte INT, tx_trans_byte INT, networkType INT, duplexMode INT, dataActivity INT, signalLevel INT, simState INT, operatorName TEXT, bands TEXT, sleep_time INT, rx_time INT, rx_5g_time INT, transceiver_eg INT, pa_eg INT, modem_eg INT, total_eg INT,lvl0_duration INT,lvl1_duration INT,lvl2_duration INT,lvl3_duration INT,lvl4_duration INT,lvl0_5g_duration INT,lvl1_5g_duration INT,lvl2_5g_duration INT,lvl3_5g_duration INT,lvl4_5g_duration INT)",
+  "CREATE TABLE comp_cellularagent_backward(start_ts INT, end_ts INT, wall_start_ts INT, wall_end_ts INT, total_du INT, fg_app TEXT, power_mode INT, thermal_mode INT, screen_mode INT, incall_du INT, rx_trans_byte INT, tx_trans_byte INT, sleep_time INT, rx_time INT, rx_5g_time INT, networkType INT, duplexMode INT, dataActivity INT, signalLevel INT, signalStrength INT, simState INT, operatorName TEXT, ci INT, pci INT, tac INT, earfcn INT, bandwidth INT, bands TEXT, transceiver_eg INT, pa_eg INT, modem_eg INT, total_eg INT,lvl0_duration INT,lvl1_duration INT,lvl2_duration INT,lvl3_duration INT,lvl4_duration INT,lvl0_5g_duration INT,lvl1_5g_duration INT,lvl2_5g_duration INT,lvl3_5g_duration INT,lvl4_5g_duration INT)",
+  "CREATE TABLE comp_cellularagent_modem_info(start_ts INT, end_ts INT, wall_start_ts INT, wall_end_ts INT, hour_ts INT, lte_rrc_c0 INT, lte_rrc_c1 INT, lte_rrc_t0 INT, lte_rrc_t1 INT, nr_rrc_c0 INT, nr_rrc_c1 INT, nr_rrc_t0 INT, nr_rrc_t1 INT)",
+  "CREATE TABLE comp_ddrAgent_whole_energy(wall_start_ts INT, wall_end_ts INT, start_ts INT, end_ts INT, app TEXT, power_mode INT, screen_mode INT, thermal_mode INT, ground_mode INT, total_eg INT, freq_du TEXT, app_eg TEXT)",
+  "CREATE TABLE comp_displayAgent_appPower_intv(wall_start_ts INT,wall_end_ts INT,start_ts INT,end_ts INT,time_delta INT,screen_id INT,split_mode INT,parallel_mode INT,app INT,activity INT,app_secondary INT,activity_secondary INT,power_mode INT,screen_mode INT,thermal_mode INT,ground_mode INT,I1 INT,P1 INT,P2 INT,P3 INT,FPS INT,brightness INT,renderFps INT,whole_eg INT)",
+  "CREATE TABLE comp_displayAgent_brightness_intv(wall_start_ts INT,wall_end_ts INT,start_ts INT,end_ts INT,screen_id INT,app INT,brightness INT,brightmode INT,time_delta INT)",
+  "CREATE TABLE comp_displayAgent_histInfo_intv(wall_start_ts INT,wall_end_ts INT,start_ts INT,end_ts INT,time_delta INT,app INT,power_mode INT,screen_mode INT,thermal_mode INT,ground_mode INT,I1 INT,P1 INT,P2 INT,P3 INT,FPS INT,brightness INT,renderFps INT,whole_eg INT,rhist INT,rsample INT,ghist INT,gsample INT,bhist INT,bsample INT)",
+  "CREATE TABLE comp_flashlight_appPower_intv(wall_start_ts INT, wall_end_ts INT, start_ts INT, end_ts INT,  time_delta INT, app TEXT, power_mode INT, screen_mode INT, thermal_mode INT, ground_mode INT, TorchName TEXT, Torch_dur INT, Torch_eg INT)",
+  "CREATE TABLE comp_foreign_event(wall_start_ts INT, wall_end_ts INT, start_ts INT, end_ts INT, notify_type INT, msg TEXT, related_data TEXT)",
+  "CREATE TABLE comp_gpuPower_gpuAgent_intv(wall_start_ts INT, wall_end_ts INT, start_ts INT, end_ts INT, app TEXT, ground_mode INT, screen_mode INT, power_mode INT, thermal_mode INT, gpu_slumber_time_du INT, busy_time INT, usually_utilize_rate INT, fmax_utilize_rate INT, time_delta INT, whole_eg INT,g0_du INT,g1_du INT,g2_du INT,g3_du INT,g4_du INT,g5_du INT,g6_du INT,g7_du INT,g8_du INT,g9_du INT,g10_du INT,g11_du INT,g12_du INT,g13_du INT,g14_du INT,g15_du INT,g16_du INT,g17_du INT,g0_eg INT,g1_eg INT,g2_eg INT,g3_eg INT,g4_eg INT,g5_eg INT,g6_eg INT,g7_eg INT,g8_eg INT,g9_eg INT,g10_eg INT,g11_eg INT,g12_eg INT,g13_eg INT,g14_eg INT,g15_eg INT,g16_eg INT,g17_eg INT)",
+  "CREATE TABLE comp_table_whole_ufs_energy(start_ts INT, end_ts INT, wall_start_ts INT, wall_end_ts INT, app TEXT, ground_mode INT, screen_mode INT, charge_mode INT, thermal_mode INT, vcc_power INT, vccq_power INT, total_power INT)",
+  "CREATE TABLE comp_thermalAgent_backward(wall_start_ts INT, wall_end_ts INT, start_ts INT, end_ts INT, fg_app TEXT, screen_mode INT, power_mode INT, thermal_mode INT, network_type INT, zone_name TEXT, max_temp INT, up_trend INT, down_trend INT, keep_trend INT, max_rate INT,zone0 INT,zone1 INT,zone2 INT,zone3 INT,zone4 INT,zone5 INT,zone6 INT,zone7 INT,zone8 INT,zone9 INT,zone10 INT,zone11 INT,zone12 INT,zone13 INT)",
+  "CREATE TABLE comp_uidstate_cpuagent_backward(wall_start_ts INT,wall_end_ts INT,start_ts INT,end_ts INT,power_mode INT,screen_mode INT,thermal_mode INT,ground_mode INT,pid INT,tgid INT,uid INT,pid_name INT,tgid_name INT,uid_name INT,total_eg INT,pmu_total_eg INT,c0_0_du INT,c0_1_du INT,c0_2_du INT,c0_3_du INT,c0_4_du INT,c0_5_du INT,c0_6_du INT,c0_7_du INT,c0_8_du INT,c0_9_du INT,c0_10_du INT,c0_11_du INT,c0_12_du INT,c0_13_du INT,c0_14_du INT,c0_15_du INT,c0_16_du INT,c0_17_du INT,c0_18_du INT,c0_19_du INT,c0_20_du INT,c0_21_du INT,c0_22_du INT,c0_23_du INT,c0_24_du INT,c0_25_du INT,c0_26_du INT,c0_27_du INT,c1_0_du INT,c1_1_du INT,c1_2_du INT,c1_3_du INT,c1_4_du INT,c1_5_du INT,c1_6_du INT,c1_7_du INT,c1_8_du INT,c1_9_du INT,c1_10_du INT,c1_11_du INT,c1_12_du INT,c1_13_du INT,c1_14_du INT,c1_15_du INT,c1_16_du INT,c1_17_du INT,c1_18_du INT,c1_19_du INT,c1_20_du INT,c1_21_du INT,c1_22_du INT,c1_23_du INT,c1_24_du INT,c1_25_du INT,c1_26_du INT)",
+  "CREATE TABLE comp_wifi_agent_intv(start_ts INT, end_ts INT, time_delta INT, wall_start_ts INT, wall_end_ts INT, app TEXT, screen_mode INT, power_mode INT, thermal_mode INT, ground_mode INT, uid INT, package_name TEXT, tx_byte INT, rx_byte INT, tx_packet INT, rx_packet INT, tx_time FLOAT, rx_time FLOAT, idle_time FLOAT, wifi_id INT, enable INT, hotspot INT, frequency_band TEXT, standard TEXT, band_width INT, antenna INT, rssi INT, total_eg INT)",
+  "CREATE TABLE log_running_event(OTIME INT,BTIME INT,WTIME INT,MTIME INT,DATE TEXT,EVENT TEXT,DES CHAR)",
+  "CREATE TABLE meta_alert_threshold(alert_id TEXT, bin_id TEXT, app_name TEXT, lower_bin_value INT, upper_bin_value INT, threshold INT)",
+  "CREATE TABLE meta_alert_trigger_list(enable INT, type INT, version INT, name TEXT, sql TEXT, install_if TEXT, trigger_cnt INT, last_trigger_time INT)",
+  "CREATE TABLE meta_daily_dcs_data(date TEXT, start_ts INT, end_ts INT, agent TEXT, daily_data TEXT)",
+  "CREATE TABLE meta_package_uid(id TEXT UNIQUE, pkg TEXT, uid INT, version TEXT)",
+  "CREATE TABLE meta_persist_properties(name TEXT,value TEXT,type INT,created_time INT,modified_time INT)",
+  "CREATE TABLE meta_table_version(name TEXT, version INT)",
+  "CREATE TABLE raw_audioAgent_backward(wall_ts INT, snap_ts INT, appName TEXT, player_app TEXT, audio_number INT, volume INT, channel INT)",
+  "CREATE TABLE raw_batteryAgent_appPower_intv(snap_wall_ts INT, snap_ts INT, app TEXT, power_mode INT, screen_mode INT, thermal_mode INT, battery_passed_chgq INT, battery_passed_chgq_reset_count INT, battery_level INT, battery_fcc INT, battery_rm INT, input_usb_current INT, charge_tech INT, fast_chg_type INT)",
+  "CREATE TABLE raw_cameraAgent_appPower_intv(snap_ts INT, app TEXT, power_mode INT, screen_mode INT, thermal_mode INT, ground_mode INT, camera_app TEXT, camera_starttime INT, duration INT, camera_number INT, fps INT, camera_id TEXT, resolution TEXT, camera_eg INT, laser_eg INT, osi_eg INT, motor_eg INT)",
+  "CREATE TABLE raw_cellularagent_backward(snap_ts INT, raw_stats TEXT)",
+  "CREATE TABLE raw_ddrAgent_energy(wall_ts INT, snap_ts INT, app TEXT, power_mode INT, screen_mode INT, thermal_mode INT, ground_mode INT, freq_du TEXT)",
+  "CREATE TABLE raw_displayAgent_appPower_intv(snap_wall_ts INT,snap_ts INT,app INT,power_mode INT,screen_mode INT,thermal_mode INT,ground_mode INT,FPS INT,brightness INT,whole_eg INT)",
+  "CREATE TABLE raw_displayAgent_brightness(snap_wall_ts INT,snap_ts INT,app INT,brightness INT,brightmode INT)",
+  "CREATE TABLE raw_foreign_event(wall_ts INT, snap_ts INT, notify_type INT, msg TEXT)",
+  "CREATE TABLE raw_gpuStatusTime_gpuAgent_backward(snap_wall_ts INT, snap_ts INT, gpu_freq_busy_time_ms TEXT, gpu_freq_busy_inc_ms TEXT, gpu_slumber_time INT, gpu_slumber_time_inc INT)",
+  "CREATE TABLE raw_loggeragent_backward(snap_ts INT, opcode INT, value TEXT)",
+  "CREATE TABLE raw_table_ufs_energy(snap_ts INT, appName TEXT, write_sec_min INT, write_sec_max INT, read_sec_min INT, read_sec_max INT,      write_us_min INT, write_us_max INT, read_us_min INT, read_us_max INT, other_sec_min INT, other_sec_max INT,      other_us_min INT, other_us_max INT, scsi_send_count INT, dev_cmd_count INT)",
+  "CREATE TABLE raw_thermalAgent_temp(wall_ INT, snap_ts INT, fg_app TEXT,tz0 INT,tz1 INT,tz2 INT,tz3 INT,tz4 INT,tz5 INT,tz6 INT,tz7 INT,tz8 INT,tz9 INT,tz10 INT,tz11 INT,tz12 INT,tz13 INT,tz14 INT,tz15 INT,tz16 INT,tz17 INT,tz18 INT,tz19 INT,tz20 INT)",
+  "CREATE TABLE raw_wifi_agent_intv(snap_ts INT, app TEXT, screen_mode INT, power_mode INT, thermal_mode INT,wifi_id INT, enable INT, hotspot INT, generation TEXT, frequency INT, link_speed INT, rssi INT)",
+  "CREATE TABLE trig_aod_state_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_appName_fgBgChanged_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_app_cold_hot_start(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_app_update(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_application_init_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_audio_agent_version_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_audio_channel_type_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_audio_player_state_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_brightness_screen_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_cell_state_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_cfl_dbfile_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_charging_chargerState_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_displayOnOff_screenState_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_flashlight_state_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_hour_timer_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_last_exit_info(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_level_Battery_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_low_power_mode_change_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_midnight_timer_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_network_bands_changed_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_network_type_changed_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_network_used_when_suspend_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_obrain_external_notify_event(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_resolution_changed_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_rus_command_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_set_time_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_speaker_volume_changed_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_state_system_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_state_thermal_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_suspend_and_resume_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_system_setting_property_record(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_tenMinute_timer_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_unknown_otherEvents_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_wifi_info_timer_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_wifi_scan_result_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE TABLE trig_wifi_state_eventAgent(eid INT, otime INT, btime INT, wtime INT, mtime, state INT, info CHAR(100), extra CHAR(100))",
+  "CREATE VIEW agg_audio_device_hourly as\nselect start_ts, end_ts, timestamp, sum(foreground_duration) as foreground_duration,\nsum(foreground_energy) as foreground_energy,\nsum(background_duration) as background_duration, sum(background_energy) as background_energy,\nsum(screen_on_duration) as screen_on_duration, sum(screen_on_energy) as screen_on_energy,\nsum(screen_off_duration) as screen_off_duration, sum(screen_off_energy) as screen_off_energy\nfrom agg_audio_app_hourly\ngroup by timestamp",
+  "CREATE VIEW agg_camera_device_hourly as\nselect start_ts, end_ts, timestamp, camera_id, sum(foreground_duration) as foreground_duration,\nsum(foreground_energy) as foreground_energy,\nsum(background_duration) as background_duration, sum(background_energy) as background_energy,\nsum(screen_on_duration) as screen_on_duration, sum(screen_on_energy) as screen_on_energy,\nsum(screen_off_duration) as screen_off_duration, sum(screen_off_energy) as screen_off_energy\nfrom agg_camera_app_hourly\ngroup by timestamp",
+  "CREATE VIEW agg_cpu_device_hourly as\nselect start_ts, end_ts, timestamp, sum(foreground_duration) as foreground_duration,\nsum(foreground_energy) as foreground_energy,\nsum(background_duration) as background_duration, sum(background_energy) as background_energy,\nsum(screen_on_duration) as screen_on_duration, sum(screen_on_energy) as screen_on_energy,\nsum(screen_off_duration) as screen_off_duration, sum(screen_off_energy) as screen_off_energy\nfrom agg_cpu_app_hourly\ngroup by timestamp",
+  "CREATE VIEW agg_ddr_device_hourly as\nselect start_ts, end_ts, timestamp,\nsum(screen_on_energy) as screen_on_energy,\nsum(screen_off_energy) as screen_off_energy\nfrom agg_ddr_app_hourly\ngroup by timestamp",
+  "CREATE VIEW agg_display_device_hourly as\nselect start_ts, end_ts, timestamp, screen_id, sum(duration) as duration, sum(energy) as energy,\nsum(screen_off_duration) as screen_off_duration, sum(screen_off_energy) as screen_off_energy\nfrom (select start_ts, end_ts, timestamp, screen_id, \ncase when (mode <> 1 and mode <> 2) then duration else 0 end as duration,\ncase when (mode <> 1 and mode <> 2) then energy else 0 end as energy,\ncase when (mode = 1 or mode = 2) then duration else 0 end as screen_off_duration,\ncase when (mode = 1 or mode = 2) then energy else 0 end as screen_off_energy\nfrom agg_display_app_hourly) group by timestamp, screen_id",
+  "CREATE VIEW agg_flashlight_device_hourly as\nselect start_ts, end_ts, timestamp, sum(foreground_duration) as foreground_duration,\nsum(foreground_energy) as foreground_energy,\nsum(background_duration) as background_duration, sum(background_energy) as background_energy,\nsum(screen_on_duration) as screen_on_duration, sum(screen_on_energy) as screen_on_energy,\nsum(screen_off_duration) as screen_off_duration, sum(screen_off_energy) as screen_off_energy\nfrom agg_flashlight_app_hourly\ngroup by timestamp",
+  "CREATE VIEW agg_gpu_device_hourly as\nselect start_ts, end_ts, timestamp, sum(duration) as duration,\navg(usage) as usage,\nsum(energy) as energy\nfrom agg_gpu_app_hourly\ngroup by timestamp",
+  "CREATE VIEW agg_modem_device_hourly as\nselect start_ts, end_ts, timestamp \n, sum(foreground_tx_bytes) as foreground_tx_bytes\n, sum(foreground_rx_bytes) as foreground_rx_bytes\n, sum(foreground_energy) as foreground_energy\n, sum(background_tx_bytes) as background_tx_bytes\n, sum(background_rx_bytes) as background_rx_bytes\n, sum(background_energy) as background_energy\n, sum(screen_on_tx_bytes) as screen_on_tx_bytes\n, sum(screen_on_rx_bytes) as screen_on_rx_bytes\n, sum(screen_on_energy) as screen_on_energy\n, sum(screen_off_tx_bytes) as screen_off_tx_bytes\n, sum(screen_off_rx_bytes) as screen_off_rx_bytes\n, sum(screen_off_energy) as screen_off_energy\nfrom agg_modem_app_hourly\ngroup by timestamp",
+  "CREATE VIEW agg_ufs_device_hourly as\nselect start_ts, end_ts, timestamp, sum(foreground_duration) as foreground_duration,\nsum(foreground_energy) as foreground_energy,\nsum(background_duration) as background_duration, sum(background_energy) as background_energy,\nsum(screen_on_duration) as screen_on_duration, sum(screen_on_energy) as screen_on_energy,\nsum(screen_off_duration) as screen_off_duration, sum(screen_off_energy) as screen_off_energy\nfrom agg_ufs_app_hourly\ngroup by timestamp",
+  "CREATE VIEW agg_wifi_device_hourly as\nselect start_ts, end_ts, timestamp \n, sum(foreground_duration) as foreground_duration\n, sum(foreground_tx_bytes) as foreground_tx_bytes\n, sum(foreground_rx_bytes) as foreground_rx_bytes\n, sum(foreground_energy) as foreground_energy\n, sum(background_duration) as background_duration\n, sum(background_tx_bytes) as background_tx_bytes\n, sum(background_rx_bytes) as background_rx_bytes\n, sum(background_energy) as background_energy\n, sum(screen_on_duration) as screen_on_duration\n, sum(screen_on_tx_bytes) as screen_on_tx_bytes\n, sum(screen_on_rx_bytes) as screen_on_rx_bytes\n, sum(screen_on_energy) as screen_on_energy\n, sum(screen_off_duration) as screen_off_duration\n, sum(screen_off_tx_bytes) as screen_off_tx_bytes\n, sum(screen_off_rx_bytes) as screen_off_rx_bytes\n, sum(screen_off_energy) as screen_off_energy\nfrom agg_wifi_app_hourly\ngroup by timestamp",
+  "CREATE VIEW diag_obrain_self_check as\r\n-------- mode check ----------\r\nwith SCREEN_MODE_TBL as (\r\n\tselect *\r\n\tFROM (\r\n\t\t\tselect *,\r\n\t\t\t\tlead(mode) over(\r\n\t\t\t\t\torder by start_ts\r\n\t\t\t\t) as next_mode\r\n\t\t\tfrom (\r\n\t\t\t\t\tselect otime as start_ts,\r\n\t\t\t\t\t\tlead(otime) over(\r\n\t\t\t\t\t\t\torder by otime\r\n\t\t\t\t\t\t) as end_ts,\r\n\t\t\t\t\t\tstate as mode\r\n\t\t\t\t\tfrom (\r\n\t\t\t\t\t\t\tselect otime,\r\n\t\t\t\t\t\t\t\tstate\r\n\t\t\t\t\t\t\tfrom trig_displayOnOff_screenState_eventAgent\r\n\t\t\t\t\t\t\tUNION\r\n\t\t\t\t\t\t\tselect otime,\r\n\t\t\t\t\t\t\t\t-1\r\n\t\t\t\t\t\t\tfrom log_running_event\r\n\t\t\t\t\t\t\twhere EVENT = 'START'\r\n\t\t\t\t\t\t)\r\n\t\t\t\t)\r\n\t\t)\r\n\twhere mode <> -1\r\n\t\tand next_mode <> -1\r\n\t\tand end_ts is not null\r\n),\r\nTHERMAL_MODE_TBL as (\r\n\tselect *\r\n\tFROM (\r\n\t\t\tselect *,\r\n\t\t\t\tlead(mode) over(\r\n\t\t\t\t\torder by start_ts\r\n\t\t\t\t) as next_mode\r\n\t\t\tfrom (\r\n\t\t\t\t\tselect otime as start_ts,\r\n\t\t\t\t\t\tlead(otime) over(\r\n\t\t\t\t\t\t\torder by otime\r\n\t\t\t\t\t\t) as end_ts,\r\n\t\t\t\t\t\tstate as mode\r\n\t\t\t\t\tfrom (\r\n\t\t\t\t\t\t\tselect otime,\r\n\t\t\t\t\t\t\t\tstate\r\n\t\t\t\t\t\t\tfrom trig_state_thermal_eventAgent\r\n\t\t\t\t\t\t\tUNION\r\n\t\t\t\t\t\t\tselect otime,\r\n\t\t\t\t\t\t\t\t-1\r\n\t\t\t\t\t\t\tfrom log_running_event\r\n\t\t\t\t\t\t\twhere EVENT = 'START'\r\n\t\t\t\t\t\t)\r\n\t\t\t\t)\r\n\t\t)\r\n\twhere mode <> -1\r\n\t\tand next_mode <> -1\r\n\t\tand end_ts is not null\r\n),\r\nPOWER_MODE_TBL as (\r\n\tselect *\r\n\tFROM (\r\n\t\t\tselect *,\r\n\t\t\t\tlead(mode) over(\r\n\t\t\t\t\torder by start_ts\r\n\t\t\t\t) as next_mode\r\n\t\t\tfrom (\r\n\t\t\t\t\tselect otime as start_ts,\r\n\t\t\t\t\t\tlead(otime) over(\r\n\t\t\t\t\t\t\torder by otime\r\n\t\t\t\t\t\t) as end_ts,\r\n\t\t\t\t\t\tstate as mode\r\n\t\t\t\t\tfrom (\r\n\t\t\t\t\t\t\tselect otime,\r\n\t\t\t\t\t\t\t\tstate\r\n\t\t\t\t\t\t\tfrom trig_charging_chargerState_eventAgent\r\n\t\t\t\t\t\t\tUNION\r\n\t\t\t\t\t\t\tselect otime,\r\n\t\t\t\t\t\t\t\t-1\r\n\t\t\t\t\t\t\tfrom log_running_event\r\n\t\t\t\t\t\t\twhere EVENT = 'START'\r\n\t\t\t\t\t\t)\r\n\t\t\t\t)\r\n\t\t)\r\n\twhere mode <> -1\r\n\t\tand next_mode <> -1\r\n\t\tand end_ts is not null\r\n),\r\nNATIVE_PSS_TBL as (\r\n    select *, round(1.0 * native_pss_increased_kb / time_h, 2) as kb_per_hour\r\n    from (\r\n        select min(start_ts) as start_ts, max(end_ts) as end_ts, EVENT,\r\n\t\t\tsum(increased_mem) as native_pss_increased_kb, round(1.0*sum(duration)/3600000, 2) as time_h\r\n        from (\r\n\t\t\tselect TB1.start_ts as start_ts, TB1.end_ts, TB1.EVENT, TB1.mem,\r\n\t\t\t\tlead(TB1.mem) over (order by TB1.start_ts) as next_mem, (lead(TB1.mem) over (order by TB1.start_ts) - TB1.mem) as increased_mem,\r\n\t\t\t\t(TB1.end_ts - TB1.start_ts) as duration, TB2.phase, lead(TB2.phase) over (order by TB1.start_ts) as next_phase\r\n\t\t\tfrom (\r\n\t\t\t\tselect OTIME as start_ts, lead(OTIME) over (order by OTIME) as end_ts, DATE, EVENT, DES,\r\n\t\t\t\tcase\r\n\t\t\t\twhen EVENT = 'Memory' then  json_extract(DES,'$.nativePss') else 0 end as mem\r\n\t\t\t\tfrom log_running_event\r\n\t\t\t\twhere  EVENT = 'Memory'\r\n\t\t\t) TB1, (\r\n\t\t\t    -- select start phase --\r\n\t\t\t\tselect T1.start_ts, ifnull(T1.end_ts, T2.max_ts) as end_ts, T1.EVENT, T1.phase\r\n\t\t\t\tfrom (\r\n\t\t\t\t\tselect OTIME as start_ts, lead(OTIME) over (order by OTIME) as end_ts, EVENT,\r\n\t\t\t\t\trow_number() over () as phase\r\n\t\t\t\t\tfrom log_running_event\r\n\t\t\t\t\twhere  EVENT = 'START'\r\n\t\t\t\t\tORDER BY start_ts asc\r\n\t\t\t\t) T1, (\r\n\t\t\t\t\tselect max(OTIME) as max_ts\r\n\t\t\t\t\tfrom log_running_event\r\n\t\t\t\t) T2\r\n\t\t\t) TB2\r\n\t\t\twhere TB1.start_ts > TB2.start_ts and TB1.start_ts <= TB2.end_ts\r\n        )\r\n        where phase == next_phase\r\n        group by phase\r\n    )\r\n),\r\nGPU_FREQ_TBL as (\r\n\tselect count(*) as count from comp_gpuPower_gpuAgent_intv where whole_eg = 0 and usually_utilize_rate <> 0\r\n),\r\nAGENT_TBL as (\r\n\tselect 'cpu' as agent,\r\n\t\tstart_ts,\r\n\t\tend_ts,\r\n\t\tscreen_mode,\r\n        thermal_mode,\r\n        ground_mode,\r\n        power_mode\r\n\tfrom comp_uidstate_cpuagent_backward\r\n\twhere screen_mode <> -1 and thermal_mode <> -1 and ground_mode <> -1 and power_mode <> -1\r\n\tunion\r\n\tselect 'battery' as agent,\r\n\t\tstart_ts,\r\n\t\tend_ts,\r\n\t\tscreen_mode,\r\n        thermal_mode,\r\n\t\t1 as ground_mode,\r\n        power_mode\r\n\tfrom comp_batteryAgent_mode_intv\r\n\twhere screen_mode <> -1 and thermal_mode <> -1 and power_mode <> -1\r\n\tunion\r\n\tselect 'display' as agent,\r\n\t\tstart_ts,\r\n\t\tend_ts,\r\n\t\tscreen_mode,\r\n        thermal_mode,\r\n        ground_mode,\r\n        power_mode\r\n\tfrom comp_displayAgent_appPower_intv\r\n\twhere screen_mode <> -1 and thermal_mode <> -1 and ground_mode <> -1 and power_mode <> -1\r\n),\r\nSCREEN_MODE_RESULT_TBL as (\r\n\tselect AGENT_TBL.agent,\r\n\t\tjson_insert(\r\n\t\t\t'{}',\r\n\t\t\t'$.agent',\r\n\t\t\tAGENT_TBL.agent,\r\n\t\t\t'$.timestamp',\r\n\t\t\tSCREEN_MODE_TBL.start_ts || ',' || SCREEN_MODE_TBL.end_ts || ',' || AGENT_TBL.start_ts || ',' || AGENT_TBL.end_ts,\r\n\t\t\t'$.screen_mode',\r\n\t\t\tSCREEN_MODE_TBL.mode || ',' || AGENT_TBL.screen_mode\r\n\t\t) as detail,\r\n\t\tcase\r\n\t\t\twhen SCREEN_MODE_TBL.mode = AGENT_TBL.screen_mode then 'pass'\r\n\t\t\telse 'fail'\r\n\t\tend as result\r\n\tfrom SCREEN_MODE_TBL\r\n\t\tinner join AGENT_TBL on AGENT_TBL.start_ts >= SCREEN_MODE_TBL.start_ts\r\n\t\tand AGENT_TBL.end_ts <= SCREEN_MODE_TBL.end_ts\r\n),\r\nSCREEN_MODE_REASON_TBL as (\r\n\tselect count(*) as fail_cnt,\r\n\t\t'[' || group_concat(detail) || ']' detail\r\n\tfrom SCREEN_MODE_RESULT_TBL\r\n\twhere result <> 'pass'\r\n),\r\nSCREEN_MODE_FINAL_TBL as (\r\n    select 'screen_mode_check' as item,\r\n        case\r\n            when fail_cnt > 0 then 'fail'\r\n            else 'pass'\r\n        end as result,\r\n        fail_cnt,\r\n        detail\r\n    from SCREEN_MODE_REASON_TBL\r\n),\r\nTHERMAL_MODE_RESULT_TBL as (\r\n\tselect AGENT_TBL.agent,\r\n\t\tjson_insert(\r\n\t\t\t'{}',\r\n\t\t\t'$.agent',\r\n\t\t\tAGENT_TBL.agent,\r\n\t\t\t'$.timestamp',\r\n\t\t\tTHERMAL_MODE_TBL.start_ts || ',' || THERMAL_MODE_TBL.end_ts || ',' || AGENT_TBL.start_ts || ',' || AGENT_TBL.end_ts,\r\n\t\t\t'$.thermal_mode',\r\n\t\t\tTHERMAL_MODE_TBL.mode || ',' || AGENT_TBL.thermal_mode\r\n\t\t) as detail,\r\n\t\tcase\r\n\t\t\twhen THERMAL_MODE_TBL.mode = AGENT_TBL.thermal_mode then 'pass'\r\n\t\t\telse 'fail'\r\n\t\tend as result\r\n\tfrom THERMAL_MODE_TBL\r\n\t\tinner join AGENT_TBL on AGENT_TBL.start_ts >= THERMAL_MODE_TBL.start_ts\r\n\t\tand AGENT_TBL.end_ts <= THERMAL_MODE_TBL.end_ts\r\n),\r\nTHERMAL_MODE_REASON_TBL as (\r\n\tselect count(*) as fail_cnt,\r\n\t\t'[' || group_concat(detail) || ']' detail\r\n\tfrom THERMAL_MODE_RESULT_TBL\r\n\twhere result <> 'pass'\r\n),\r\nTHERMAL_MODE_FINAL_TBL as (\r\n    select 'thermal_mode_check' as item,\r\n        case\r\n            when fail_cnt > 0 then 'fail'\r\n            else 'pass'\r\n        end as result,\r\n        fail_cnt,\r\n        detail\r\n    from THERMAL_MODE_REASON_TBL\r\n),\r\nPOWER_MODE_RESULT_TBL as (\r\n\tselect AGENT_TBL.agent,\r\n\t\tjson_insert(\r\n\t\t\t'{}',\r\n\t\t\t'$.agent',\r\n\t\t\tAGENT_TBL.agent,\r\n\t\t\t'$.timestamp',\r\n\t\t\tPOWER_MODE_TBL.start_ts || ',' || POWER_MODE_TBL.end_ts || ',' || AGENT_TBL.start_ts || ',' || AGENT_TBL.end_ts,\r\n\t\t\t'$.power_mode',\r\n\t\t\tPOWER_MODE_TBL.mode || ',' || AGENT_TBL.power_mode\r\n\t\t) as detail,\r\n\t\tcase\r\n\t\t\twhen POWER_MODE_TBL.mode = AGENT_TBL.power_mode then 'pass'\r\n\t\t\telse 'fail'\r\n\t\tend as result\r\n\tfrom POWER_MODE_TBL\r\n\t\tinner join AGENT_TBL on AGENT_TBL.start_ts >= POWER_MODE_TBL.start_ts\r\n\t\tand AGENT_TBL.end_ts <= POWER_MODE_TBL.end_ts\r\n),\r\nPOWER_MODE_REASON_TBL as (\r\n\tselect count(*) as fail_cnt,\r\n\t\t'[' || group_concat(detail) || ']' detail\r\n\tfrom POWER_MODE_RESULT_TBL\r\n\twhere result <> 'pass'\r\n),\r\nPOWER_MODE_FINAL_TBL as (\r\n    select 'power_mode_check' as item,\r\n        case\r\n            when fail_cnt > 0 then 'fail'\r\n            else 'pass'\r\n        end as result,\r\n        fail_cnt,\r\n        detail\r\n    from POWER_MODE_REASON_TBL\r\n),\r\n-------- logic error check ----------\r\nLOG_ERR_CHECK_TBL as (\r\n    select 'logic_error_check' as item,\r\n        case\r\n            when count(*) > 0 then 'fail'\r\n            else 'pass'\r\n        end as result,\r\n\t\tcount(*) as fail_cnt,\r\n        json_group_array(DATE || ':' || EVENT || ':' || DES) as detail\r\n    from log_running_event\r\n    where EVENT='ERROR'\r\n),\r\nNATIVE_PSS_INCREASE_CHECK_TBL as (\r\n    select 'native_increase_pss_check' as item,\r\n\tcase\r\n\t\twhen kb_per_hour >  213  then 'fail' ----5MB/day == 213KB/hour------\r\n\t\telse 'pass'\r\n\tend as result, count (*) as fail_cnt,\r\n\tjson_group_array('start_ts :' || start_ts || ', end_ts :' || end_ts || ', native_increased_pss_kb :' || native_pss_increased_kb  || ', time_h : ' || time_h || ', kb_per_hour: ' || kb_per_hour ) as detail\r\n    from NATIVE_PSS_TBL\r\n    where kb_per_hour >  213\r\n),\r\nGPU_FREQ_CHECK_TBL as (\r\n\tselect 'gpu_freq_check' as item,\r\n\tcase\r\n\twhen count >  0\r\n\t\tthen 'fail' ----出现GPU频点不匹配的问题------\r\n\t\telse 'pass'\r\n\tend as result,\r\n\tcount as fail_cnt,\r\n\tcase\r\n\twhen count >  0\r\n\t\tthen 'GPU freq error'\r\n\t\telse NULL\r\n\tend as detail\r\n    from GPU_FREQ_TBL\r\n),\r\n--------------cpu_check-----------------\r\nCOMP_CPU_TAB as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect total_eg\r\n\t\t\t, case\r\n\t\t\t\twhen total_eg >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as total_eg_check, pid\r\n\t\t\t, case\r\n\t\t\t\twhen pid = -1 or pid >= 0 and pid = cast(pid as int) then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as pid_check, tgid\r\n\t\t\t, case\r\n\t\t\t\twhen tgid = -1 or tgid >= 0 and tgid = cast(tgid as int) then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as tgid_check, uid\r\n\t\t\t, case\r\n\t\t        when uid = -1 or uid >= 0 and uid = cast(uid as int) then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as uid_check, pid_name\r\n\t\t\t, case\r\n\t\t\t\twhen pid = -1 and pid_name = '' then 'pass'\r\n\t\t\t\twhen uid = -1 and pid_name = '' then 'pass'\r\n\t\t\t\twhen pid <> -1 and uid <> -1 and pid_name <> '' then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as pid_name_check, tgid_name\r\n\t\t\t, case\r\n\t\t\t\twhen pid = -1 and tgid_name = '' then 'pass'\r\n\t\t\t\twhen uid = -1 and tgid_name = '' then 'pass'\r\n\t\t\t\twhen pid <> -1 and uid <> -1 and tgid_name <> '' then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as tgid_name_check, uid_name\r\n\t\t\t, case\r\n\t\t\t\twhen uid_name <> '' then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as uid_name_check\r\n\t\tfrom comp_uidstate_cpuagent_backward\r\n\t)\r\n\twhere total_eg_check = 'fail'\r\n\t\tor pid_check = 'fail'\r\n\t\tor tgid_check = 'fail'\r\n\t\tor uid_check = 'fail'\r\n\t\tor pid_name_check = 'fail'\r\n\t\tor tgid_name_check = 'fail'\r\n\t\tor uid_name_check = 'fail'\r\n),\r\nSUM_COMP_CPU_TAB as (\r\n\tselect *\r\n    from (\r\n    \tselect round(sum_eg * 1.0 / sum_dur * 1.0, 2) as p\r\n    \t\t, case\r\n    \t\t\twhen sum_eg / sum_dur >= 1 then 'pass'\r\n    \t\t\telse 'fail'\r\n    \t\tend as sum_total_eg_check, empty_check\r\n    \tfrom (\r\n    \t\tselect max(end_ts) - min(start_ts) as sum_dur\r\n    \t\t\t, sum(total_eg) as sum_eg\r\n    \t\t\t, case\r\n    \t\t\t\twhen count(*) > 0 then 'pass'\r\n    \t\t\t\telse 'fail'\r\n    \t\t\tend as empty_check\r\n    \t\tfrom comp_uidstate_cpuagent_backward\r\n    \t)\r\n    )\r\n    where sum_total_eg_check = 'fail'\r\n    \tor empty_check = 'fail'\r\n),\r\nAGG_CPU_DAILY_TAB as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect case\r\n\t\t\t\twhen count(*) > 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as empty_check, timestamp\r\n\t\t\t, case\r\n\t\t\t\twhen timestamp > 0 and timestamp = cast(timestamp as int) then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as timestamp_check, start_ts\r\n\t\t\t, case\r\n\t\t\t\twhen start_ts >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as start_ts_check, end_ts\r\n\t\t\t, case\r\n\t\t\t\twhen end_ts >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as end_ts_check, foreground_duration\r\n\t\t\t, case\r\n\t\t\t\twhen foreground_duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as foreground_duration_check, foreground_energy\r\n\t\t\t, case\r\n\t\t\t\twhen foreground_energy >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as foreground_energy_check, background_duration\r\n\t\t\t, case\r\n\t\t\t\twhen background_duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as background_duration_check, background_energy\r\n\t\t\t, case\r\n\t\t\t\twhen background_energy >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as background_energy_check, screen_on_duration\r\n\t\t\t, case\r\n\t\t\t\twhen screen_on_duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_on_duration_check, screen_on_energy\r\n\t\t\t, case\r\n\t\t\t\twhen screen_on_energy >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_on_energy_check, screen_off_duration\r\n\t\t\t, case\r\n\t\t\t\twhen screen_off_duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_off_duration_check, screen_off_energy\r\n\t\t\t, case\r\n\t\t\t\twhen screen_off_energy >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_off_energy_check\r\n\t\tfrom agg_cpu_app_daily\r\n\t)\r\n\twhere timestamp_check = 'fail'\r\n\t\tor start_ts_check = 'fail'\r\n\t\tor end_ts_check = 'fail'\r\n\t\tor foreground_duration_check = 'fail'\r\n\t\tor foreground_energy_check = 'fail'\r\n\t\tor background_duration_check = 'fail'\r\n\t\tor background_energy_check = 'fail'\r\n\t\tor screen_on_duration_check = 'fail'\r\n\t\tor screen_on_energy_check = 'fail'\r\n\t\tor screen_off_duration_check = 'fail'\r\n\t\tor screen_off_energy_check = 'fail'\r\n\t\tor empty_check = 'fail'\r\n),\r\nCPU_RESULT_CHECK_TAB as (\r\n\tselect 'comp_uidstate_cpuagent_data_check' as item\r\n\t\t, case\r\n\t\t\twhen count(*) > 0 then 'fail'\r\n\t\t\telse 'pass'\r\n\t\tend as result, ifnull(fail_cnt, 0) as fail_cnt, detail\r\n\tfrom (\r\n\t\tselect a.fail_cnt  + c.fail_cnt as fail_cnt\r\n\t\t\t, json_group_array('comp_uidstate_cpuagent_backward :' || c.detail || a.detail) as detail\r\n\t\tfrom (\r\n\t\t\tselect count(*) as fail_cnt\r\n\t\t\t\t, json_group_array('total_eg :' || total_eg || ':' || total_eg_check || ', pid :' || pid || ':' || pid_check || ', tgid :' || tgid || ':' || tgid_check ||\r\n\t\t\t\t', uid :' || uid || ':' || uid_check || ', pid_name :' || pid_name || ':' || pid_name_check || ', tgid_name :' || tgid_name || ':' || tgid_name_check ||\r\n\t\t\t\t', uid_name :' || uid_name || ':' || uid_name_check) as detail\r\n\t\t\tfrom COMP_CPU_TAB\r\n\t\t) a , (\r\n\t\t\t\tselect count(*) as fail_cnt\r\n\t\t\t\t\t, json_group_array('empty_check :' || empty_check || ', total_eg/total_du :' || p || ':' || sum_total_eg_check) as detail\r\n\t\t\t\tfrom SUM_COMP_CPU_TAB\r\n\t\t\t) c\r\n\t)\r\n\twhere fail_cnt > 0\r\n),\r\nAGG_CPU_DAILY_CHECK_TAB as (\r\n\tselect 'agg_cpu_app_daily_data_check' as item\r\n    \t, case\r\n    \t\twhen count(*) > 0 then 'fail'\r\n    \t\telse 'pass'\r\n    \tend as result, ifnull(fail_cnt, 0) as fail_cnt, detail\r\n    from (\r\n    \tselect fail_cnt, json_group_array('agg_cpu_app_daily :' || detail) as detail\r\n    \tfrom (\r\n    \t\tselect count(*) as fail_cnt\r\n    \t\t\t, json_group_array('empty_check :' || empty_check || ', timestamp :' || timestamp || ':' || timestamp_check || ', start_ts :' || start_ts || ':' || start_ts_check ||\r\n    \t\t\t', end_ts : ' || end_ts || ':' || end_ts_check || ', foreground_duration :' || foreground_duration_check ||\r\n    \t\t\t', foreground_energy :' || foreground_energy_check || ', background_duration :' || background_duration_check || ', background_energy :' || background_energy_check ||\r\n    \t\t\t', screen_on_duration :' || screen_on_duration_check || ', screen_on_energy :' || screen_on_energy_check || ', screen_off_duration :' || screen_off_duration_check || \r\n\t\t\t\t', screen_off_energy :' || screen_off_energy_check) as detail\r\n    \t\tfrom AGG_CPU_DAILY_TAB\r\n    \t)\r\n    )\r\n    where fail_cnt > 0\r\n),\r\n--------------GPU----------------\r\nCOMP_GPU_AGENT_TAB as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect app\r\n\t\t\t, case\r\n\t\t\t\twhen app <> '' then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as app_check, gpu_slumber_time_du\r\n\t\t\t, case\r\n\t\t\t\twhen gpu_slumber_time_du >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as gpu_slumber_time_du_check, usually_utilize_rate\r\n\t\t\t, case\r\n\t\t\t\twhen usually_utilize_rate >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as usually_utilize_rate_check, fmax_utilize_rate\r\n\t\t\t, case\r\n\t\t\t\twhen fmax_utilize_rate >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as fmax_utilize_rate_check, time_delta\r\n\t\t\t, case\r\n\t\t\t\twhen time_delta >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as time_delta_check, whole_eg\r\n\t\t\t, case\r\n\t\t\t\twhen whole_eg >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as whole_eg_check\r\n\t\tfrom comp_gpuPower_gpuAgent_intv\r\n\t)\r\n\twhere app_check = 'fail'\r\n\t\tor gpu_slumber_time_du_check = 'fail'\r\n\t\tor usually_utilize_rate_check = 'fail'\r\n\t\tor fmax_utilize_rate_check = 'fail'\r\n\t\tor time_delta_check = 'fail'\r\n\t\tor whole_eg_check = 'fail'\r\n),\r\nWHOLE_EG_CHECK as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect case\r\n\t\t\t\twhen sum(whole_eg) > 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as sum_whole_eg_check\r\n\t\tfrom comp_gpuPower_gpuAgent_intv\r\n\t)\r\n\twhere sum_whole_eg_check = 'fail'\r\n),\r\nAGG_GPU_DAILY_TAB as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect case\r\n\t\t\t\twhen count(*) > 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as empty_check, timestamp\r\n\t\t\t, case\r\n\t\t\t\twhen timestamp > 0 and timestamp = cast(timestamp as int) then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as timestamp_check, start_ts\r\n\t\t\t, case\r\n\t\t\t\twhen start_ts >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as start_ts_check, end_ts\r\n\t\t\t, case\r\n\t\t\t\twhen end_ts >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as end_ts_check, name\r\n\t\t\t, case\r\n\t\t\t\twhen name <> '' then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as name_check, duration\r\n\t\t\t, case\r\n\t\t\t\twhen duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as duration_check, usage\r\n\t\t\t, case\r\n\t\t\t\twhen usage >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as usage_check, energy\r\n\t\t\t, case\r\n\t\t\t\twhen energy >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as energy_check\r\n\t\tfrom agg_gpu_app_daily\r\n\t)\r\n\twhere timestamp_check = 'fail'\r\n\t\tor start_ts_check = 'fail'\r\n\t\tor end_ts_check = 'fail'\r\n\t\tor name_check = 'fail'\r\n\t\tor duration_check = 'fail'\r\n\t\tor usage_check = 'fail'\r\n\t\tor energy_check = 'fail'\r\n\t\tor empty_check = 'fail'\r\n),\r\nCOMP_GPU_AGENT_RESULT_TAB as (\r\n\tselect 'comp_gpuPower_gpuAgent_data_check' as item\r\n\t\t, case\r\n\t\t\twhen count(*) > 0 then 'fail'\r\n\t\t\telse 'pass'\r\n\t\tend as result, ifnull(fail_cnt, 0) as fail_cnt, detail\r\n\tfrom (\r\n\t\tselect a.fail_cnt + c.fail_cnt + b.fail_cnt as fail_cnt\r\n\t\t\t, json_group_array('comp_gpuPower_gpuAgent_intv :' || c.detail || a.detail || b.detail) as detail\r\n\t\tfrom (\r\n\t\t\tselect count(*) as fail_cnt\r\n\t\t\t\t, json_group_array('app :' || app || ':' || app_check || ', gpu_slumber_time_du :' || gpu_slumber_time_du || ':' || gpu_slumber_time_du_check ||\r\n\t\t\t\t', usually_utilize_rate :' || usually_utilize_rate || ':' || usually_utilize_rate_check || ', fmax_utilize_rate :' || fmax_utilize_rate || ':' || fmax_utilize_rate_check ||\r\n\t\t\t\t', time_delta :' || time_delta || ':' || time_delta_check || ', whole_eg :' || whole_eg || ':' || whole_eg_check) as detail\r\n\t\t\tfrom COMP_GPU_AGENT_TAB\r\n\t\t) a, (\r\n\t\t\t\tselect count(*) as fail_cnt, json_group_array('empty_check :' || empty_check) as detail\r\n\t\t\t\tfrom (\r\n\t\t\t\t\tselect case\r\n\t\t\t\t\t\t\twhen count(*) = 0 then 'fail'\r\n\t\t\t\t\t\t\telse 'pass'\r\n\t\t\t\t\t\tend as empty_check\r\n\t\t\t\t\tfrom comp_gpuPower_gpuAgent_intv\r\n\t\t\t\t)\r\n\t\t\t\twhere empty_check = 'fail'\r\n\t\t\t) c, (\r\n\t\t\t\t\tselect count(*) as fail_cnt, json_group_array('sum_whole_eg_check :' || sum_whole_eg_check) as detail\r\n\t\t\t\t\tfrom WHOLE_EG_CHECK\r\n\t\t\t\t) b\r\n\t)\r\n\twhere fail_cnt > 0\r\n),\r\nAGG_GPU_APP_DAILY_RESULT_TAB as (\r\n\tselect 'agg_gpu_app_daily_data_check' as item\r\n\t\t, case\r\n\t\t\twhen count(*) > 0 then 'fail'\r\n\t\t\telse 'pass'\r\n\t\tend as result, ifnull(fail_cnt, 0) as fail_cnt, detail\r\n\tfrom (\r\n\t\tselect fail_cnt, json_group_array('agg_gpu_app_daily :' || detail) as detail\r\n\t\tfrom (\r\n\t\t\tselect count(*) as fail_cnt\r\n\t\t\t\t, json_group_array('empty_check :' || empty_check || ', timestamp :' || timestamp || ':' || timestamp_check || ', start_ts :' || start_ts || ':' || start_ts_check ||\r\n\t\t\t\t', end_ts :' || end_ts || ':' || end_ts_check || ', name :' || name_check || ', duration :' || duration_check ||\r\n\t\t\t\t', usage :' || usage_check || ', energy :' || energy || ':' || energy_check) as detail\r\n\t\t\tfrom AGG_GPU_DAILY_TAB\r\n\t\t)\r\n\t)\r\n\twhere fail_cnt > 0\r\n),\r\n----------------camera_check--------------\r\nCOMP_CAMERA_TAB as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect time_delta\r\n\t\t\t, case\r\n\t\t\t\twhen time_delta > 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as time_delta_check, app\r\n\t\t\t, case\r\n\t\t\t\twhen app <> '' then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as app_check, camera_app\r\n\t\t\t, case\r\n\t\t\t\twhen camera_app <> '' then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as camera_app_check, duration\r\n\t\t\t, case\r\n\t\t\t\twhen duration > 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as duration_check, fps\r\n\t\t\t, case\r\n\t\t\t\twhen fps > 0 and fps < 120\r\n\t\t\t\tthen 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as fps_check, camera_eg\r\n\t\t\t, case\r\n\t\t\t\twhen camera_eg >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as camera_eg_check, laser_eg\r\n\t\t\t, case\r\n\t\t\t\twhen laser_eg >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as laser_eg_check, osi_eg\r\n\t\t\t, case\r\n\t\t\t\twhen osi_eg >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as osi_eg_check, motor_eg\r\n\t\t\t, case\r\n\t\t\t\twhen motor_eg >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as motor_eg_check\r\n\t\tfrom comp_cameraAgent_appPower_intv\r\n\t)\r\n\twhere time_delta_check = 'fail'\r\n\t\tor app_check = 'fail'\r\n\t\tor camera_app_check = 'fail'\r\n\t\tor duration_check = 'fail'\r\n\t\tor fps_check = 'fail'\r\n\t\tor camera_eg_check = 'fail'\r\n\t\tor laser_eg_check = 'fail'\r\n\t\tor osi_eg_check = 'fail'\r\n\t\tor motor_eg_check = 'fail'\r\n),\r\nCAMERA_EG_CHECK as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect case\r\n\t\t\t\twhen sum(camera_eg) > 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as sum_camera_eg_check\r\n\t\tfrom comp_cameraAgent_appPower_intv\r\n\t)\r\n\twhere sum_camera_eg_check = 'fail'\r\n),\r\nAGG_CAMERA_DAILY_TAB as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect case\r\n\t\t\t\twhen count(*) > 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as empty_check, timestamp\r\n\t\t\t, case\r\n\t\t\t\twhen timestamp > 0 and timestamp = cast(timestamp as int) then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as timestamp_check, start_ts\r\n\t\t\t, case\r\n\t\t\t\twhen start_ts >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as start_ts_check, end_ts\r\n\t\t\t, case\r\n\t\t\t\twhen end_ts >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as end_ts_check, foreground_duration\r\n\t\t\t, case\r\n\t\t\t\twhen foreground_duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as foreground_duration_check, foreground_energy\r\n\t\t\t, case\r\n\t\t\t\twhen foreground_energy >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as foreground_energy_check, background_duration\r\n\t\t\t, case\r\n\t\t\t\twhen background_duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as background_duration_check, background_energy\r\n\t\t\t, case\r\n\t\t\t\twhen background_energy >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as background_energy_check, screen_on_duration\r\n\t\t\t, case\r\n\t\t\t\twhen screen_on_duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_on_duration_check, screen_on_energy\r\n\t\t\t, case\r\n\t\t\t\twhen screen_on_energy >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_on_energy_check, screen_off_duration\r\n\t\t\t, case\r\n\t\t\t\twhen screen_off_duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_off_duration_check, screen_off_energy\r\n\t\t\t, case\r\n\t\t\t\twhen screen_off_energy >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_off_energy_check\r\n\t\tfrom agg_camera_app_daily\r\n\t)\r\n\twhere timestamp_check = 'fail'\r\n\t\tor start_ts_check = 'fail'\r\n\t\tor end_ts_check = 'fail'\r\n\t\tor foreground_duration_check = 'fail'\r\n\t\tor foreground_energy_check = 'fail'\r\n\t\tor background_duration_check = 'fail'\r\n\t\tor background_energy_check = 'fail'\r\n\t\tor screen_on_duration_check = 'fail'\r\n\t\tor screen_on_energy_check = 'fail'\r\n\t\tor screen_off_duration_check = 'fail'\r\n\t\tor screen_off_energy_check = 'fail'\r\n\t\tor empty_check = 'fail'\r\n),\r\nCOMP_CAMERA_RESULT_TAB as (\r\n\tselect 'comp_cameraAgent_appPower_data_check' as item\r\n\t\t, case\r\n\t\t\twhen count(*) > 0 then 'fail'\r\n\t\t\telse 'pass'\r\n\t\tend as result, ifnull(fail_cnt, 0) as fail_cnt, detail\r\n\tfrom (\r\n\t\tselect a.fail_cnt + c.fail_cnt + b.fail_cnt as fail_cnt\r\n\t\t\t, json_group_array('comp_cameraAgent_appPower_intv :' || c.detail || a.detail || b.detail) as detail\r\n\t\tfrom (\r\n\t\t\tselect count(*) as fail_cnt\r\n\t\t\t\t, json_group_array('time_delta :' || time_delta || ':' || time_delta_check || ', app :' || app || ':' || app_check ||\r\n\t\t\t\t', camera_app :' || camera_app || ':' || camera_app_check || ', duration :' || duration || ':' || duration_check || ', fps :' || fps || ':' || fps_check ||\r\n\t\t\t\t', camera_eg :' || camera_eg || ':' || camera_eg_check || ', laser_eg :' || laser_eg || ':' || laser_eg_check || ', osi_eg :' || osi_eg || ':' || osi_eg_check ||\r\n\t\t\t\t', motor_eg :' || motor_eg || ':' || motor_eg_check) as detail\r\n\t\t\tfrom COMP_CAMERA_TAB\r\n\t\t) a, (\r\n\t\t\t\tselect count(*) as fail_cnt, json_group_array('empty_check :' || empty_check) as detail\r\n\t\t\t\tfrom (\r\n\t\t\t\t\tselect case\r\n\t\t\t\t\t\t\twhen count(*) = 0 then 'fail'\r\n\t\t\t\t\t\t\telse 'pass'\r\n\t\t\t\t\t\tend as empty_check\r\n\t\t\t\t\tfrom comp_cameraAgent_appPower_intv\r\n\t\t\t\t)\r\n\t\t\t\twhere empty_check = 'fail'\r\n\t\t\t) c,(\r\n\t\t\t\t\tselect count(*) as fail_cnt, json_group_array('sum_camera_eg_check :' || sum_camera_eg_check) as detail\r\n\t\t\t\t\tfrom CAMERA_EG_CHECK\r\n\t\t\t\t) b\r\n\t)\r\n\twhere fail_cnt > 0\r\n),\r\nAGG_CAMERA_DAILY_RESULT_TAB as (\r\n\tselect 'agg_camera_app_daily_data_check' as item\r\n    \t, case\r\n    \t\twhen count(*) > 0 then 'fail'\r\n    \t\telse 'pass'\r\n    \tend as result, ifnull(fail_cnt, 0) as fail_cnt, detail\r\n    from (\r\n    \tselect fail_cnt, json_group_array('agg_camera_app_daily :' || detail) as detail\r\n    \tfrom (\r\n    \t\tselect count(*) as fail_cnt\r\n    \t\t\t, json_group_array('empty_check :' || empty_check || ', timestamp :' || timestamp || ':' || timestamp_check || ', start_ts :' || start_ts || ':' || start_ts_check ||\r\n    \t\t\t', end_ts : ' || end_ts || ':' || end_ts_check || ', foreground_duration :' || foreground_duration_check ||\r\n    \t\t\t', foreground_energy :' || foreground_energy_check || ', background_duration :' || background_duration_check || ', background_energy :' || background_energy_check ||\r\n    \t\t\t', screen_on_duration :' || screen_on_duration_check || ', screen_on_energy :' || screen_on_energy_check || ', screen_off_duration :' || screen_off_duration_check || \r\n\t\t\t\t', screen_off_energy :' || screen_off_energy_check) as detail\r\n    \t\tfrom AGG_CAMERA_DAILY_TAB\r\n    \t)\r\n    )\r\n    where fail_cnt > 0\r\n),\r\n---------------------------cellular_check-----------------------------\r\nCOMP_CELLULAR_AGENT_TAB as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect total_du\r\n\t\t\t, case\r\n\t\t\t\twhen total_du >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as total_du_check, fg_app\r\n\t\t\t, case\r\n\t\t\t\twhen fg_app <> '' then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as fg_app_check, incall_du\r\n\t\t\t, case\r\n\t\t\t\twhen incall_du >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as incall_du_check, rx_trans_byte\r\n\t\t\t, case\r\n\t\t\t\twhen rx_trans_byte >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as rx_trans_byte_check, tx_trans_byte\r\n\t\t\t, case\r\n\t\t\t\twhen tx_trans_byte >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as tx_trans_byte_check, sleep_time\r\n\t\t\t, case\r\n\t\t\t\twhen sleep_time >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as sleep_time_check, rx_time\r\n\t\t\t, case\r\n\t\t\t\twhen rx_time >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as rx_time_check, rx_5g_time\r\n\t\t\t, case\r\n\t\t\t\twhen rx_5g_time >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as rx_5g_time_check, signalStrength\r\n\t\t\t, case\r\n\t\t\t\twhen signalStrength >= -143 and signalStrength <= -43\r\n\t\t\t\tthen 'pass'\r\n\t\t\t\twhen signalStrength = -1 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as signalStrength_check, transceiver_eg\r\n\t\t\t, case\r\n\t\t\t\twhen transceiver_eg >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as transceiver_eg_check, pa_eg\r\n\t\t\t, case\r\n\t\t\t\twhen pa_eg >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as pa_eg_check, modem_eg\r\n\t\t\t, case\r\n\t\t\t\twhen modem_eg >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as modem_eg_check, total_eg\r\n\t\t\t, case\r\n\t\t\t\twhen total_eg >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as total_eg_check\r\n\t\tfrom comp_cellularagent_backward\r\n\t)\r\n\twhere total_du_check = 'fail'\r\n\t\tor fg_app_check = 'fail'\r\n\t\tor incall_du_check = 'fail'\r\n\t\tor rx_trans_byte_check = 'fail'\r\n\t\tor tx_trans_byte_check = 'fail'\r\n\t\tor sleep_time_check = 'fail'\r\n\t\tor rx_time_check = 'fail'\r\n\t\tor rx_5g_time_check = 'fail'\r\n\t\tor signalStrength_check = 'fail'\r\n\t\tor transceiver_eg_check = 'fail'\r\n\t\tor pa_eg_check = 'fail'\r\n\t\tor modem_eg_check = 'fail'\r\n\t\tor total_eg_check = 'fail'\r\n),\r\nNETWORK_TYPE_CHECK as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect case\r\n\t\t\t\twhen empty_check > 0\r\n\t\t\t\t\tand count_n > 0\r\n\t\t\t\tthen 'pass'\r\n\t\t\t\twhen empty_check = 0 then 'pass'\r\n\t\t\t\telse 'fail (Note: If no phone card is inserted, it is considered correct)'\r\n\t\t\tend as networkType_check\r\n\t\tfrom (\r\n\t\t\tselect count(*) as count_n\r\n\t\t\tfrom comp_cellularagent_backward\r\n\t\t\twhere networkType <> -1\r\n\t\t) a, (\r\n\t\t\t\tselect count(*) as empty_check\r\n\t\t\t\tfrom comp_cellularagent_backward\r\n\t\t\t) b\r\n\t)\r\n\twhere networkType_check <> 'pass'\r\n),\r\nCOMP_CELLULAR_UID_STATE_TAB as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect busy_du\r\n\t\t\t, case\r\n\t\t\t\twhen busy_du >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as busy_du_check, incall_du\r\n\t\t\t, case\r\n\t\t\t\twhen incall_du >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as incall_du_check, name\r\n\t\t\t, case\r\n\t\t\t\twhen name <> '' then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as name_check, rx_trans_byte\r\n\t\t\t, case\r\n\t\t\t\twhen rx_trans_byte >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as rx_trans_byte_check, tx_trans_byte\r\n\t\t\t, case\r\n\t\t\t\twhen tx_trans_byte >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as tx_trans_byte_check, sleep_time\r\n\t\t\t, case\r\n\t\t\t\twhen sleep_time >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as sleep_time_check, rx_time\r\n\t\t\t, case\r\n\t\t\t\twhen rx_time >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as rx_time_check, rx_5g_time\r\n\t\t\t, case\r\n\t\t\t\twhen rx_5g_time >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as rx_5g_time_check, transceiver_eg\r\n\t\t\t, case\r\n\t\t\t\twhen transceiver_eg >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as transceiver_eg_check, pa_eg\r\n\t\t\t, case\r\n\t\t\t\twhen pa_eg >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as pa_eg_check, modem_eg\r\n\t\t\t, case\r\n\t\t\t\twhen modem_eg >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as modem_eg_check, total_eg\r\n\t\t\t, case\r\n\t\t\t\twhen total_eg >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as total_eg_check\r\n\t\tfrom comp_cellularUidState_backward\r\n\t)\r\n\twhere busy_du_check = 'fail'\r\n\t\tor incall_du_check = 'fail'\r\n\t\tor name_check = 'fail'\r\n\t\tor rx_trans_byte_check = 'fail'\r\n\t\tor tx_trans_byte_check = 'fail'\r\n\t\tor sleep_time_check = 'fail'\r\n\t\tor rx_time_check = 'fail'\r\n\t\tor rx_5g_time_check = 'fail'\r\n\t\tor transceiver_eg_check = 'fail'\r\n\t\tor pa_eg_check = 'fail'\r\n\t\tor modem_eg_check = 'fail'\r\n\t\tor total_eg_check = 'fail'\r\n),\r\nAGG_MODEM_APP_DAILY_TAB as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect case\r\n\t\t\t\twhen count(*) > 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as empty_check, timestamp\r\n\t\t\t, case\r\n\t\t\t\twhen timestamp > 0 and timestamp = cast(timestamp as int) then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as timestamp_check, start_ts\r\n\t\t\t, case\r\n\t\t\t\twhen start_ts >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as start_ts_check, end_ts\r\n\t\t\t, case\r\n\t\t\t\twhen end_ts >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as end_ts_check, foreground_tx_bytes\r\n\t\t\t, case\r\n\t\t\t\twhen foreground_tx_bytes >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as foreground_tx_bytes_check, foreground_rx_bytes\r\n\t\t\t, case\r\n\t\t\t\twhen foreground_rx_bytes >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as foreground_rx_bytes_check, foreground_energy\r\n\t\t\t, case\r\n\t\t\t\twhen foreground_energy >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as foreground_energy_check, background_tx_bytes\r\n\t\t\t, case\r\n\t\t\t\twhen background_tx_bytes >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as background_tx_bytes_check, background_rx_bytes\r\n\t\t\t, case\r\n\t\t\t\twhen background_rx_bytes >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as background_rx_bytes_check, background_energy\r\n\t\t\t, case\r\n\t\t\t\twhen background_energy >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as background_energy_check, screen_on_tx_bytes\r\n\t\t\t, case\r\n\t\t\t\twhen screen_on_tx_bytes >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_on_tx_bytes_check, screen_on_rx_bytes\r\n\t\t\t, case\r\n\t\t\t\twhen screen_on_rx_bytes >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_on_rx_bytes_check, screen_on_energy\r\n\t\t\t, case\r\n\t\t\t\twhen screen_on_energy >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_on_energy_check, screen_off_tx_bytes\r\n\t\t\t, case\r\n\t\t\t\twhen screen_off_tx_bytes >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_off_tx_bytes_check, screen_off_rx_bytes\r\n\t\t\t, case\r\n\t\t\t\twhen screen_off_rx_bytes >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_off_rx_bytes_check, screen_off_energy\r\n\t\t\t, case\r\n\t\t\t\twhen screen_off_energy >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_off_energy_check\r\n\t\tfrom agg_modem_app_daily\r\n\t)\r\n\twhere timestamp_check = 'fail'\r\n\t\tor start_ts_check = 'fail'\r\n\t\tor end_ts_check = 'fail'\r\n\t\tor foreground_tx_bytes_check = 'fail'\r\n\t\tor foreground_rx_bytes_check = 'fail'\r\n\t\tor foreground_energy_check = 'fail'\r\n\t\tor background_tx_bytes_check = 'fail'\r\n\t\tor background_rx_bytes_check = 'fail'\r\n\t\tor background_energy_check = 'fail'\r\n\t\tor screen_on_tx_bytes_check = 'fail'\r\n\t\tor screen_on_rx_bytes_check = 'fail'\r\n\t\tor screen_on_energy_check = 'fail'\r\n\t\tor screen_off_tx_bytes_check = 'fail'\r\n\t\tor screen_off_rx_bytes_check = 'fail'\r\n\t\tor screen_off_energy_check = 'fail'\r\n\t\tor empty_check = 'fail'\r\n),\r\nCOMP_CELLULAR_AGENT_RESULT_TAB as (\r\n\tselect 'comp_cellularagent_backward_data_check' as item\r\n\t\t, case\r\n\t\t\twhen count(*) > 0 then 'fail'\r\n\t\t\telse 'pass'\r\n\t\tend as result, ifnull(fail_cnt, 0) as fail_cnt, detail\r\n\tfrom (\r\n\t\tselect a.fail_cnt + b.fail_cnt + c.fail_cnt as fail_cnt\r\n\t\t\t, json_group_array('comp_cellularagent_backward :' || c.detail || b.detail || a.detail) as detail\r\n\t\tfrom (\r\n\t\t\tselect count(*) as fail_cnt\r\n\t\t\t\t, json_group_array('total_du :' || total_du || ':' || total_du_check || ', fg_app :' || fg_app || ':' || fg_app_check ||\r\n\t\t\t\t', incall_du :' || incall_du || ':' || incall_du_check || ', rx_trans_byte :' || rx_trans_byte || ':' || rx_trans_byte_check ||\r\n\t\t\t\t', tx_trans_byte :' || tx_trans_byte || ':' || tx_trans_byte_check || ', sleep_time :' || sleep_time || ':' || sleep_time_check ||\r\n\t\t\t\t', rx_time :' || rx_time || ':' || rx_time_check || ', rx_5g_time :' || rx_5g_time || ':' || rx_5g_time_check ||\r\n\t\t\t\t', signalStrength :' || signalStrength || ':' || signalStrength_check || ', pa_eg :' || pa_eg || ':' || pa_eg_check ||\r\n\t\t\t\t', modem_eg :' || modem_eg || ':' || modem_eg_check || ', total_eg :' || total_eg || ':' || total_eg_check) as detail\r\n\t\t\tfrom COMP_CELLULAR_AGENT_TAB\r\n\t\t) a, (\r\n\t\t\t\tselect count(*) as fail_cnt, json_group_array('networkType_check :' || networkType_check) as detail\r\n\t\t\t\tfrom NETWORK_TYPE_CHECK\r\n\t\t\t) b, (\r\n\t\t\t\tselect count(*) as fail_cnt, json_group_array('empty_check :' || empty_check) as detail\r\n\t\t\t\tfrom (\r\n\t\t\t\t\tselect case\r\n\t\t\t\t\t\t\twhen count(*) = 0 then 'fail'\r\n\t\t\t\t\t\t\telse 'pass'\r\n\t\t\t\t\t\tend as empty_check\r\n\t\t\t\t\tfrom comp_cellularagent_backward\r\n\t\t\t\t)\r\n\t\t\t\twhere empty_check = 'fail'\r\n\t\t\t) c\r\n\t)\r\n\twhere fail_cnt > 0\r\n),\r\nCOMP_CELLULAR_UID_STATE_RESULT_TAB as (\r\n\tselect 'comp_cellularUidState_backward_data_check' as item\r\n\t\t, case\r\n\t\t\twhen count(*) > 0 then 'fail'\r\n\t\t\telse 'pass'\r\n\t\tend as result, ifnull(fail_cnt, 0) as fail_cnt, detail\r\n\tfrom (\r\n\t\tselect a.fail_cnt + c.fail_cnt as fail_cnt\r\n\t\t\t, json_group_array('comp_cellularUidState_backward :' || c.detail || a.detail) as detail\r\n\t\tfrom (\r\n\t\t\tselect count(*) as fail_cnt\r\n\t\t\t\t, json_group_array('busy_du :' || busy_du || ':' || busy_du_check || ', incall_du :' || incall_du || ':' || incall_du_check ||\r\n\t\t\t\t', name :' || name || ':' || name_check || ', rx_trans_byte :' || rx_trans_byte || ':' || rx_trans_byte_check || ', tx_trans_byte :' || tx_trans_byte || ':'\r\n\t\t\t\t|| tx_trans_byte_check || ', sleep_time :' || sleep_time || ':' || sleep_time_check || ', rx_time :' || rx_time || ':' || rx_time_check ||\r\n\t\t\t\t', rx_5g_time :' || rx_5g_time || ':' || rx_5g_time_check || ', transceiver_eg :' || transceiver_eg || ':' || transceiver_eg_check ||\r\n\t\t\t\t', pa_eg :' || pa_eg || ':' || pa_eg_check || ', modem_eg :' || modem_eg || ':' || modem_eg_check || ', total_eg :' || total_eg || ':'\r\n\t\t\t\t|| total_eg_check) as detail\r\n\t\t\tfrom COMP_CELLULAR_UID_STATE_TAB\r\n\t\t) a, (\r\n\t\t\t\tselect count(*) as fail_cnt, json_group_array('empty_check :' || empty_check) as detail\r\n\t\t\t\tfrom (\r\n\t\t\t\t\tselect case\r\n\t\t\t\t\t\t\twhen count(*) = 0 then 'fail'\r\n\t\t\t\t\t\t\telse 'pass'\r\n\t\t\t\t\t\tend as empty_check\r\n\t\t\t\t\tfrom comp_cellularUidState_backward\r\n\t\t\t\t)\r\n\t\t\t\twhere empty_check = 'fail'\r\n\t\t\t) c\r\n\t)\r\n\twhere fail_cnt > 0\r\n),\r\nAGG_MODEM_APP_DAILY_RESULT_TAB as (\r\n\tselect 'agg_modem_app_daily_data_check' as item\r\n\t\t, case\r\n\t\t\twhen count(*) > 0 then 'fail'\r\n\t\t\telse 'pass'\r\n\t\tend as result, ifnull(fail_cnt, 0) as fail_cnt, detail\r\n\tfrom (\r\n\t\tselect fail_cnt, json_group_array('agg_modem_app_daily :' || detail) as detail\r\n\t\tfrom (\r\n\t\t\tselect count(*) as fail_cnt\r\n\t\t\t\t, json_group_array('empty_check :' || empty_check || ', timestamp :' || timestamp || ':' || timestamp_check || \r\n\t\t\t\t', start_ts :' || start_ts || ':' || start_ts_check || ', end_ts : ' || end_ts || ':' || end_ts_check \r\n\t\t\t\t|| ', foreground_tx_bytes :' || foreground_tx_bytes_check || ', foreground_rx_bytes :' || foreground_rx_bytes_check\r\n\t\t\t\t || ', foreground_energy :' || foreground_energy_check || ', background_tx_bytes :' || background_tx_bytes_check || ', background_rx_bytes :' || background_rx_bytes_check\r\n\t\t\t\t || ', background_energy :' || background_energy_check || ', screen_on_tx_bytes :' || screen_on_tx_bytes_check || ', screen_on_rx_bytes :' || screen_on_rx_bytes_check\r\n\t\t\t\t  || ', screen_on_energy :' || screen_on_energy_check || ', screen_off_tx_bytes :' || screen_off_tx_bytes_check || ', screen_off_rx_bytes :' || screen_off_rx_bytes_check\r\n\t\t\t\t   || ', screen_off_energy :' || screen_off_energy_check) as detail\r\n\t\t\tfrom AGG_MODEM_APP_DAILY_TAB\r\n\t\t)\r\n\t)\r\n\twhere fail_cnt > 0\r\n),\r\n\r\n--------------------wifi----------------\r\nCOMP_WIFI_TAB as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect app\r\n\t\t\t, case when app <> '' then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as app_check, wifi_id\r\n\t\t\t, case when wifi_id in (0, 1) then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as wifi_id_check, enable\r\n\t\t\t, case when enable in (0, 1) then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as enable_check, hotspot\r\n\t\t\t, case when hotspot in (0, 1) then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as hotspot_check, frequency_band\r\n\t\t\t, case when frequency_band in ('5G', '2.4G', 'unknown') then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as frequency_band_check, package_name\r\n\t\t\t, case when package_name <> '' then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as package_name_check, tx_byte\r\n\t\t\t, case when tx_byte >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as tx_byte_check, rx_byte\r\n\t\t\t, case when rx_byte >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as rx_byte_check, tx_time\r\n\t\t\t, case when tx_time >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as tx_time_check, rx_time\r\n\t\t\t, case when rx_time >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as rx_time_check, idle_time\r\n\t\t\t, case when idle_time >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as idle_time_check, tx_packet\r\n\t\t\t, case when tx_packet >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as tx_packet_check, rx_packet\r\n\t\t\t, case when rx_packet >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as rx_packet_check, rssi\r\n\t\t\t, case when rssi >= -127 and rssi <= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as rssi_check, total_eg\r\n\t\t\t, case when total_eg >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as total_eg_check\r\n\t\tfrom comp_wifi_agent_intv\r\n\t)\r\n\twhere app_check = 'fail'\r\n\t\tor wifi_id_check = 'fail'\r\n\t\tor enable_check = 'fail'\r\n\t\tor hotspot_check = 'fail'\r\n\t\tor frequency_band_check = 'fail'\r\n\t\tor package_name_check = 'fail'\r\n\t\tor tx_byte_check = 'fail'\r\n\t\tor rx_byte_check = 'fail'\r\n\t\tor tx_time_check = 'fail'\r\n\t\tor rx_time_check = 'fail'\r\n\t\tor idle_time_check = 'fail'\r\n\t\tor tx_packet_check = 'fail'\r\n\t\tor rx_packet_check = 'fail'\r\n\t\tor rssi_check = 'fail'\r\n\t\tor total_eg_check = 'fail'\r\n),\r\nAGG_WIFI_AGENT_TAB as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect case\r\n\t\t\t\twhen count(*) > 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as empty_check, timestamp\r\n\t\t\t, case\r\n\t\t\t\twhen timestamp > 0 and timestamp = cast(timestamp as int) then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as timestamp_check, start_ts\r\n\t\t\t, case\r\n\t\t\t\twhen start_ts >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as start_ts_check, end_ts\r\n\t\t\t, case\r\n\t\t\t\twhen end_ts >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as end_ts_check, foreground_duration\r\n\t\t\t, case\r\n\t\t\t\twhen foreground_duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as foreground_duration_check, foreground_tx_bytes\r\n\t\t\t, case\r\n\t\t\t\twhen foreground_tx_bytes >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as foreground_tx_bytes_check, foreground_rx_bytes\r\n\t\t\t, case\r\n\t\t\t\twhen foreground_rx_bytes >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as foreground_rx_bytes_check, foreground_energy\r\n\t\t\t, case\r\n\t\t\t\twhen foreground_energy >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as foreground_energy_check, background_duration\r\n\t\t\t, case\r\n\t\t\t\twhen background_duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as background_duration_check, background_tx_bytes\r\n\t\t\t, case\r\n\t\t\t\twhen background_tx_bytes >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as background_tx_bytes_check, background_rx_bytes\r\n\t\t\t, case\r\n\t\t\t\twhen background_rx_bytes >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as background_rx_bytes_check, background_energy\r\n\t\t\t, case\r\n\t\t\t\twhen background_energy >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as background_energy_check,screen_on_duration\r\n\t\t\t, case\r\n\t\t\t\twhen screen_on_duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_on_duration_check, screen_on_tx_bytes\r\n\t\t\t, case\r\n\t\t\t\twhen screen_on_tx_bytes >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_on_tx_bytes_check, screen_on_rx_bytes\r\n\t\t\t, case\r\n\t\t\t\twhen screen_on_rx_bytes >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_on_rx_bytes_check, screen_on_energy\r\n\t\t\t, case\r\n\t\t\t\twhen screen_on_energy >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_on_energy_check,screen_off_duration\r\n\t\t\t, case\r\n\t\t\t\twhen screen_off_duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_off_duration_check, screen_off_tx_bytes\r\n\t\t\t, case\r\n\t\t\t\twhen screen_off_tx_bytes >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_off_tx_bytes_check, screen_off_rx_bytes\r\n\t\t\t, case\r\n\t\t\t\twhen screen_off_rx_bytes >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_off_rx_bytes_check, screen_off_energy\r\n\t\t\t, case\r\n\t\t\t\twhen screen_off_energy >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_off_energy_check\r\n\t\tfrom agg_wifi_app_daily\r\n\t)\r\n\twhere timestamp_check = 'fail'\r\n\t\tor start_ts_check = 'fail'\r\n\t\tor end_ts_check = 'fail'\r\n\t\tor foreground_duration_check = 'fail'\r\n\t\tor foreground_tx_bytes_check = 'fail'\r\n\t\tor foreground_rx_bytes_check = 'fail'\r\n\t\tor foreground_energy_check = 'fail'\r\n\t\tor background_duration_check = 'fail'\r\n\t\tor background_tx_bytes_check = 'fail'\r\n\t\tor background_rx_bytes_check = 'fail'\r\n\t\tor background_energy_check = 'fail'\r\n\t\tor screen_on_duration_check = 'fail'\r\n\t\tor screen_on_tx_bytes_check = 'fail'\r\n\t\tor screen_on_rx_bytes_check = 'fail'\r\n\t\tor screen_on_energy_check = 'fail'\r\n\t\tor screen_off_duration_check = 'fail'\r\n\t\tor screen_off_tx_bytes_check = 'fail'\r\n\t\tor screen_off_rx_bytes_check = 'fail'\r\n\t\tor screen_off_energy_check = 'fail'\r\n\t\tor empty_check = 'fail'\r\n),\r\nCOMP_WIFI_RESULT_TAB as (\r\n\tselect 'comp_wifi_agent_intv_data_check' as item\r\n\t\t, case\r\n\t\t\twhen count(*) > 0 then 'fail'\r\n\t\t\telse 'pass'\r\n\t\tend as result, ifnull(fail_cnt, 0) as fail_cnt, detail\r\n\tfrom (\r\n\t\tselect a.fail_cnt + c.fail_cnt as fail_cnt\r\n\t\t\t, json_group_array('comp_wifi_agent_intv :' || c.detail || a.detail) as detail\r\n\t\tfrom (\r\n\t\t\tselect count(*) as fail_cnt\r\n\t\t\t\t, json_group_array('app :' || app || ':' || app_check || ', wifi_id :' || wifi_id || ':' || wifi_id_check || ', enable :' || enable || ':' || enable_check ||\r\n\t\t\t\t', hotspot :' || hotspot || ':' || hotspot_check || ', frequency_band :' || frequency_band || ':' || frequency_band_check ||\r\n\t\t\t\t', package_name :' || package_name || ':' || package_name_check || ', tx_byte :' || tx_byte || ':' || tx_byte_check ||\r\n\t\t\t\t', rx_byte :' || rx_byte || ':' || rx_byte_check || ', tx_time :' || tx_time || ':' || tx_time_check || ', rx_time :' || rx_time || ':' || rx_time_check ||\r\n\t\t\t\t', idle_time :' || idle_time || ':' || idle_time_check || ', tx_packet :' || tx_packet || ':' || tx_packet_check ||\r\n\t\t\t\t', rx_packet :' || rx_packet || ':' || rx_packet_check || ', rssi :' || rssi || ':' || rssi_check || ', total_eg :' || total_eg || ':' || total_eg_check) as detail\r\n\t\t\tfrom COMP_WIFI_TAB\r\n\t\t) a, (\r\n\t\t\t\tselect count(*) as fail_cnt, json_group_array('empty_check :' || empty_check) as detail\r\n\t\t\t\tfrom (\r\n\t\t\t\t\tselect case\r\n\t\t\t\t\t\t\twhen count(*) = 0 then 'fail'\r\n\t\t\t\t\t\t\telse 'pass'\r\n\t\t\t\t\t\tend as empty_check\r\n\t\t\t\t\tfrom comp_wifi_agent_intv\r\n\t\t\t\t)\r\n\t\t\t\twhere empty_check = 'fail'\r\n\t\t\t) c\r\n\t)\r\n\twhere fail_cnt > 0\r\n),\r\nAGG_WIFI_APP_DAILY_RESULT_TAB as (\r\n\tselect 'agg_wifi_app_daily_data_check' as item\r\n\t\t, case\r\n\t\t\twhen count(*) > 0 then 'fail'\r\n\t\t\telse 'pass'\r\n\t\tend as result, ifnull(fail_cnt, 0) as fail_cnt, detail\r\n\tfrom (\r\n\t\tselect fail_cnt, json_group_array('agg_wifi_app_daily :' || detail) as detail\r\n\t\tfrom (\r\n\t\t\tselect count(*) as fail_cnt\r\n\t\t\t\t, json_group_array('empty_check :' || empty_check || ', timestamp :' || timestamp || ':' || timestamp_check || \r\n\t\t\t\t', start_ts :' || start_ts || ':' || start_ts_check || ', end_ts : ' || end_ts || ':' || end_ts_check \r\n\t\t\t\t|| ', foreground_duration :' || foreground_duration_check\r\n\t\t\t\t|| ', foreground_tx_bytes :' || foreground_tx_bytes_check || ', foreground_rx_bytes :' || foreground_rx_bytes_check\r\n\t\t\t\t || ', foreground_energy :' || foreground_energy_check || ', background_duration :' || background_duration_check\r\n\t\t\t\t || ', background_tx_bytes :' || background_tx_bytes_check || ', background_rx_bytes :' || background_rx_bytes_check\r\n\t\t\t\t || ', background_energy :' || background_energy_check || ', screen_on_duration :' || screen_on_duration_check\r\n\t\t\t\t || ', screen_on_tx_bytes :' || screen_on_tx_bytes_check || ', screen_on_rx_bytes :' || screen_on_rx_bytes_check\r\n\t\t\t\t  || ', screen_on_energy :' || screen_on_energy_check || ', screen_off_duration :' || screen_off_duration_check\r\n\t\t\t\t  || ', screen_off_tx_bytes :' || screen_off_tx_bytes_check || ', screen_off_rx_bytes :' || screen_off_rx_bytes_check\r\n\t\t\t\t   || ', screen_off_energy :' || screen_off_energy_check) as detail\r\n\t\t\tfrom AGG_WIFI_AGENT_TAB\r\n\t\t)\r\n\t)\r\n\twhere fail_cnt > 0\r\n),\r\n----------------audio_check-----------------------\r\nCOMP_AUDIO_AGENT_TAB as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect duration\r\n\t\t\t, case when duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as duration_check, app\r\n\t\t\t, case when app <> '' then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as app_check, player_app\r\n\t\t\t, case when player_app <> '' then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as player_app_check, audio_number\r\n\t\t\t, case when audio_number > 0 and audio_number = cast(audio_number as int) then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as audio_number_check, volume\r\n\t\t\t, case when volume >= 0 and volume <= 16 and volume = cast(volume as int)\r\n\t\t\t\tthen 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as volume_check, channel\r\n\t\t\t, case when channel in (0, 1, 2) then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as channel_check, whole_eg\r\n\t\t\t, case\r\n\t\t\t\twhen volume = 0 and whole_eg = 0 then 'pass'\r\n\t\t\t\twhen duration < 1000 and whole_eg = 0 then 'pass'\r\n\t\t\t\twhen whole_eg >= 0 and whole_eg = cast(whole_eg as int) then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as whole_eg_check\r\n\t\tfrom comp_audioPower_audioAgent_intv\r\n\t\twhere volume <> -1\r\n\t)\r\n\twhere duration_check = 'fail'\r\n\t\tor app_check = 'fail'\r\n\t\tor player_app_check = 'fail'\r\n\t\tor audio_number_check = 'fail'\r\n\t\tor volume_check = 'fail'\r\n\t\tor channel_check = 'fail'\r\n\t\tor whole_eg_check = 'fail'\r\n),\r\nAUDIO_EG_CHECK as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect case\r\n\t\t\t\twhen sum(whole_eg) > 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as sum_whole_eg_check\r\n\t\tfrom comp_audioPower_audioAgent_intv\r\n\t)\r\n\twhere sum_whole_eg_check = 'fail'\r\n),\r\nAGG_AUDIO_APP_DAILY_TAB as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect case\r\n\t\t\t\twhen count(*) > 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as empty_check, timestamp\r\n\t\t\t, case\r\n\t\t\t\twhen timestamp > 0 and timestamp = cast(timestamp as int) then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as timestamp_check, start_ts\r\n\t\t\t, case\r\n\t\t\t\twhen start_ts >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as start_ts_check, end_ts\r\n\t\t\t, case\r\n\t\t\t\twhen end_ts >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as end_ts_check, foreground_duration\r\n\t\t\t, case\r\n\t\t\t\twhen foreground_duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as foreground_duration_check, foreground_energy\r\n\t\t\t, case\r\n\t\t\t\twhen foreground_energy >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as foreground_energy_check, background_duration\r\n\t\t\t, case\r\n\t\t\t\twhen background_duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as background_duration_check, background_energy\r\n\t\t\t, case\r\n\t\t\t\twhen background_energy >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as background_energy_check, screen_on_duration\r\n\t\t\t, case\r\n\t\t\t\twhen screen_on_duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_on_duration_check, screen_on_energy\r\n\t\t\t, case\r\n\t\t\t\twhen screen_on_energy >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_on_energy_check, screen_off_duration\r\n\t\t\t, case\r\n\t\t\t\twhen screen_off_duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_off_duration_check, screen_off_energy\r\n\t\t\t, case\r\n\t\t\t\twhen screen_off_energy >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as screen_off_energy_check\r\n\t\tfrom agg_audio_app_daily\r\n\t)\r\n\twhere timestamp_check = 'fail'\r\n\t\tor start_ts_check = 'fail'\r\n\t\tor end_ts_check = 'fail'\r\n\t\tor foreground_duration_check = 'fail'\r\n\t\tor foreground_energy_check = 'fail'\r\n\t\tor background_duration_check = 'fail'\r\n\t\tor background_energy_check = 'fail'\r\n\t\tor screen_on_duration_check = 'fail'\r\n\t\tor screen_on_energy_check = 'fail'\r\n\t\tor screen_off_duration_check = 'fail'\r\n\t\tor screen_off_energy_check = 'fail'\r\n\t\tor empty_check = 'fail'\r\n),\r\nCOMP_AUDIO_AGENT_RESULT_TAB as (\r\n\tselect 'comp_audioAgent_data_check' as item\r\n\t\t, case\r\n\t\t\twhen count(*) > 0 then 'fail'\r\n\t\t\telse 'pass'\r\n\t\tend as result, ifnull(fail_cnt, 0) as fail_cnt, detail\r\n\tfrom (\r\n\t\tselect a.fail_cnt + c.fail_cnt + b.fail_cnt as fail_cnt\r\n\t\t\t, json_group_array('comp_audioPower_audioAgent_intv :' || c.detail || a.detail || b.detail) as detail\r\n\t\tfrom (\r\n\t\t\tselect count(*) as fail_cnt\r\n\t\t\t\t, json_group_array('duration :' || duration || ':' || duration_check || ', app :' || app || ':' || app_check || ', player_app :' || player_app || ':' || player_app_check ||\r\n\t\t\t\t', audio_number :' || audio_number || ':' || audio_number_check || ', volume :' || volume || ':' || volume_check || ', channel :' || channel || ':' || channel_check ||\r\n\t\t\t\t', whole_eg :' || whole_eg || ':' || whole_eg_check) as detail\r\n\t\t\tfrom COMP_AUDIO_AGENT_TAB\r\n\t\t) a, (\r\n\t\t\t\tselect count(*) as fail_cnt, json_group_array('empty_check :' || empty_check) as detail\r\n\t\t\t\tfrom (\r\n\t\t\t\t\tselect case\r\n\t\t\t\t\t\t\twhen count(*) = 0 then 'fail'\r\n\t\t\t\t\t\t\telse 'pass'\r\n\t\t\t\t\t\tend as empty_check\r\n\t\t\t\t\tfrom comp_audioPower_audioAgent_intv\r\n\t\t\t\t)\r\n\t\t\t\twhere empty_check = 'fail'\r\n\t\t\t) c,(\r\n\t\t\t\t\tselect count(*) as fail_cnt, json_group_array('sum_whole_eg_check :' || sum_whole_eg_check) as detail\r\n\t\t\t\t\tfrom AUDIO_EG_CHECK\r\n\t\t\t\t) b\r\n\t)\r\n\twhere fail_cnt > 0\r\n),\r\nAGG_AUDIO_APP_DAILY_RESULT_TAB as (\r\n\tselect 'agg_audio_app_daily_data_check' as item\r\n\t\t, case\r\n\t\t\twhen count(*) > 0 then 'fail'\r\n\t\t\telse 'pass'\r\n\t\tend as result, ifnull(fail_cnt, 0) as fail_cnt, detail\r\n\tfrom (\r\n\t\tselect fail_cnt, json_group_array('agg_audio_app_daily :' || detail) as detail\r\n\t\tfrom (\r\n\t\t\tselect count(*) as fail_cnt\r\n\t\t\t\t, json_group_array('empty_check :' || empty_check || ', timestamp :' || timestamp || ':' || timestamp_check || ', start_ts :' || start_ts || ':' || start_ts_check ||\r\n    \t\t\t', end_ts : ' || end_ts || ':' || end_ts_check || ', foreground_duration :' || foreground_duration_check ||\r\n    \t\t\t', foreground_energy :' || foreground_energy_check || ', background_duration :' || background_duration_check || ', background_energy :' || background_energy_check ||\r\n    \t\t\t', screen_on_duration :' || screen_on_duration_check || ', screen_on_energy :' || screen_on_energy_check || ', screen_off_duration :' || screen_off_duration_check || \r\n\t\t\t\t', screen_off_energy :' || screen_off_energy_check) as detail\r\n\t\t\tfrom AGG_AUDIO_APP_DAILY_TAB\r\n\t\t)\r\n\t)\r\n\twhere fail_cnt > 0\r\n),\r\n\r\n----------------------thermal--------------\r\nCOMP_THERMAL_AGENT_TAB as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect fg_app\r\n\t\t\t, case\r\n\t\t\t\twhen fg_app <> '' then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as fg_app_check, network_type\r\n\t\t\t, case\r\n\t\t\t\twhen network_type = -1 or network_type >= 0 and network_type = cast(network_type as int) then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as network_type_check, zone_name\r\n\t\t\t, case\r\n\t\t\t\twhen zone_name <> '' then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as zone_name_check, max_temp\r\n\t\t\t, case\r\n\t\t\t\twhen max_temp > -2 and max_temp < 120 and max_temp = cast(max_temp as int) then 'pass'\r\n\t\t\t\twhen max_temp = -1 and zone_name = 'ambientThermal' then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as max_temp_check, up_trend\r\n\t\t\t, case\r\n\t\t\t\twhen up_trend >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as up_trend_check, down_trend\r\n\t\t\t, case\r\n\t\t\t\twhen down_trend >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as down_trend_check, keep_trend\r\n\t\t\t, case\r\n\t\t\t\twhen keep_trend >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as keep_trend_check\r\n\t\tfrom comp_thermalAgent_backward\r\n\t)\r\n\twhere fg_app_check = 'fail'\r\n\t\tor network_type_check = 'fail'\r\n\t\tor zone_name_check = 'fail'\r\n\t\tor max_temp_check = 'fail'\r\n\t\tor up_trend_check = 'fail'\r\n\t\tor down_trend_check = 'fail'\r\n\t\tor keep_trend_check = 'fail'\r\n),\r\nAGG_THERMAL_AGENT_DAILY_TAB as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect case\r\n\t\t\t\twhen count(*) = 0 then 'fail'\r\n\t\t\t\telse 'pass'\r\n\t\t\tend as empty_check, start_ts\r\n            , case\r\n            \twhen start_ts >= 0 then 'pass'\r\n            \telse 'fail'\r\n            end as start_ts_check, end_ts\r\n            , case\r\n            \twhen end_ts >= 0 then 'pass'\r\n            \telse 'fail'\r\n            end as end_ts_check,histogram\r\n\t\t\t, case\r\n\t\t\t\twhen histogram <> '' then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as histogram_check, top_app\r\n\t\t\t, case\r\n\t\t\t\twhen top_app <> '' then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as top_app_check\r\n\t\tfrom agg_thermalAgent_daily\r\n\t)\r\n\twhere empty_check = 'fail'\r\n\t\tor histogram_check = 'fail'\r\n\t\tor top_app_check = 'fail'\r\n\t\tor start_ts_check = 'fail'\r\n        or end_ts_check = 'fail'\r\n),\r\nCOMP_THERMAL_AGENT_RESULT_TAB as (\r\n\tselect 'comp_thermalAgent_backward_data_check' as item\r\n\t\t, case\r\n\t\t\twhen count(*) > 0 then 'fail'\r\n\t\t\telse 'pass'\r\n\t\tend as result, ifnull(fail_cnt, 0) as fail_cnt, detail\r\n\tfrom (\r\n\t\tselect a.fail_cnt + c.fail_cnt as fail_cnt\r\n\t\t\t, json_group_array('comp_thermalAgent_backward :' || c.detail || a.detail) as detail\r\n\t\tfrom (\r\n\t\t\tselect count(*) as fail_cnt\r\n\t\t\t\t, json_group_array('fg_app :' || fg_app || ':' || fg_app_check || ', network_type :' || network_type || ':' || network_type_check ||\r\n\t\t\t\t', zone_name :' || zone_name || ':' || zone_name_check || ', max_temp :' || max_temp || ':' || max_temp_check || ', up_trend :' || up_trend || ':' || up_trend_check ||\r\n\t\t\t\t', down_trend :' || down_trend || ':' || down_trend_check || ', keep_trend :' || keep_trend || ':' || keep_trend_check) as detail\r\n\t\t\tfrom COMP_THERMAL_AGENT_TAB\r\n\t\t) a, (\r\n\t\t\t\tselect count(*) as fail_cnt, json_group_array('empty_check :' || empty_check) as detail\r\n\t\t\t\tfrom (\r\n\t\t\t\t\tselect case\r\n\t\t\t\t\t\t\twhen count(*) = 0 then 'fail'\r\n\t\t\t\t\t\t\telse 'pass'\r\n\t\t\t\t\t\tend as empty_check\r\n\t\t\t\t\tfrom comp_thermalAgent_backward\r\n\t\t\t\t)\r\n\t\t\t\twhere empty_check = 'fail'\r\n\t\t\t) c\r\n\t)\r\n\twhere fail_cnt > 0\r\n),\r\nAGG_THERMAL_DAILY_RESULT_TAB as (\r\n\tselect 'agg_thermalAgent_daily_data_check' as item\r\n\t\t, case\r\n\t\t\twhen count(*) > 0 then 'fail'\r\n\t\t\telse 'pass'\r\n\t\tend as result, ifnull(fail_cnt, 0) as fail_cnt, detail\r\n\tfrom (\r\n\t\tselect fail_cnt, json_group_array('agg_thermalAgent_daily :' || detail) as detail\r\n\t\tfrom (\r\n\t\t\tselect count(*) as fail_cnt\r\n\t\t\t\t, json_group_array('empty_check :' || empty_check || ', start_ts :' || start_ts || ':' || start_ts_check || ', end_ts :' || end_ts || ':' || end_ts_check ||\r\n\t\t\t\t', histogram :' || histogram_check || ', top_app :' || top_app_check) as detail\r\n\t\t\tfrom AGG_THERMAL_AGENT_DAILY_TAB\r\n\t\t)\r\n\t)\r\n\twhere fail_cnt > 0\r\n),\r\n-------------battery--------------\r\nCOMP_BATTERY_AGENT_TAB as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect app\r\n\t\t\t, case\r\n\t\t\t\twhen app <> '' then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as app_check, input_usb_eg\r\n\t\t\t, case\r\n\t\t\t\twhen time_delta <= 1000 then 'pass'\r\n\t\t\t\twhen app like '%unknown%' then 'pass'\r\n\t\t\t\twhen power_mode = 1\r\n\t\t\t\t\tand input_usb_eg >= 0\r\n\t\t\t\tthen 'pass'\r\n\t\t\t\twhen power_mode = 0\r\n\t\t\t\t\tand input_usb_eg = 0\r\n\t\t\t\tthen 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as input_usb_eg_check, battery_level\r\n\t\t\t, case\r\n\t\t\t\twhen battery_level >= 0\r\n\t\t\t\t\tand battery_level <= 100\r\n\t\t\t\t\tand battery_level = cast(battery_level as int)\r\n\t\t\t\tthen 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as battery_level_check, rm_delta\r\n\t\t\t, case\r\n\t\t\t\twhen power_mode = 1\r\n\t\t\t\t\tand rm_delta >= 0\r\n\t\t\t\tthen 'pass'\r\n\t\t\t\twhen power_mode = 0\r\n\t\t\t\t\tand rm_delta <= 0\r\n\t\t\t\tthen 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as rm_delta_check, charge_tech\r\n\t\t\t, case\r\n\t\t\t\twhen power_mode = 1\r\n\t\t\t\t\tand charge_tech >= 0\r\n\t\t\t\tthen 'pass'\r\n\t\t\t\twhen power_mode = 0\r\n\t\t\t\t\tand charge_tech = -1\r\n\t\t\t\tthen 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as charge_tech_check, fast_chg_type\r\n\t\t\t, case\r\n\t\t\t\twhen power_mode = 1\r\n\t\t\t\t\tand fast_chg_type >= 0\r\n\t\t\t\tthen 'pass'\r\n\t\t\t\twhen power_mode = 0\r\n\t\t\t\t\tand fast_chg_type = -1\r\n\t\t\t\tthen 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as fast_chg_type_check\r\n\t\tfrom comp_batteryAgent_appPower_intv\r\n\t)\r\n\twhere app_check = 'fail'\r\n\t\tor input_usb_eg_check = 'fail'\r\n\t\tor battery_level_check = 'fail'\r\n\t\tor rm_delta_check = 'fail'\r\n\t\tor charge_tech_check = 'fail'\r\n\t\tor fast_chg_type_check = 'fail'\r\n),\r\nAGG_BATTERY_DEVICE_DAILY_TAB as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect case\r\n\t\t\t\twhen count(*) > 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as empty_check, timestamp\r\n\t\t\t, case\r\n\t\t\t\twhen timestamp > 0 and timestamp = cast(timestamp as int) then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as timestamp_check, start_ts\r\n\t\t\t, case\r\n\t\t\t\twhen start_ts >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as start_ts_check, end_ts\r\n\t\t\t, case\r\n\t\t\t\twhen end_ts >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as end_ts_check, discharge_screen_on_duration\r\n\t\t\t, case\r\n\t\t\t\twhen discharge_screen_on_duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as discharge_screen_on_duration_check, discharge_screen_on_fuel_gauge\r\n\t\t\t, case\r\n\t\t\t\twhen discharge_screen_on_fuel_gauge >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as discharge_screen_on_fuel_gauge_check, discharge_screen_on_level\r\n\t\t\t, case\r\n\t\t\t\twhen discharge_screen_on_level >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as discharge_screen_on_level_check, discharge_screen_off_duration\r\n\t\t\t, case\r\n\t\t\t\twhen discharge_screen_off_duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as discharge_screen_off_duration_check, discharge_screen_off_fuel_gauge\r\n\t\t\t, case\r\n\t\t\t\twhen discharge_screen_off_fuel_gauge >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as discharge_screen_off_fuel_gauge_check, discharge_screen_off_level\r\n\t\t\t, case\r\n\t\t\t\twhen discharge_screen_off_level >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as discharge_screen_off_level_check, charge_screen_on_duration\r\n\t\t\t, case\r\n\t\t\t\twhen charge_screen_on_duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as charge_screen_on_duration_check, charge_screen_on_fuel_gauge\r\n\t\t\t, case\r\n\t\t\t\twhen charge_screen_on_fuel_gauge >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as charge_screen_on_fuel_gauge_check,charge_screen_on_level\r\n\t\t\t, case\r\n\t\t\t\twhen charge_screen_on_level >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as charge_screen_on_level_check, charge_screen_off_duration\r\n\t\t\t, case\r\n\t\t\t\twhen charge_screen_off_duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as charge_screen_off_duration_check, charge_screen_off_fuel_gauge\r\n\t\t\t, case\r\n\t\t\t\twhen charge_screen_off_fuel_gauge >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as charge_screen_off_fuel_gauge_check, charge_screen_off_level\r\n\t\t\t, case\r\n\t\t\t\twhen charge_screen_off_level >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as charge_screen_off_level_check\r\n\t\tfrom agg_battery_device_daily\r\n\t)\r\n\twhere timestamp_check = 'fail'\r\n\t\tor start_ts_check = 'fail'\r\n\t\tor end_ts_check = 'fail'\r\n\t\tor discharge_screen_on_duration_check = 'fail'\r\n\t\tor discharge_screen_on_fuel_gauge_check = 'fail'\r\n\t\tor discharge_screen_on_level_check = 'fail'\r\n\t\tor discharge_screen_off_duration_check = 'fail'\r\n\t\tor discharge_screen_off_fuel_gauge_check = 'fail'\r\n\t\tor discharge_screen_off_level_check = 'fail'\r\n\t\tor charge_screen_on_duration_check = 'fail'\r\n\t\tor charge_screen_on_fuel_gauge_check = 'fail'\r\n\t\tor charge_screen_on_level_check = 'fail'\r\n\t\tor charge_screen_off_duration_check = 'fail'\r\n\t\tor charge_screen_off_fuel_gauge_check = 'fail'\r\n\t\tor charge_screen_off_level_check = 'fail'\r\n\t\tor empty_check = 'fail'\r\n),\r\nCOMP_BATTERY_AGENT_RESULT_TAB as (\r\n\tselect 'comp_batteryAgent_appPower_data_check' as item\r\n\t\t, case\r\n\t\t\twhen count(*) > 0 then 'fail'\r\n\t\t\telse 'pass'\r\n\t\tend as result, ifnull(fail_cnt, 0) as fail_cnt, detail\r\n\tfrom (\r\n\t\tselect a.fail_cnt + c.fail_cnt as fail_cnt\r\n\t\t\t, json_group_array('comp_batteryAgent_appPower_intv :' || c.detail || a.detail) as detail\r\n\t\tfrom (\r\n\t\t\tselect count(*) as fail_cnt\r\n\t\t\t\t, json_group_array('app :' || app || ':' || app_check || ', input_usb_eg :' || input_usb_eg || ':' || input_usb_eg_check ||\r\n\t\t\t\t', battery_level :' || battery_level || ':' || battery_level_check || ', rm_delta :' || rm_delta || ':' || rm_delta_check ||\r\n\t\t\t\t', charge_tech :' || charge_tech || ':' || charge_tech_check || ', fast_chg_type :' || fast_chg_type || ':' || fast_chg_type_check) as detail\r\n\t\t\tfrom COMP_BATTERY_AGENT_TAB\r\n\t\t) a, (\r\n\t\t\t\tselect count(*) as fail_cnt\r\n\t\t\t\t\t, json_group_array('empty_check :' || empty_check) as detail\r\n\t\t\t\tfrom (\r\n\t\t\t\t\tselect case\r\n\t\t\t\t\t\t\twhen count(*) = 0 then 'fail'\r\n\t\t\t\t\t\t\telse 'pass'\r\n\t\t\t\t\t\tend as empty_check\r\n\t\t\t\t\tfrom comp_batteryAgent_appPower_intv\r\n\t\t\t\t)\r\n\t\t\t\twhere empty_check = 'fail'\r\n\t\t\t) c\r\n\t)\r\n\twhere fail_cnt > 0\r\n),\r\nAGG_BATTERY_DAILY_RESULT_TAB as (\r\n\tselect 'agg_batteryAgent_daily_data_check' as item\r\n\t\t, case\r\n\t\t\twhen count(*) > 0 then 'fail'\r\n\t\t\telse 'pass'\r\n\t\tend as result, ifnull(fail_cnt, 0) as fail_cnt, detail\r\n\tfrom (\r\n\t\tselect fail_cnt, json_group_array('agg_batteryAgent_daily :' || detail) as detail\r\n\t\tfrom (\r\n\t\t\tselect count(*) as fail_cnt\r\n\t\t\t\t, json_group_array('empty_check :' || empty_check || ', timestamp :' || timestamp || ':' || timestamp_check || \r\n\t\t\t\t', start_ts :' || start_ts || ':' || start_ts_check || ', end_ts : ' || end_ts || ':' || end_ts_check \r\n\t\t\t\t|| ', discharge_screen_on_duration :' || discharge_screen_on_duration_check\r\n\t\t\t\t|| ', discharge_screen_on_fuel_gauge :' || discharge_screen_on_fuel_gauge_check || ', discharge_screen_on_level :' || discharge_screen_on_level_check\r\n\t\t\t\t || ', discharge_screen_off_duration :' || discharge_screen_off_duration_check || ', discharge_screen_off_fuel_gauge :' || discharge_screen_off_fuel_gauge_check\r\n\t\t\t\t || ', discharge_screen_off_level :' || discharge_screen_off_level_check || ', charge_screen_on_duration :' || charge_screen_on_duration_check\r\n\t\t\t\t || ', charge_screen_on_fuel_gauge :' || charge_screen_on_fuel_gauge_check || ', charge_screen_on_level :' || charge_screen_on_level_check\r\n\t\t\t\t || ', charge_screen_off_duration :' || charge_screen_off_duration_check || ', charge_screen_off_fuel_gauge :' || charge_screen_off_fuel_gauge_check\r\n\t\t\t\t  || ', charge_screen_off_level :' || charge_screen_off_level_check) as detail\r\n\t\t\tfrom AGG_BATTERY_DEVICE_DAILY_TAB\r\n\t\t)\r\n\t)\r\n\twhere fail_cnt > 0\r\n),\r\n----------------------display------------\r\nCOMP_DISPLAY_AGENT_TAB as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect app\r\n\t\t\t, case\r\n\t\t\t\twhen app <> '' then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as app_check, brightness\r\n\t\t\t, case\r\n\t\t\t\twhen brightness > 0 and brightness = cast(brightness as int) then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as brightness_check,FPS\r\n\t\t\t, case\r\n\t\t\t\twhen FPS > 0 and FPS <= 240 and FPS = cast(FPS as int) then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as FPS_check,renderFps\r\n\t\t\t, case\r\n\t\t\t\twhen renderFps >= 0 and renderFps = cast(renderFps as int) then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as renderFps_check,whole_eg\r\n\t\t\t, case\r\n\t\t\t\twhen whole_eg >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as whole_eg_check\r\n\t\tfrom comp_displayAgent_appPower_intv\r\n\t)\r\n\twhere app_check = 'fail'\r\n\t\tor brightness_check = 'fail'\r\n\t\tor FPS_check = 'fail'\r\n\t\tor renderFps_check = 'fail'\r\n\t\tor whole_eg_check = 'fail'\r\n),\r\nDISPLAY_EG_CHECK as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect case\r\n\t\t\t\twhen sum(whole_eg) > 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as sum_whole_eg_check\r\n\t\t\t,case\r\n\t\t\t\twhen sum(renderFps) > 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as sum_renderFps_check\r\n\t\tfrom comp_displayAgent_appPower_intv\r\n\t)\r\n\twhere sum_whole_eg_check = 'fail'\r\n\t\tor sum_renderFps_check = 'fail'\r\n),\r\nAGG_DISPLAY_APP_DAILY_TAB as (\r\n\tselect *\r\n\tfrom (\r\n\t\tselect case\r\n\t\t\t\twhen count(*) > 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as empty_check, timestamp\r\n\t\t\t, case\r\n\t\t\t\twhen timestamp > 0 and timestamp = cast(timestamp as int) then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as timestamp_check, start_ts\r\n\t\t\t, case\r\n\t\t\t\twhen start_ts >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as start_ts_check, end_ts\r\n\t\t\t, case\r\n\t\t\t\twhen end_ts >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as end_ts_check,name\r\n\t\t\t, case\r\n\t\t\t\twhen name <> '' then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as name_check, duration\r\n\t\t\t, case\r\n\t\t\t\twhen duration >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as duration_check,energy\r\n\t\t\t, case\r\n\t\t\t\twhen energy >= 0 then 'pass'\r\n\t\t\t\telse 'fail'\r\n\t\t\tend as energy_check\r\n\t\tfrom agg_display_app_daily\r\n\t)\r\n\twhere empty_check = 'fail'\r\n\t\tor name_check = 'fail'\r\n\t\tor energy_check = 'fail'\r\n\t\tor duration_check = 'fail'\r\n\t\tor timestamp_check = 'fail'\r\n\t\tor start_ts_check = 'fail'\r\n\t\tor end_ts_check = 'fail'\r\n),\r\nCOMP_DISPLAY_AGENT_RESULT_TAB as (\r\n\tselect 'comp_displayAgent_appPower_data_check' as item\r\n\t\t, case\r\n\t\t\twhen count(*) > 0 then 'fail'\r\n\t\t\telse 'pass'\r\n\t\tend as result, ifnull(fail_cnt, 0) as fail_cnt, detail\r\n\tfrom (\r\n\t\tselect a.fail_cnt + c.fail_cnt + b.fail_cnt as fail_cnt\r\n\t\t\t, json_group_array('comp_displayAgent_appPower_intv :' || c.detail || a.detail || b.detail) as detail\r\n\t\tfrom (\r\n\t\t\tselect count(*) as fail_cnt\r\n\t\t\t\t, json_group_array('app :' || app || ':' || app_check ||\r\n\t\t\t\t', brightness :' || brightness || ':' || brightness_check || ', FPS :' || FPS || ':' || FPS_check || ', renderFps :' || renderFps || ':' || renderFps_check ||\r\n\t\t\t\t', whole_eg :' || whole_eg || ':' || whole_eg_check) as detail\r\n\t\t\tfrom COMP_DISPLAY_AGENT_TAB\r\n\t\t) a, (\r\n\t\t\t\tselect count(*) as fail_cnt, json_group_array('empty_check :' || empty_check) as detail\r\n\t\t\t\tfrom (\r\n\t\t\t\t\tselect case\r\n\t\t\t\t\t\t\twhen count(*) = 0 then 'fail'\r\n\t\t\t\t\t\t\telse 'pass'\r\n\t\t\t\t\t\tend as empty_check\r\n\t\t\t\t\tfrom comp_displayAgent_appPower_intv\r\n\t\t\t\t)\r\n\t\t\t\twhere empty_check = 'fail'\r\n\t\t\t) c,(\r\n\t\t\t\t\tselect count(*) as fail_cnt, json_group_array('sum_whole_eg_check :' || sum_whole_eg_check || ', sum_renderFps_check :' || sum_renderFps_check) as detail\r\n\t\t\t\t\tfrom DISPLAY_EG_CHECK\r\n\t\t\t\t) b\r\n\t)\r\n\twhere fail_cnt > 0\r\n),\r\nAGG_DISPLAY_DAILY_RESULT_TAB as (\r\n\tselect 'agg_display_app_daily_data_check' as item\r\n\t\t, case\r\n\t\t\twhen count(*) > 0 then 'fail'\r\n\t\t\telse 'pass'\r\n\t\tend as result, ifnull(fail_cnt, 0) as fail_cnt, detail\r\n\tfrom (\r\n\t\tselect fail_cnt, json_group_array('agg_display_app_daily :' || detail) as detail\r\n\t\tfrom (\r\n\t\t\tselect count(*) as fail_cnt\r\n\t\t\t\t, json_group_array('empty_check :' || empty_check || ', timestamp :' || timestamp || ':' || timestamp_check || \r\n\t\t\t\t', start_ts :' || start_ts || ':' || start_ts_check || ', end_ts : ' || end_ts || ':' || end_ts_check ||\r\n\t\t\t\t', name :' || name_check || ', duration :' || duration || duration_check || ', energy : ' || energy || ':' || energy_check) as detail\r\n\t\t\tfrom AGG_DISPLAY_APP_DAILY_TAB\r\n\t\t)\r\n\t)\r\n\twhere fail_cnt > 0\r\n)\r\n\r\nselect * from COMP_DISPLAY_AGENT_RESULT_TAB\r\nunion\r\nselect * from AGG_DISPLAY_DAILY_RESULT_TAB\r\nunion\r\nselect * from COMP_BATTERY_AGENT_RESULT_TAB\r\nunion\r\nselect * from AGG_BATTERY_DAILY_RESULT_TAB\r\nunion\r\nselect * from COMP_THERMAL_AGENT_RESULT_TAB\r\nunion\r\nselect * from AGG_THERMAL_DAILY_RESULT_TAB\r\nunion\r\nselect * from COMP_AUDIO_AGENT_RESULT_TAB\r\nunion\r\nselect * from AGG_AUDIO_APP_DAILY_RESULT_TAB\r\nunion\r\nselect * from COMP_WIFI_RESULT_TAB\r\nunion\r\nselect * from AGG_WIFI_APP_DAILY_RESULT_TAB\r\nunion\r\nselect * from AGG_GPU_APP_DAILY_RESULT_TAB\r\nunion\r\nselect * from COMP_GPU_AGENT_RESULT_TAB\r\nunion\r\nselect * from CPU_RESULT_CHECK_TAB\r\nunion\r\nselect * from AGG_CPU_DAILY_CHECK_TAB\r\nunion\r\nselect * from AGG_MODEM_APP_DAILY_RESULT_TAB\r\nunion\r\nselect * from COMP_CELLULAR_UID_STATE_RESULT_TAB\r\nunion\r\nselect * from COMP_CELLULAR_AGENT_RESULT_TAB\r\nunion\r\nselect * from AGG_CAMERA_DAILY_RESULT_TAB\r\nunion\r\nselect * from COMP_CAMERA_RESULT_TAB\r\nunion\r\nselect * from SCREEN_MODE_FINAL_TBL\r\nunion\r\nselect * from THERMAL_MODE_FINAL_TBL\r\nunion\r\nselect * from POWER_MODE_FINAL_TBL\r\nunion\r\nselect * from LOG_ERR_CHECK_TBL\r\nunion\r\nselect * from NATIVE_PSS_INCREASE_CHECK_TBL\r\nunion\r\nselect * from GPU_FREQ_CHECK_TBL"
+ ],
+ "tables": [
+  {
+   "name": "agg_audio_app_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_audio_app_hourly",
+   "rows": 1,
+   "avgRowBytes": 122,
+   "insert": 4,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_audio_device_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_audio_volume_app_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_audio_volume_app_hourly",
+   "rows": 1,
+   "avgRowBytes": 97,
+   "insert": 5,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_battery_app_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_battery_app_hourly",
+   "rows": 16,
+   "avgRowBytes": 95,
+   "insert": 16,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_battery_device_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_battery_device_hourly",
+   "rows": 11,
+   "avgRowBytes": 128,
+   "insert": 2,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_battery_sleep_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_battery_sleep_hourly",
+   "rows": 7,
+   "avgRowBytes": 114,
+   "insert": 1,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_binderagent_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_binderstats_binderagent_hourly",
+   "rows": 7976,
+   "avgRowBytes": 103,
+   "insert": 2610,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_camera_app_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_camera_app_hourly",
+   "rows": 0,
+   "avgRowBytes": 114,
+   "insert": 2,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_camera_device_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_cpu_app_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_cpu_app_hourly",
+   "rows": 964,
+   "avgRowBytes": 118,
+   "insert": 207,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_cpu_device_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_cpu_frequency_app_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_ddr_app_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_ddr_app_hourly",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_ddr_device_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_displayAgent_brightness_hourly",
+   "rows": 14,
+   "avgRowBytes": 79,
+   "insert": 24,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_display_app_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_display_app_hourly",
+   "rows": 2,
+   "avgRowBytes": 89,
+   "insert": 13,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_display_device_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_flashlight_app_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_flashlight_app_hourly",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_flashlight_device_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_foreign_event_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_gpu_app_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_gpu_app_hourly",
+   "rows": 5,
+   "avgRowBytes": 81,
+   "insert": 13,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_gpu_device_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_metaAgent_daily",
+   "rows": 2,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_modem_app_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_modem_app_hourly",
+   "rows": 7,
+   "avgRowBytes": 164,
+   "insert": 1,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_modem_state_device_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_modem_state_device_hourly",
+   "rows": 15,
+   "avgRowBytes": 256,
+   "insert": 3,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_screen_brightness_fps_app_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_screen_brightness_fps_app_hourly",
+   "rows": 10,
+   "avgRowBytes": 102,
+   "insert": 78,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_thermalAgent_analysis",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_thermalAgent_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_thermalAgent_hourly",
+   "rows": 1150,
+   "avgRowBytes": 239,
+   "insert": 360,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_ufs_app_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_ufs_app_hourly",
+   "rows": 8,
+   "avgRowBytes": 120,
+   "insert": 13,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_ufs_device_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_uidstate_cpuagent_hourly",
+   "rows": 2438,
+   "avgRowBytes": 578,
+   "insert": 526,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_wifi_app_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_wifi_app_hourly",
+   "rows": 126,
+   "avgRowBytes": 187,
+   "insert": 29,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_wifi_state_device_daily",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "agg_wifi_state_device_hourly",
+   "rows": 33,
+   "avgRowBytes": 162,
+   "insert": 4,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "comp_audioPower_audioAgent_intv",
+   "rows": 3,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "comp_batteryAgent_appPower_intv",
+   "rows": 4290,
+   "avgRowBytes": 180,
+   "insert": 8,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "comp_batteryAgent_mode_intv",
+   "rows": 1718,
+   "avgRowBytes": 144,
+   "insert": 2,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "comp_binderstats_binderagent_backward",
+   "rows": 39410,
+   "avgRowBytes": 580,
+   "insert": 65,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "comp_cameraAgent_appPower_intv",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "comp_cameraAgent_explorer",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "comp_cellularUidState_backward",
+   "rows": 6256,
+   "avgRowBytes": 292,
+   "insert": 8,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "comp_cellularagent_backward",
+   "rows": 6256,
+   "avgRowBytes": 340,
+   "insert": 8,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "comp_cellularagent_modem_info",
+   "rows": 1939,
+   "avgRowBytes": 104,
+   "insert": 1,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "comp_ddrAgent_whole_energy",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "comp_displayAgent_appPower_intv",
+   "rows": 23,
+   "avgRowBytes": 215,
+   "insert": 2,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "comp_displayAgent_brightness_intv",
+   "rows": 1525,
+   "avgRowBytes": 92,
+   "insert": 2,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "comp_displayAgent_histInfo_intv",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "comp_flashlight_appPower_intv",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "comp_foreign_event",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "comp_gpuPower_gpuAgent_intv",
+   "rows": 1866,
+   "avgRowBytes": 428,
+   "insert": 2,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "comp_table_whole_ufs_energy",
+   "rows": 1982,
+   "avgRowBytes": 116,
+   "insert": 4,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "comp_thermalAgent_backward",
+   "rows": 9906,
+   "avgRowBytes": 254,
+   "insert": 20,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "comp_uidstate_cpuagent_backward",
+   "rows": 169879,
+   "avgRowBytes": 572,
+   "insert": 285,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "comp_wifi_agent_intv",
+   "rows": 10583,
+   "avgRowBytes": 255,
+   "insert": 15,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "log_running_event",
+   "rows": 3124,
+   "avgRowBytes": 129,
+   "insert": 9,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "meta_alert_threshold",
+   "rows": 819,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "meta_alert_trigger_list",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "meta_daily_dcs_data",
+   "rows": 22,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "meta_package_uid",
+   "rows": 486,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "meta_persist_properties",
+   "rows": 50,
+   "avgRowBytes": 110,
+   "insert": 0,
+   "update": 12,
+   "delete": 0
+  },
+  {
+   "name": "meta_table_version",
+   "rows": 126,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "raw_audioAgent_backward",
+   "rows": 4,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "raw_batteryAgent_appPower_intv",
+   "rows": 765,
+   "avgRowBytes": 132,
+   "insert": 8,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "raw_cameraAgent_appPower_intv",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "raw_cellularagent_backward",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "raw_ddrAgent_energy",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "raw_displayAgent_appPower_intv",
+   "rows": 23,
+   "avgRowBytes": 101,
+   "insert": 2,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "raw_displayAgent_brightness",
+   "rows": 49,
+   "avgRowBytes": 59,
+   "insert": 1,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "raw_foreign_event",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "raw_gpuStatusTime_gpuAgent_backward",
+   "rows": 262,
+   "avgRowBytes": 142,
+   "insert": 2,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "raw_loggeragent_backward",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "raw_table_ufs_energy",
+   "rows": 248,
+   "avgRowBytes": 148,
+   "insert": 4,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "raw_thermalAgent_temp",
+   "rows": 2195,
+   "avgRowBytes": 212,
+   "insert": 12,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "raw_wifi_agent_intv",
+   "rows": 243,
+   "avgRowBytes": 114,
+   "insert": 4,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_aod_state_eventAgent",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_appName_fgBgChanged_eventAgent",
+   "rows": 4,
+   "avgRowBytes": 68,
+   "insert": 1,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_app_cold_hot_start",
+   "rows": 2,
+   "avgRowBytes": 69,
+   "insert": 1,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_app_update",
+   "rows": 4,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_application_init_eventAgent",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_audio_agent_version_eventAgent",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_audio_channel_type_eventAgent",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_audio_player_state_eventAgent",
+   "rows": 3140,
+   "avgRowBytes": 95,
+   "insert": 2,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_brightness_screen_eventAgent",
+   "rows": 1336,
+   "avgRowBytes": 53,
+   "insert": 1,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_cell_state_eventAgent",
+   "rows": 3415,
+   "avgRowBytes": 247,
+   "insert": 2,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_cfl_dbfile_eventAgent",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_charging_chargerState_eventAgent",
+   "rows": 3,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_displayOnOff_screenState_eventAgent",
+   "rows": 3143,
+   "avgRowBytes": 51,
+   "insert": 1,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_flashlight_state_eventAgent",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_hour_timer_eventAgent",
+   "rows": 31,
+   "avgRowBytes": 48,
+   "insert": 1,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_last_exit_info",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_level_Battery_eventAgent",
+   "rows": 104,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_low_power_mode_change_eventAgent",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_midnight_timer_eventAgent",
+   "rows": 2,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_network_bands_changed_eventAgent",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_network_type_changed_eventAgent",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_network_used_when_suspend_eventAgent",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_obrain_external_notify_event",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_resolution_changed_eventAgent",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_rus_command_eventAgent",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_set_time_eventAgent",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_speaker_volume_changed_eventAgent",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_state_system_eventAgent",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_state_thermal_eventAgent",
+   "rows": 2,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_suspend_and_resume_eventAgent",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_system_setting_property_record",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_tenMinute_timer_eventAgent",
+   "rows": 173,
+   "avgRowBytes": 48,
+   "insert": 1,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_unknown_otherEvents_eventAgent",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_wifi_info_timer_eventAgent",
+   "rows": 317,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_wifi_scan_result_eventAgent",
+   "rows": 80,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "trig_wifi_state_eventAgent",
+   "rows": 2,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  }
+ ],
+ "framesPerOp": 0.020695929042528996,
+ "opsPerCommit": 293
+}

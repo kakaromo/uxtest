@@ -1,0 +1,64 @@
+{
+ "create": [
+  "CREATE TABLE android_metadata (locale TEXT)",
+  "CREATE TABLE geller_data_table (_id INTEGER PRIMARY KEY, data BLOB NOT NULL)",
+  "CREATE TABLE geller_database_info_table (key TEXT NOT NULL, info TEXT NOT NULL)",
+  "CREATE TABLE geller_file_table (data_type TEXT NOT NULL, key TEXT NOT NULL, timestamp_micro INTEGER NOT NULL, sync_status TEXT, delete_status TEXT, num_times_used INTEGER, deletion_sync_status TEXT, file_path TEXT NOT NULL)",
+  "CREATE TABLE geller_key_table (data_type TEXT NOT NULL, key TEXT NOT NULL, timestamp_micro INTEGER NOT NULL, sync_status TEXT, delete_status TEXT, num_times_used INTEGER, deletion_sync_status TEXT, data_id INTEGER NOT NULL,  FOREIGN KEY (data_id) REFERENCES geller_data_table (_id) ON DELETE CASCADE )",
+  "CREATE TABLE geller_metadata_table (data_type TEXT NOT NULL, key TEXT NOT NULL, metadata TEXT NOT NULL)",
+  "CREATE INDEX datatype_dataid ON geller_key_table (data_type, data_id)",
+  "CREATE INDEX datatype_key_dataid ON geller_key_table (data_type, key, delete_status, data_id)"
+ ],
+ "tables": [
+  {
+   "name": "android_metadata",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "geller_data_table",
+   "rows": 91,
+   "avgRowBytes": 350,
+   "insert": 1,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "geller_database_info_table",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "geller_file_table",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "geller_key_table",
+   "rows": 91,
+   "avgRowBytes": 71,
+   "insert": 1,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "geller_metadata_table",
+   "rows": 72,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  }
+ ],
+ "framesPerOp": 3.5,
+ "opsPerCommit": 2
+}

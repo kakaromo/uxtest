@@ -1,0 +1,44 @@
+{
+ "create": [
+  "CREATE TABLE android_metadata (locale TEXT)",
+  "CREATE TABLE `files` (`path` TEXT NOT NULL, `last_modified` INTEGER NOT NULL DEFAULT 0, `sha256` TEXT NOT NULL, `size` INTEGER NOT NULL DEFAULT 0, `type` TEXT NOT NULL, `signatures` TEXT NOT NULL, PRIMARY KEY(`path`))",
+  "CREATE TABLE room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+  "CREATE TABLE `scan_results` (`file_sha256` TEXT NOT NULL, `source` TEXT NOT NULL, `result` TEXT NOT NULL, `vps_version` TEXT NOT NULL, PRIMARY KEY(`file_sha256`, `source`))"
+ ],
+ "tables": [
+  {
+   "name": "android_metadata",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "files",
+   "rows": 580,
+   "avgRowBytes": 520,
+   "insert": 7,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "room_master_table",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "scan_results",
+   "rows": 42,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  }
+ ],
+ "framesPerOp": 3.7142857142857144,
+ "opsPerCommit": 1
+}

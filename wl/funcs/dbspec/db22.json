@@ -1,0 +1,138 @@
+{
+ "create": [
+  "CREATE TABLE `alarm_note` (`guid` TEXT NOT NULL, `alarm_time` INTEGER DEFAULT 0, PRIMARY KEY(`guid`))",
+  "CREATE TABLE android_metadata (locale TEXT)",
+  "CREATE TABLE `attachments` (`attachment_id` TEXT NOT NULL, `rich_note_id` TEXT NOT NULL, `type` INTEGER NOT NULL, `state` INTEGER NOT NULL, `md5` TEXT, `url` TEXT, `checkPayload` TEXT, `file_name` TEXT, `cloud_metadata` TEXT, `extra` TEXT, `width` INTEGER, `height` INTEGER, `associate_attachment_id` TEXT, PRIMARY KEY(`attachment_id`), FOREIGN KEY(`rich_note_id`) REFERENCES `rich_notes`(`local_id`) ON UPDATE CASCADE ON DELETE CASCADE )",
+  "CREATE TABLE `collect_privacy` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `content` TEXT, `create_time` INTEGER NOT NULL, `type` TEXT)",
+  "CREATE TABLE `folders` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `guid` TEXT, `state` INTEGER NOT NULL, `created_time` INTEGER, `modify_device` TEXT, `data1` TEXT, `data2` TEXT, `encrypted` INTEGER NOT NULL DEFAULT 0, `encrypted_pre` INTEGER NOT NULL DEFAULT 0, `modify_time` INTEGER, `extra` TEXT, `sysVersion` INTEGER NOT NULL DEFAULT 0, `encryptSysVersion` INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE `note_paragraph_style` (`aid` TEXT NOT NULL, `id` TEXT NOT NULL, `md5` TEXT NOT NULL, `name` TEXT NOT NULL, `preview` TEXT NOT NULL, `url` TEXT NOT NULL, `versionCode` INTEGER NOT NULL, `structVersion` TEXT NOT NULL, `section` TEXT NOT NULL, `detail` TEXT, `condition` TEXT NOT NULL, `thumbnail` TEXT NOT NULL, `thumbnailBlack` TEXT NOT NULL, `data1` TEXT NOT NULL, `data2` TEXT NOT NULL, PRIMARY KEY(`id`, `condition`))",
+  "CREATE TABLE `note_skin` (`aid` TEXT NOT NULL, `id` TEXT NOT NULL, `md5` TEXT NOT NULL, `name` TEXT NOT NULL, `preview` TEXT NOT NULL, `thumbnail` TEXT NOT NULL, `url` TEXT NOT NULL, `versionCode` INTEGER NOT NULL, `detail` TEXT, `condition` TEXT NOT NULL, `data1` TEXT NOT NULL, `data2` TEXT NOT NULL, PRIMARY KEY(`id`, `condition`))",
+  "CREATE TABLE `notes` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `guid` TEXT, `version` INTEGER NOT NULL DEFAULT 0, `topped` INTEGER DEFAULT 0, `updated` INTEGER DEFAULT 0, `recycled_time` INTEGER DEFAULT 0, `state` INTEGER NOT NULL DEFAULT 0, `description` TEXT, `note_folder` TEXT, `note_folder_guid` TEXT NOT NULL DEFAULT '00000000_0000_0000_0000_000000000000', `attr_count` INTEGER NOT NULL DEFAULT 0, `sort` INTEGER NOT NULL DEFAULT 0, `created_console` INTEGER NOT NULL DEFAULT 0, `thumb_type` INTEGER NOT NULL DEFAULT 0, `thumb_filename` TEXT, `uid` INTEGER NOT NULL DEFAULT 0, `deleted` INTEGER NOT NULL DEFAULT 0, `para` INTEGER NOT NULL DEFAULT 0, `created` INTEGER DEFAULT 0, `globalId` TEXT, `attachment_id` TEXT, `attachment_md5` TEXT, `account` TEXT, `alarm_time` INTEGER DEFAULT 0, `note_skin` TEXT, `recycled_time_pre` INTEGER DEFAULT 0, `alarm_time_pre` INTEGER DEFAULT 0, `note_skin_pre` TEXT, `timestamp` INTEGER, `extra` TEXT, `sysVersion` INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE `notes_attributes` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `note_guid` TEXT, `type` INTEGER NOT NULL DEFAULT 0, `filename` TEXT, `version` INTEGER NOT NULL DEFAULT 0, `updated` INTEGER DEFAULT 0, `para` TEXT, `state` INTEGER NOT NULL DEFAULT 1, `attachment_md5` TEXT, `attachment_sync_url` TEXT, `sync_data1` TEXT, `width` INTEGER NOT NULL DEFAULT 0, `height` INTEGER NOT NULL DEFAULT 0)",
+  "CREATE TABLE `rich_notes` (`local_id` TEXT NOT NULL, `global_id` TEXT, `text` TEXT NOT NULL, `raw_text` TEXT NOT NULL, `html_text` TEXT NOT NULL, `folder_id` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `create_time` INTEGER NOT NULL, `update_time` INTEGER NOT NULL, `top_time` INTEGER NOT NULL, `recycle_time` INTEGER NOT NULL, `alarm_time` INTEGER NOT NULL, `state` INTEGER NOT NULL, `deleted` INTEGER NOT NULL, `skin_id` TEXT NOT NULL, `title` TEXT, `raw_title` TEXT, `recycle_time_pre` INTEGER, `alarm_time_pre` INTEGER, `skin_id_pre` TEXT, `extra` TEXT, `version` INTEGER NOT NULL, `is_local` INTEGER NOT NULL, `is_preset` INTEGER NOT NULL, `from_package` TEXT, `web_notes` TEXT, `sysVersion` INTEGER, `encrypted` INTEGER NOT NULL DEFAULT 0, `encrypted_pre` INTEGER NOT NULL DEFAULT 0, `encryptSysVersion` INTEGER, `attachment_extra` TEXT, PRIMARY KEY(`local_id`))",
+  "CREATE TABLE room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+  "CREATE TABLE `speech_log_info` (`summary_id` TEXT NOT NULL, `rich_note_id` TEXT NOT NULL, `speech_log_id` TEXT NOT NULL, `contact_cover` TEXT, `contact_number` TEXT, `contact_name` TEXT, `entity` TEXT, `voice_id` TEXT, `voice_url` TEXT, `voice_lrc_id` TEXT, `voice_lrc_url` TEXT, `flag` INTEGER NOT NULL DEFAULT 0, `speech_create_time` INTEGER NOT NULL, `speech_type` INTEGER NOT NULL DEFAULT 0, `pic_id` TEXT, `speech_mark` TEXT, `combined_card` TEXT, `extra_info` TEXT, PRIMARY KEY(`summary_id`), FOREIGN KEY(`rich_note_id`) REFERENCES `rich_notes`(`local_id`) ON UPDATE CASCADE ON DELETE CASCADE )",
+  "CREATE TABLE `todo` (`local_id` TEXT NOT NULL, `parent_id` TEXT, `global_id` TEXT, `content` TEXT, `alarm_time` INTEGER, `alarm_next_time` INTEGER, `create_time` INTEGER, `update_time` INTEGER, `finish_time` INTEGER, `status` INTEGER, `is_delete` INTEGER, `timestamp` INTEGER, `extra` TEXT, `is_local` INTEGER, `is_reminded` INTEGER, `force_reminder_pre` INTEGER, `repeat_rule_pre` TEXT, `alarm_time_pre` INTEGER, `from_package` TEXT, `sysVersion` INTEGER NOT NULL DEFAULT 0, `color_index` INTEGER NOT NULL DEFAULT -1, PRIMARY KEY(`local_id`))",
+  "CREATE TABLE `words` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `note_guid` TEXT, `content` TEXT, `updated` INTEGER, `state` INTEGER NOT NULL)",
+  "CREATE INDEX `index_attachments_rich_note_id` ON `attachments` (`rich_note_id`)",
+  "CREATE UNIQUE INDEX `index_folders_guid` ON `folders` (`guid`)",
+  "CREATE INDEX `index_rich_notes_local_id` ON `rich_notes` (`local_id`)",
+  "CREATE INDEX `index_speech_log_info_rich_note_id` ON `speech_log_info` (`rich_note_id`)"
+ ],
+ "tables": [
+  {
+   "name": "alarm_note",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "android_metadata",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "attachments",
+   "rows": 8,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "collect_privacy",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "folders",
+   "rows": 2,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "note_paragraph_style",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "note_skin",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "notes",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "notes_attributes",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "rich_notes",
+   "rows": 22,
+   "avgRowBytes": 1570,
+   "insert": 1,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "room_master_table",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "speech_log_info",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "todo",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "words",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  }
+ ],
+ "framesPerOp": 14.0,
+ "opsPerCommit": 1
+}

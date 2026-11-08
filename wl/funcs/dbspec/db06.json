@@ -1,0 +1,62 @@
+{
+ "create": [
+  "CREATE TABLE android_metadata (locale TEXT)",
+  "CREATE TABLE `app_usage` (`package_name` TEXT NOT NULL, `count` INTEGER NOT NULL, `used_millis` INTEGER NOT NULL, `begin_time_millis` INTEGER NOT NULL, `saved_time_millis` INTEGER NOT NULL, `time_window` INTEGER NOT NULL, PRIMARY KEY(`package_name`, `begin_time_millis`))",
+  "CREATE TABLE `battery_usage` (`package_name` TEXT NOT NULL, `used_power` REAL NOT NULL, `used_power_raw` REAL NOT NULL, `used_percent` REAL NOT NULL, `level` INTEGER NOT NULL, `begin_time_millis` INTEGER NOT NULL, `saved_time_millis` INTEGER NOT NULL, `time_window` INTEGER NOT NULL, PRIMARY KEY(`package_name`, `begin_time_millis`))",
+  "CREATE TABLE `bucket_status` (`type` TEXT NOT NULL, `status` TEXT NOT NULL, `begin_time_millis` INTEGER NOT NULL, `time_window` INTEGER NOT NULL, `saved_time_millis` INTEGER NOT NULL, PRIMARY KEY(`type`, `begin_time_millis`))",
+  "CREATE TABLE `net_usage` (`package_uid` TEXT NOT NULL, `used_bytes` INTEGER NOT NULL, `begin_time_millis` INTEGER NOT NULL, `saved_time_millis` INTEGER NOT NULL, `time_window` INTEGER NOT NULL, PRIMARY KEY(`package_uid`, `begin_time_millis`))",
+  "CREATE TABLE room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)"
+ ],
+ "tables": [
+  {
+   "name": "android_metadata",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "app_usage",
+   "rows": 304,
+   "avgRowBytes": 62,
+   "insert": 19,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "battery_usage",
+   "rows": 25646,
+   "avgRowBytes": 81,
+   "insert": 768,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "bucket_status",
+   "rows": 2028,
+   "avgRowBytes": 33,
+   "insert": 20,
+   "update": 0,
+   "delete": 10
+  },
+  {
+   "name": "net_usage",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "room_master_table",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  }
+ ],
+ "framesPerOp": 0.033047735618115054,
+ "opsPerCommit": 68
+}

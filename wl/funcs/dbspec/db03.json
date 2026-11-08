@@ -1,0 +1,44 @@
+{
+ "create": [
+  "CREATE TABLE bounces(site TEXT PRIMARY KEY NOT NULL,first_user_activation_time INTEGER,last_user_activation_time INTEGER,first_bounce_time INTEGER,last_bounce_time INTEGER,first_web_authn_assertion_time INTEGER,last_web_authn_assertion_time INTEGER)",
+  "CREATE TABLE config(key TEXT NOT NULL,int_value INTEGER,PRIMARY KEY (`key`))",
+  "CREATE TABLE meta(key LONGVARCHAR NOT NULL UNIQUE PRIMARY KEY, value LONGVARCHAR)",
+  "CREATE TABLE popups(opener_site TEXT NOT NULL,popup_site TEXT NOT NULL,access_id INT64,last_popup_time INTEGER,is_current_interaction BOOLEAN,is_authentication_interaction BOOLEAN,PRIMARY KEY (`opener_site`,`popup_site`))"
+ ],
+ "tables": [
+  {
+   "name": "bounces",
+   "rows": 1,
+   "avgRowBytes": 26,
+   "insert": 1,
+   "update": 0,
+   "delete": 1
+  },
+  {
+   "name": "config",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "meta",
+   "rows": 3,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "popups",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  }
+ ],
+ "framesPerOp": 5.0,
+ "opsPerCommit": 1
+}

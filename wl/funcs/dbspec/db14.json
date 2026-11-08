@@ -1,0 +1,135 @@
+{
+ "create": [
+  "CREATE TABLE album_art (album_id INTEGER PRIMARY KEY,_data TEXT)",
+  "CREATE TABLE android_metadata (locale TEXT)",
+  "CREATE TABLE audio_playlists_map (_id INTEGER PRIMARY KEY,audio_id INTEGER NOT NULL,playlist_id INTEGER NOT NULL,play_order INTEGER NOT NULL)",
+  "CREATE TABLE deleted_media (_id INTEGER PRIMARY KEY AUTOINCREMENT,old_id INTEGER UNIQUE, generation_modified INTEGER NOT NULL)",
+  "CREATE TABLE files (_id INTEGER PRIMARY KEY AUTOINCREMENT,_data TEXT UNIQUE COLLATE NOCASE,_size INTEGER,format INTEGER,parent INTEGER,date_added INTEGER,date_modified INTEGER,mime_type TEXT,title TEXT,description TEXT,_display_name TEXT,picasa_id TEXT,orientation INTEGER,latitude DOUBLE,longitude DOUBLE,datetaken INTEGER,mini_thumb_magic INTEGER,bucket_id TEXT,bucket_display_name TEXT,isprivate INTEGER,title_key TEXT,artist_id INTEGER,album_id INTEGER,composer TEXT,track INTEGER,year INTEGER CHECK(year!=0),is_ringtone INTEGER,is_music INTEGER,is_alarm INTEGER,is_notification INTEGER,is_podcast INTEGER,album_artist TEXT,duration INTEGER,bookmark INTEGER,artist TEXT,album TEXT,resolution TEXT,tags TEXT,category TEXT,language TEXT,mini_thumb_data TEXT,name TEXT,media_type INTEGER,old_id INTEGER,is_drm INTEGER,width INTEGER, height INTEGER, title_resource_uri TEXT,owner_package_name TEXT DEFAULT NULL,color_standard INTEGER, color_transfer INTEGER, color_range INTEGER,_hash BLOB DEFAULT NULL, is_pending INTEGER DEFAULT 0,is_download INTEGER DEFAULT 0, download_uri TEXT DEFAULT NULL,referer_uri TEXT DEFAULT NULL, is_audiobook INTEGER DEFAULT 0,date_expires INTEGER DEFAULT NULL,is_trashed INTEGER DEFAULT 0,group_id INTEGER DEFAULT NULL,primary_directory TEXT DEFAULT NULL,secondary_directory TEXT DEFAULT NULL,document_id TEXT DEFAULT NULL,instance_id TEXT DEFAULT NULL,original_document_id TEXT DEFAULT NULL,relative_path TEXT DEFAULT NULL,volume_name TEXT DEFAULT NULL,artist_key TEXT DEFAULT NULL,album_key TEXT DEFAULT NULL,genre TEXT DEFAULT NULL,genre_key TEXT DEFAULT NULL,genre_id INTEGER,author TEXT DEFAULT NULL, bitrate INTEGER DEFAULT NULL,capture_framerate REAL DEFAULT NULL, cd_track_number TEXT DEFAULT NULL,compilation INTEGER DEFAULT NULL, disc_number TEXT DEFAULT NULL,is_favorite INTEGER DEFAULT 0, num_tracks INTEGER DEFAULT NULL,writer TEXT DEFAULT NULL, exposure_time TEXT DEFAULT NULL,f_number TEXT DEFAULT NULL, iso INTEGER DEFAULT NULL,scene_capture_type INTEGER DEFAULT NULL, generation_added INTEGER DEFAULT 0,generation_modified INTEGER DEFAULT 0, xmp BLOB DEFAULT NULL,_transcode_status INTEGER DEFAULT 0, _video_codec_type TEXT DEFAULT NULL,_modifier INTEGER DEFAULT 0, is_recording INTEGER DEFAULT 0,redacted_uri_id TEXT DEFAULT NULL, _user_id INTEGER DEFAULT 0, _special_format INTEGER DEFAULT NULL,oem_metadata BLOB DEFAULT NULL,inferred_media_date INTEGER,bits_per_sample INTEGER DEFAULT NULL, samplerate INTEGER DEFAULT NULL,inferred_date INTEGER)",
+  "CREATE TABLE local_metadata (generation INTEGER DEFAULT 0)",
+  "CREATE TABLE log (time DATETIME, message TEXT)",
+  "CREATE TABLE media_grants (owner_package_name TEXT,file_id INTEGER,package_user_id INTEGER,generation_granted INTEGER DEFAULT 0,UNIQUE(owner_package_name, file_id, package_user_id)  ON CONFLICT IGNORE FOREIGN KEY (file_id)  REFERENCES files(_id)  ON DELETE CASCADE)",
+  "CREATE TABLE search_index_processing_status (media_id INTEGER PRIMARY_KEY,metadata_processing_status INTEGER DEFAULT 0,label_processing_status INTEGER DEFAULT 0,ocr_latin_processing_status INTEGER DEFAULT 0,location_processing_status INTEGER DEFAULT 0,generation_number INTEGER DEFAULT 0,display_name TEXT DEFAULT NULL,mime_type TEXT DEFAULT NULL,date_taken INTEGER DEFAULT 0,size INTEGER DEFAULT 0,latitude DOUBLE DEFAULT 0.0,longitude DOUBLE DEFAULT 0.0)",
+  "CREATE TABLE thumbnails (_id INTEGER PRIMARY KEY,_data TEXT,image_id INTEGER,kind INTEGER,width INTEGER,height INTEGER)",
+  "CREATE TABLE videothumbnails (_id INTEGER PRIMARY KEY,_data TEXT,video_id INTEGER,kind INTEGER,width INTEGER,height INTEGER)",
+  "CREATE INDEX album_id_idx ON files(album_id)",
+  "CREATE INDEX artist_id_idx ON files(artist_id)",
+  "CREATE INDEX bucket_index on files(bucket_id,media_type,datetaken, _id)",
+  "CREATE INDEX bucket_name on files(bucket_id,media_type,bucket_display_name)",
+  "CREATE INDEX date_modified_index ON files(date_modified)",
+  "CREATE INDEX format_index ON files(format)",
+  "CREATE INDEX generation_granted_index ON media_grants(generation_granted)",
+  "CREATE INDEX generation_modified_index ON files(generation_modified)",
+  "CREATE INDEX genre_id_idx ON files(genre_id)",
+  "CREATE INDEX image_id_index on thumbnails(image_id)",
+  "CREATE INDEX media_type_index ON files(media_type)",
+  "CREATE INDEX parent_index ON files(parent)",
+  "CREATE INDEX path_index ON files(_data)",
+  "CREATE INDEX sort_index ON files(datetaken ASC, _id ASC)",
+  "CREATE INDEX title_idx ON files(title)",
+  "CREATE INDEX titlekey_index ON files(title_key)",
+  "CREATE INDEX video_id_index on videothumbnails(video_id)",
+  "CREATE VIEW audio AS SELECT title_key,instance_id,compilation,disc_number,duration,is_ringtone,album_artist,resolution,orientation,artist,author,inferred_date,height,is_drm,bucket_display_name,is_audiobook,owner_package_name,volume_name,title_resource_uri,date_modified,writer,date_expires,composer,bits_per_sample,_display_name,is_recording,datetaken,mime_type,is_notification,bitrate,cd_track_number,_id,xmp,year,oem_metadata,_data,_size,album,genre,is_alarm,title,track,width,is_music,samplerate,album_key,is_favorite,is_trashed,group_id,document_id,artist_id,generation_added,artist_key,genre_key,is_download,generation_modified,is_pending,date_added,is_podcast,capture_framerate,album_id,num_tracks,original_document_id,genre_id,bucket_id,bookmark,relative_path,_modifier FROM files WHERE media_type=2",
+  "CREATE VIEW audio_albums AS SELECT   album_id AS _id, album_id AS album_id, MIN(album) AS album, album_key AS album_key, artist_id AS artist_id, artist AS artist, artist_key AS artist_key, COUNT(DISTINCT _id) AS numsongs, COUNT(DISTINCT _id) AS numsongs_by_artist, MIN(year) AS minyear, MAX(year) AS maxyear, NULL AS album_art FROM audio WHERE is_music=1 AND is_pending=0 AND is_trashed=0 AND volume_name IN ( 'external_primary' ) GROUP BY album_id",
+  "CREATE VIEW audio_artists AS SELECT   artist_id AS _id, MIN(artist) AS artist, artist_key AS artist_key, COUNT(DISTINCT album_id) AS number_of_albums, COUNT(DISTINCT _id) AS number_of_tracks FROM audio WHERE is_music=1 AND is_pending=0 AND is_trashed=0 AND volume_name IN ( 'external_primary' ) GROUP BY artist_id",
+  "CREATE VIEW audio_artists_albums AS SELECT   album_id AS _id, album_id AS album_id, MIN(album) AS album, album_key AS album_key, artist_id AS artist_id, artist AS artist, artist_key AS artist_key, (SELECT COUNT(*) FROM audio WHERE album_id = TEMP.album_id) AS numsongs, COUNT(DISTINCT _id) AS numsongs_by_artist, MIN(year) AS minyear, MAX(year) AS maxyear, NULL AS album_art FROM audio TEMP WHERE is_music=1 AND is_pending=0 AND is_trashed=0 AND volume_name IN ( 'external_primary' ) GROUP BY album_id, artist_id",
+  "CREATE VIEW audio_genres AS SELECT   genre_id AS _id, MIN(genre) AS name FROM audio WHERE is_pending=0 AND is_trashed=0 AND volume_name IN ( 'external_primary' ) GROUP BY genre_id",
+  "CREATE VIEW audio_playlists AS SELECT instance_id,compilation,disc_number,duration,album_artist,resolution,orientation,artist,author,inferred_date,height,is_drm,bucket_display_name,owner_package_name,volume_name,date_modified,writer,date_expires,composer,_display_name,datetaken,mime_type,bitrate,cd_track_number,_id,xmp,name,year,oem_metadata,_data,_size,album,genre,title,width,is_favorite,is_trashed,group_id,document_id,generation_added,is_download,generation_modified,is_pending,date_added,capture_framerate,num_tracks,original_document_id,bucket_id,relative_path,_modifier FROM files WHERE media_type=4",
+  "CREATE VIEW downloads AS SELECT instance_id,compilation,disc_number,duration,album_artist,description,resolution,orientation,artist,author,inferred_date,height,is_drm,bucket_display_name,owner_package_name,volume_name,date_modified,writer,date_expires,composer,_display_name,datetaken,mime_type,bitrate,cd_track_number,referer_uri,_id,xmp,year,oem_metadata,_data,_size,album,genre,title,width,is_favorite,is_trashed,group_id,document_id,generation_added,is_download,generation_modified,is_pending,date_added,download_uri,capture_framerate,num_tracks,original_document_id,bucket_id,relative_path,_modifier FROM files WHERE is_download=1",
+  "CREATE VIEW images AS SELECT instance_id,compilation,disc_number,duration,album_artist,description,picasa_id,resolution,latitude,orientation,artist,author,inferred_date,height,is_drm,bucket_display_name,owner_package_name,f_number,volume_name,date_modified,writer,date_expires,composer,_display_name,scene_capture_type,datetaken,mime_type,bitrate,cd_track_number,_id,iso,xmp,year,oem_metadata,_data,_size,album,genre,title,width,longitude,is_favorite,is_trashed,exposure_time,group_id,document_id,generation_added,is_download,generation_modified,is_pending,date_added,mini_thumb_magic,capture_framerate,num_tracks,isprivate,original_document_id,bucket_id,relative_path,_modifier FROM files WHERE media_type=1",
+  "CREATE VIEW search AS SELECT _id,'artist' AS mime_type,artist,NULL AS album,NULL AS title,artist AS text1,NULL AS text2,number_of_albums AS data1,number_of_tracks AS data2,artist_key AS match,'content://media/external/audio/artists/'||_id AS suggest_intent_data,1 AS grouporder FROM artist_info WHERE (artist!='<unknown>') UNION ALL SELECT _id,'album' AS mime_type,artist,album,NULL AS title,album AS text1,artist AS text2,NULL AS data1,NULL AS data2,artist_key||' '||album_key AS match,'content://media/external/audio/albums/'||_id AS suggest_intent_data,2 AS grouporder FROM album_info WHERE (album!='<unknown>') UNION ALL SELECT searchhelpertitle._id AS _id,mime_type,artist,album,title,title AS text1,artist AS text2,NULL AS data1,NULL AS data2,artist_key||' '||album_key||' '||title_key AS match,'content://media/external/audio/media/'||searchhelpertitle._id AS suggest_intent_data,3 AS grouporder FROM searchhelpertitle WHERE (title != '')",
+  "CREATE VIEW searchhelpertitle AS SELECT * FROM audio ORDER BY title_key",
+  "CREATE VIEW video AS SELECT instance_id,compilation,disc_number,duration,album_artist,description,language,resolution,latitude,orientation,artist,color_transfer,author,inferred_date,color_standard,height,is_drm,bucket_display_name,owner_package_name,volume_name,date_modified,writer,date_expires,composer,_display_name,datetaken,mime_type,bitrate,cd_track_number,_id,xmp,tags,year,oem_metadata,category,_data,_size,album,genre,title,width,longitude,is_favorite,is_trashed,group_id,document_id,generation_added,is_download,generation_modified,is_pending,date_added,mini_thumb_magic,capture_framerate,color_range,num_tracks,isprivate,original_document_id,bucket_id,bookmark,relative_path,_modifier FROM files WHERE media_type=3"
+ ],
+ "tables": [
+  {
+   "name": "album_art",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "android_metadata",
+   "rows": 1,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "audio_playlists_map",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "deleted_media",
+   "rows": 11802,
+   "avgRowBytes": 24,
+   "insert": 20,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "files",
+   "rows": 994,
+   "avgRowBytes": 5060,
+   "insert": 0,
+   "update": 0,
+   "delete": 20
+  },
+  {
+   "name": "local_metadata",
+   "rows": 1,
+   "avgRowBytes": 8,
+   "insert": 0,
+   "update": 1,
+   "delete": 0
+  },
+  {
+   "name": "log",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "media_grants",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "search_index_processing_status",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "thumbnails",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  },
+  {
+   "name": "videothumbnails",
+   "rows": 0,
+   "avgRowBytes": 64,
+   "insert": 0,
+   "update": 0,
+   "delete": 0
+  }
+ ],
+ "framesPerOp": 8.024390243902438,
+ "opsPerCommit": 1
+}
