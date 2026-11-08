@@ -263,17 +263,21 @@ def anon_path(path):
         x = x if (PKG.match(x) and not re.search(r"\d{4,}", x)) or WORD.match(x) or x in ("0", "10") else "*"
         if not (out and out[-1] == "*" and x == "*"):
             out.append(x)
-    base = parts[-1] if parts else ""
+    return "/" + "/".join(out + [anon_base(parts[-1] if parts else "")])
+
+
+def anon_base(base):
+    if base.startswith("ino:"):
+        return base
     stem = EXT.sub("", base)
     ext = base[len(stem):]
-    if not WORD.match(stem.replace(".", "_").replace("-", "_")):
-        base = "*" + ext
-    return "/" + "/".join(out + [base])
+    return base if WORD.match(stem.replace(".", "_").replace("-", "_")) else "*" + ext
 
 
 def _anon(o):
-    if isinstance(o, dict):
-        return {k: _anon(v) for k, v in o.items()}
+    if isinstance(o, dict):                              # "file": 경로 없이 이름만 담긴 칸 (request 점)
+        return {k: anon_base(ACCOUNT.sub("account", v)) if k == "file" and isinstance(v, str) and not v.startswith("/") else _anon(v)
+                for k, v in o.items()}
     if isinstance(o, list):
         return [_anon(v) for v in o]
     if isinstance(o, str):
