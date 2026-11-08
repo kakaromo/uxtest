@@ -32,7 +32,7 @@
 		0: 'Read', 1: 'Write', 2: 'buffered Write', 3: 'direct Write', 4: 'fsync', 6: 'unlink', 9: 'atomic commit', 10: 'atomic Write',
 		13: '폴더 fsync', 15: 'SQLite', 16: 'sync', 17: 'rename', 18: 'touch'
 	};
-	const SQLK: Record<number, string> = { 1: 'WAL commit + checkpoint', 2: 'WAL commit', 3: 'WAL 쓰기 (fsync 없음)', 4: 'rollback journal transaction' };
+	const SQLK: Record<number, string> = { 1: 'WAL commit + checkpoint', 2: 'WAL commit', 3: 'WAL Write (fsync 없음)', 4: 'rollback journal transaction' };
 	const opName = (o: number | string) => OPN[+o] ?? `op ${o}`;
 	const sqlKind = (k: number) => (SQLK[k & 0xf] ?? `종류 ${k & 0xf}`) + (k & 0x10 ? ' (DB 다시 열기)' : '');
 	const tgt = (x: number | null) => (x == null ? '' : x < 0 ? `DB${-x}` : `f${x}`);
@@ -98,7 +98,7 @@
 	const itemOp = (it: Item) => (it[1] === 15 ? `SQLite ${sqlKind(it[3])}` : opName(it[1]));
 
 	const burstGrid = (): Grid => ({
-		cols: ['묶음', '시작 s', '끝 s', '주요 동작', 'Read KB', 'Write KB', '동작 줄'],
+		cols: ['burst', '시작 s', '끝 s', '주요 동작', 'Read KB', 'Write KB', '동작 줄'],
 		rows: shown.map(({ b, k }) => [k + 1, b.s, b.e, opsText(b.ops), kb(b.r), kb(b.w), b.ni])
 	});
 	const seqGrid = (): Grid => {
@@ -107,7 +107,7 @@
 			for (const it of b.it ?? [])
 				rows.push(it[1] === 15 ? [k + 1, it[0], tgt(it[2]), itemOp(it), 1, it[4], kb(it[4] * 4096)] : [k + 1, it[0], tgt(it[2]), opName(it[1]), it[3], null, kb(it[4])]);
 		});
-		return { cols: ['묶음', '시각 s', '대상', '동작', '횟수', 'SQLite page', '크기 KB'], rows };
+		return { cols: ['burst', '시각 s', '대상', '동작', '횟수', 'SQLite page', '크기 KB'], rows };
 	};
 	const seqTitle = $derived(doc && rep ? `${doc.name} ${repNo(rep)}회차 동작 순서` : '');
 
@@ -119,7 +119,7 @@
 					rep.tl,
 					rep.steps,
 					`${doc.name} ${repNo(rep)}회차 시간 축 (${rep.tl.bin === 1 ? '1초' : rep.tl.bin + '초'} 단위 MB)`,
-					`원본 측정을 함수로 바꾼 <code>wl/.private/funcs/funcs.bin</code>(<code>wl/gen_funcs.py</code>) → <code>wl/export_func_site.py</code>. TC 가 내는 동작의 바이트를 ${rep.tl.bin}초 칸마다 더했어요. Write 는 Write·buffered Write·atomic Write, SQLite 는 transaction 의 page 수 × 4KB 예요. Step 띠는 원본 측정 때 agent 가 남긴 시각이에요.`
+					`원본 측정을 바꿔 만든 함수 묶음에서 뽑았어요. TC 가 내는 동작의 바이트를 ${rep.tl.bin}초 칸마다 더했어요. Write 는 Write·buffered Write·atomic Write, SQLite 는 transaction 의 page 수 × 4KB 예요. Step 띠는 원본 측정 때 agent 가 남긴 시각이에요.`
 				)
 			: null
 	);
@@ -159,7 +159,7 @@
 			</ToggleGroup.Root>
 		</div>
 		<dl class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-			{#each [['길이', sec(rep.dur), rep.tl.bin > 1 ? `시간 축은 ${rep.tl.bin}초 칸` : ''], ['Read', `${f(rep.rMB, 1)} MB`, ''], ['Write', `${f(rep.wMB, 1)} MB`, 'SQLite 포함'], ['동작 수', n0(rep.n), `묶음 ${n0(rep.bursts.length)}개`], ['파일', `${n0(rep.files)}개`, `미리 채움 ${rep.prefill}개 · ${f(rep.prefillMB, 1)} MB`], ['SQLite DB', `${rep.dbs}개`, `transaction ${n0(rep.ops['15'] ?? 0)}번`]] as k (k[0])}
+			{#each [['길이', sec(rep.dur), rep.tl.bin > 1 ? `시간 축은 ${rep.tl.bin}초 칸` : ''], ['Read', `${f(rep.rMB, 1)} MB`, ''], ['Write', `${f(rep.wMB, 1)} MB`, 'SQLite 포함'], ['동작 수', n0(rep.n), `burst ${n0(rep.bursts.length)}개`], ['파일', `${n0(rep.files)}개`, `미리 채움 ${rep.prefill}개 · ${f(rep.prefillMB, 1)} MB`], ['SQLite DB', `${rep.dbs}개`, `transaction ${n0(rep.ops['15'] ?? 0)}번`]] as k (k[0])}
 				<div class="rounded-xl bg-card px-4 py-3 ring-1 ring-border">
 					<dt class="text-body-3 text-muted-foreground">{k[0]}</dt>
 					<dd class="mt-1 text-h4 font-bold tabular-nums">{k[1]}</dd>
@@ -208,21 +208,21 @@
 	</section>
 
 	<section class="mb-12 space-y-4">
-		<h2 id="bursts" class="text-h2 font-bold">I/O 묶음과 동작 순서</h2>
+		<h2 id="bursts" class="text-h2 font-bold">I/O burst 와 동작 순서</h2>
 		<p class="max-w-[760px] text-body-2 text-muted-foreground">
-			{doc.gap}초 넘게 쉬면 묶음을 끊어요. 줄을 누르면 그 묶음의 동작이 순서대로 펼쳐져요. 같은 파일에 같은 동작이 {Math.round(doc.fold * 1000)}ms 안에 이어지면 한 줄로 접어요. SQLite transaction 은 접지 않아요.
+			{doc.gap}초 넘게 쉬면 burst 를 끊어요. 줄을 누르면 그 burst 의 동작이 순서대로 펼쳐져요. 같은 파일에 같은 동작이 {Math.round(doc.fold * 1000)}ms 안에 이어지면 한 줄로 접어요. SQLite transaction 은 접지 않아요.
 		</p>
 		<CopyTable
-			title="{doc.name} {repNo(rep)}회차 I/O 묶음"
+			title="{doc.name} {repNo(rep)}회차 I/O burst"
 			grid={burstGrid}
-			note={rep.itemsUpTo != null ? `파일 크기 때문에 동작 줄은 앞 ${rep.itemsUpTo}개 묶음까지만 실었어요. 그 뒤 묶음은 동작 수와 양만 보여요.` : ''}
+			note={rep.itemsUpTo != null ? `파일 크기 때문에 동작 줄은 앞 ${rep.itemsUpTo}개 burst 까지만 실었어요. 그 뒤 burst 는 동작 수와 양만 보여요.` : ''}
 		>
 			{#snippet actions()}
 				<Button variant="quiet" size="xs" onclick={() => copyGrid(seqGrid(), seqTitle, '동작 순서')} title="이 회차의 동작 줄 전체(시각, 대상, 동작, 횟수, 크기)를 Confluence 에 붙여넣을 표로 복사"><ListOrdered />Copy sequence</Button>
 				<Button variant="quiet" size="xs" onclick={() => saveCSV(seqGrid(), seqTitle)} title="동작 줄 전체를 UTF-8 CSV 로 저장"><Download />Sequence CSV</Button>
 			{/snippet}
 			<table>
-				<thead><tr><th class="num">묶음</th><th class="num">시각 s</th><th>주요 동작</th><th class="num">Read</th><th class="num">Write</th></tr></thead>
+				<thead><tr><th class="num">burst</th><th class="num">시각 s</th><th>주요 동작</th><th class="num">Read</th><th class="num">Write</th></tr></thead>
 				<tbody>
 					{#each shown.slice(0, limit) as { b, k } (k)}
 						{@const isOpen = open.has(k)}
@@ -230,7 +230,7 @@
 						<tr class="brow" class:open={isOpen} onclick={() => b.it && toggle(k)}>
 							<td class="num">
 								{#if b.it}
-									<button type="button" class="exp" aria-expanded={isOpen} aria-label="{k + 1}번 묶음 동작 {isOpen ? '접기' : '펼치기'}"><ChevronRight class="size-3.5" />{k + 1}</button>
+									<button type="button" class="exp" aria-expanded={isOpen} aria-label="{k + 1}번 burst 동작 {isOpen ? '접기' : '펼치기'}"><ChevronRight class="size-3.5" />{k + 1}</button>
 								{:else}{k + 1}{/if}
 							</td>
 							<td class="num">{f(b.s, 1)} ~ {f(b.e, 1)}</td>
@@ -264,10 +264,10 @@
 			</table>
 		</CopyTable>
 		<div class="flex flex-wrap gap-2">
-			{#if nSmall}<Button variant="secondary" size="sm" onclick={() => (showAll = !showAll)}>{showAll ? '큰 묶음만 보기' : `작은 묶음 ${n0(nSmall)}개도 보기`}</Button>{/if}
-			{#if shown.length > limit}<Button variant="secondary" size="sm" onclick={() => (limit += 300)}>묶음 더 보기 ({n0(shown.length - limit)}개 남음)</Button>{/if}
+			{#if nSmall}<Button variant="secondary" size="sm" onclick={() => (showAll = !showAll)}>{showAll ? '큰 burst 만 보기' : `작은 burst ${n0(nSmall)}개도 보기`}</Button>{/if}
+			{#if shown.length > limit}<Button variant="secondary" size="sm" onclick={() => (limit += 300)}>burst 더 보기 ({n0(shown.length - limit)}개 남음)</Button>{/if}
 		</div>
-		<p class="text-body-3 text-ink-3">작은 묶음은 100KB 아래이고 동작 줄이 6개보다 적은 묶음이에요. Copy table 은 지금 보이는 묶음 목록을, Copy sequence 는 이 회차의 동작 줄 전체를 복사해요.</p>
+		<p class="text-body-3 text-ink-3">작은 burst 는 100KB 아래이고 동작 줄이 6개보다 적은 burst 예요. Copy table 은 지금 보이는 burst 목록을, Copy sequence 는 이 회차의 동작 줄 전체를 복사해요.</p>
 	</section>
 
 	<section class="mb-12 space-y-4">
