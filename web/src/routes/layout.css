@@ -61,6 +61,8 @@
 	/* 차트: 읽기 = 토스 블루, 쓰기 = grey-800 (dataviz 검증한 기존 보고서 값) */
 	--read: #3182f6;
 	--write: #333d4b;
+	--wd: #e8890c; /* direct Write = orange-500 */
+	--db: #8a5cf0; /* SQLite = purple-500 */
 	--r1: #90c2ff;
 	--r2: #64a8ff;
 	--r3: #3182f6;
@@ -110,6 +112,8 @@
 	--warning: #ffb134;
 	--read: #3485fa;
 	--write: #c3c3c6;
+	--wd: #ffb134;
+	--db: #a98bff;
 	--r1: #1957c2;
 	--r2: #2272eb;
 	--r3: #3485fa;

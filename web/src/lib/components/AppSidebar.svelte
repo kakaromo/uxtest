@@ -88,7 +88,7 @@
 					</Sidebar.MenuButton>
 				</Sidebar.MenuItem>
 				<Sidebar.MenuItem>
-					<Sidebar.MenuButton isActive={page.route.id === '/tc/func'}>
+					<Sidebar.MenuButton isActive={page.route.id?.startsWith('/tc/func') ?? false}>
 						{#snippet child({ props })}
 							<a href={resolve('/tc/func')} onclick={close} {...props}><FlaskConical />시나리오 함수 TC</a>
 						{/snippet}

@@ -1,19 +1,27 @@
 <script lang="ts">
 	// 표를 감싸 [표 복사][CSV] 도구를 붙인다. 안의 <table> 을 그대로 읽어 html+TSV 로 복사한다.
+	// 펼치는 줄처럼 DOM 이 복사용 표와 다르면 grid 로 복사할 표를 따로 준다. actions 는 버튼 옆에 더 붙일 도구.
 	import type { Snippet } from 'svelte';
 	import { Button } from '#lib/components/ui/button/index.js';
-	import { copyGrid, saveCSV, tableGrid } from '#lib/clipboard.js';
+	import { copyGrid, saveCSV, tableGrid, type Grid } from '#lib/clipboard.js';
 	import { Copy, Download } from '@lucide/svelte';
 
-	let { title, note = '', children }: { title: string; note?: string; children: Snippet } = $props();
+	let {
+		title,
+		note = '',
+		grid: custom,
+		actions,
+		children
+	}: { title: string; note?: string; grid?: () => Grid; actions?: Snippet; children: Snippet } = $props();
 	let box: HTMLDivElement;
-	const grid = () => tableGrid(box.querySelector('table')!);
+	const grid = () => (custom ? custom() : tableGrid(box.querySelector('table')!));
 </script>
 
 <div class="rounded-xl border bg-card">
 	<div class="flex flex-wrap items-center gap-x-3 gap-y-1 border-b px-4 py-2.5">
 		<h4 class="min-w-0 flex-1 text-[14px] font-semibold">{title}</h4>
-		<div class="flex gap-1">
+		<div class="flex flex-wrap gap-1">
+			{#if actions}{@render actions()}{/if}
 			<Button variant="quiet" size="xs" onclick={() => copyGrid(grid(), title)} title="엑셀·시트·Confluence 에 붙여넣을 수 있게 복사"><Copy />Copy table</Button>
 			<Button variant="quiet" size="xs" onclick={() => saveCSV(grid(), title)} title="UTF-8 CSV 로 저장"><Download />CSV</Button>
 		</div>

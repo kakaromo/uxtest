@@ -590,3 +590,116 @@ export function groupBarSpec(
 		}
 	};
 }
+
+/** 시나리오 함수 TC 동작 순서: 칸마다 Read·Write·direct Write·SQLite 누적 막대, fsync·SQLite transaction 수, Step 띠 */
+export type SeqTl = { bin: number; r: number[]; w: number[]; wd: number[]; db: number[]; fsync: number[]; sql: number[] };
+export type SeqStep = { i: number; label: string; s: number; e: number; r: number; w: number; n: number };
+export function tcSeqSpec(tl: SeqTl, steps: SeqStep[], title: string, prov: string): ChartSpec {
+	const n = tl.r.length;
+	const b = tl.bin;
+	const unit = b === 1 ? 'MB' : `MB/${b}초`;
+	const stepAt = (x: number) => steps.find((s) => s.s <= x && x < s.e)?.label ?? '';
+	const lb = Array.from({ length: n }, (_, i) => {
+		const st = stepAt(i * b + b / 2);
+		return `${i * b} ~ ${(i + 1) * b}초${st ? ' · ' + st : ''}`;
+	});
+	const xs = Array.from({ length: n }, (_, i) => i * b + b / 2);
+	const pts = (a: number[], u: string) => a.map((v, i) => ({ value: [xs[i], v], lb: lb[i], u }));
+	return {
+		title,
+		prov,
+		data: () => ({
+			cols: ['시작 s', '끝 s', 'Read MB', 'Write MB', 'direct Write MB', 'SQLite MB', 'fsync', 'SQLite tx', 'Step'],
+			rows: tl.r.map((_, i) => [i * b, (i + 1) * b, tl.r[i], tl.w[i], tl.wd[i], tl.db[i], tl.fsync[i], tl.sql[i], stepAt(i * b + b / 2)])
+		}),
+		option: (t) => {
+			const top = nice(Math.max(0.1, ...tl.r.map((v, i) => v + tl.w[i] + tl.wd[i] + tl.db[i])));
+			const x = (gi: number, show: boolean) => ({
+				type: 'value',
+				gridIndex: gi,
+				min: 0,
+				max: n * b,
+				axisLabel: { ...t.axisLabel, show, formatter: '{value}s' },
+				axisTick: { show: false },
+				axisLine: { show: false },
+				splitLine: { show: false }
+			});
+			const bar = (name: string, a: number[], color: string) => ({
+				type: 'bar',
+				name,
+				stack: 'io',
+				data: pts(a, 'MB'),
+				barWidth: '85%',
+				large: n > 600,
+				itemStyle: { color },
+				emphasis: { disabled: true }
+			});
+			return {
+				animation: false,
+				axisPointer: { link: [{ xAxisIndex: 'all' }] },
+				legend: { ...t.legend, top: 0, left: 0, data: ['Read', 'Write', 'direct Write', 'SQLite', 'fsync', 'SQLite tx'] },
+				tooltip: {
+					...t.tip,
+					trigger: 'axis',
+					axisPointer: { type: 'shadow' },
+					formatter: (ps: any) => {
+						const a = (Array.isArray(ps) ? ps : [ps]).filter((p: any) => p.seriesName !== 'Step' && p.data && p.data.lb);
+						if (!a.length) return '';
+						let h = '<b>' + a[0].data.lb + '</b>';
+						for (const p of a) h += '<br>' + p.marker + p.seriesName + ' ' + (p.data.u === 'n' ? p.data.value[1] + '번' : p.data.value[1].toFixed(2) + ' MB');
+						return h;
+					}
+				},
+				grid: [
+					{ left: 52, right: 28, top: 52, bottom: 150 },
+					{ left: 52, right: 28, height: 44, bottom: 90 },
+					{ left: 52, right: 28, height: 22, bottom: 50 }
+				],
+				dataZoom: [
+					{ type: 'inside', xAxisIndex: [0, 1, 2], filterMode: 'none' },
+					{ type: 'slider', xAxisIndex: [0, 1, 2], height: 18, bottom: 6, filterMode: 'none', borderColor: 'transparent', fillerColor: 'rgba(49,130,246,0.15)', handleStyle: { color: t.primary }, textStyle: { color: t.mute, fontSize: 10 }, labelFormatter: (v: number) => Math.round(v) + 's' }
+				],
+				xAxis: [x(0, false), x(1, false), x(2, true)],
+				yAxis: [
+					{ type: 'value', gridIndex: 0, max: top, name: unit, nameTextStyle: { color: t.mute, align: 'right', fontSize: 11 }, axisLabel: t.axisLabel, splitLine: t.split },
+					{ type: 'value', gridIndex: 1, minInterval: 1, splitNumber: 1, axisLabel: t.axisLabel, splitLine: t.split },
+					{ type: 'value', gridIndex: 2, min: 0, max: 1, axisLabel: { show: false }, axisTick: { show: false }, axisLine: { show: false }, splitLine: { show: false }, name: 'Step', nameLocation: 'middle', nameRotate: 0, nameGap: 8, nameTextStyle: { color: t.mute, fontSize: 11, align: 'right' } }
+				],
+				series: [
+					bar('Read', tl.r, t.read),
+					bar('Write', tl.w, t.write),
+					bar('direct Write', tl.wd, t.wd),
+					bar('SQLite', tl.db, t.db),
+					{ type: 'bar', name: 'fsync', xAxisIndex: 1, yAxisIndex: 1, data: pts(tl.fsync, 'n'), barWidth: '42%', barGap: '10%', large: n > 600, itemStyle: { color: t.mute }, emphasis: { disabled: true } },
+					{ type: 'bar', name: 'SQLite tx', xAxisIndex: 1, yAxisIndex: 1, data: pts(tl.sql, 'n'), barWidth: '42%', barGap: '10%', large: n > 600, itemStyle: { color: t.db }, emphasis: { disabled: true } },
+					{
+						type: 'custom',
+						name: 'Step',
+						xAxisIndex: 2,
+						yAxisIndex: 2,
+						clip: true,
+						silent: true,
+						dimensions: ['s', 'e', 'k', { name: 'label', type: 'ordinal' }],
+						encode: { x: [0, 1], y: 2, tooltip: [] },
+						itemStyle: { color: t.primary },
+						data: steps.map((s, i) => ({ name: s.label, value: [s.s, s.e, i % 2, s.label] })),
+						renderItem: (_p: any, api: any) => {
+							const a = api.coord([api.value(0), 1]);
+							const z = api.coord([api.value(1), 0]);
+							const w = Math.max(z[0] - a[0], 1);
+							const c = api.visual('color');
+							const text = w > 40 && api.ordinalRawValue ? String(api.ordinalRawValue(3)) : '';
+							return {
+								type: 'rect',
+								shape: { x: a[0], y: a[1], width: w, height: z[1] - a[1] },
+								style: { fill: c, opacity: api.value(2) ? 0.22 : 0.12 },
+								textContent: { style: { text, fill: c, fontSize: 11, width: w - 8, overflow: 'truncate' } },
+								textConfig: { position: 'insideLeft' }
+							};
+						}
+					}
+				]
+			};
+		}
+	};
+}

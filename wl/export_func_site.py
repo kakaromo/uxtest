@@ -190,6 +190,142 @@ def export():
     OUT.write_text(json.dumps(DATA, ensure_ascii=False, separators=(",", ":")))
     print(f"  tcfunc.json: 함수 {len(funcs)}개, 가중치 TC {len(mixes)}개, {OUT.stat().st_size / 1024:.0f} KB")
 
+    export_seq(d, meta, cur, cat_of)
+
+
+# ---- 함수별 동작 순서 (tcseq-<id>.json, /tc/func/<id> 페이지)
+# 공개 값만: 파일은 회차 안 번호(f12), DB 는 DB 파일 순서 번호(DB3). 파일 이름·폴더·SQL·테이블 이름은 넣지 않는다.
+SEQ_GAP = 0.3  # 이보다 오래 쉬면 묶음을 끊는다 (초)
+SEQ_FOLD = 0.05  # 같은 파일·같은 동작이 이 간격 안에 이어지면 한 줄로 접는다 (초)
+SEQ_ITEM_BURSTS = 300  # 앞 묶음 몇 개까지 동작 줄을 싣는다
+SEQ_ITEM_CAP = 15000  # 회차마다 싣는 동작 줄 상한 (파일 크기)
+W_OPS = (1, 2, 9, 10)  # 시간 축 Write (Write·buffered·atomic)
+WB_OPS = (1, 2, 3, 9, 10)  # Write 바이트 (direct 포함)
+
+
+def _steps_of(fid):
+    """시나리오 전체 step label 과, 회차(repeat)별 측정 step (s-<id>.json)."""
+    labels = []
+    ps = glob.glob(str(ROOT / "scenarios" / "*" / f"{fid}.scenario.json"))
+    if ps:
+        sc = json.load(open(ps[0]))
+        labels = [(s.get("params") or {}).get("label") or s.get("type", "") for s in sc.get("steps", [])]
+        loops = [{"a": lp["startStep"], "b": lp["endStep"], "n": lp["count"]} for lp in sc.get("loops") or []]
+    else:
+        loops = []
+    sp = ROOT / "web" / ".private" / "data" / f"s-{fid}.json"
+    runs = {}
+    if sp.exists():
+        sd = json.load(open(sp))
+        if not labels:
+            labels = [s["label"] for s in sd.get("steps", [])]
+        for r in sd["runs"]:
+            runs[r["repeat"]] = [{"i": s["i"], "label": s["label"], "s": round(s["s"], 2), "e": round(s["e"], 2),
+                                  "r": round(s["readMB"], 2), "w": round(s["writeMB"], 2), "n": s["n"]}
+                                 for s in r["steps"] if s["type"] not in ("trace_start", "trace_stop")]
+        marks = {s["i"]: s["type"] for r in sd["runs"] for s in r["steps"] if s["type"] in ("trace_start", "trace_stop")}
+    else:
+        marks = {}
+    return labels, loops, runs, marks
+
+
+def _rep_seq(d, r, rep_steps):
+    ft = np.dtype([("size", "<u8"), ("fl", "u1")])
+    rt = np.dtype([("t", "<u8"), ("op", "u1"), ("f", "<u4"), ("off", "<u8"), ("len", "<u4")])
+    fl = np.frombuffer(d, ft, r["nfiles"], r["off"])
+    rq = np.frombuffer(d, rt, r["nreq"], r["off"] + fl.nbytes)
+    isdb = (fl["fl"] & 2) > 0
+    dbnum = np.zeros(len(fl), np.int64)
+    dbnum[isdb] = np.arange(1, isdb.sum() + 1)
+    pre = ((fl["fl"] & 1) > 0) & ~isdb
+    op = rq["op"].astype(np.int64)
+    t = rq["t"].astype(np.float64) / 1e6
+    fidx = rq["f"].astype(np.int64)
+    sql = op == 15
+    pages = (rq["off"] & 0xFFFFFFFF).astype(np.int64)
+    nbytes = np.where(sql, pages * 4096, rq["len"].astype(np.int64))
+    isr = op == 0
+    isw = np.isin(op, WB_OPS) | sql
+    dur = float(r["durSec"])
+    ops = collections.Counter(op.tolist())
+
+    # 시간 축 (10분 넘으면 10초 칸)
+    bin_s = 10 if dur > 600 else 1
+    nb = max(1, int(np.ceil(max(dur, float(t[-1]) if len(t) else 0) / bin_s)))
+    bi = np.minimum((t // bin_s).astype(np.int64), nb - 1)
+
+    def tl(mask, w=None):
+        a = np.bincount(bi[mask], weights=None if w is None else w[mask], minlength=nb)
+        return a
+
+    mbr = lambda a: [round(float(x) / 1e6, 3) for x in a]
+    timeline = {"bin": bin_s, "r": mbr(tl(isr, nbytes)), "w": mbr(tl(np.isin(op, W_OPS), nbytes)), "wd": mbr(tl(op == 3, nbytes)),
+                "db": mbr(tl(sql, nbytes)), "fsync": [int(x) for x in tl(op == 4)], "sql": [int(x) for x in tl(sql)]}
+
+    # 묶음
+    cuts = np.nonzero(np.diff(t) > SEQ_GAP)[0] + 1 if len(t) else np.array([], np.int64)
+    starts = np.concatenate([[0], cuts]) if len(t) else np.array([], np.int64)
+    ends = np.concatenate([cuts, [len(t)]]) if len(t) else np.array([], np.int64)
+    bursts = []
+    nitems = 0
+    cut_at = None
+    for k, (a, b) in enumerate(zip(starts.tolist(), ends.tolist())):
+        oc = collections.Counter(op[a:b].tolist())
+        bu = {"s": round(float(t[a]), 3), "e": round(float(t[b - 1]), 3), "ops": {str(o): c for o, c in sorted(oc.items(), key=lambda x: -x[1])},
+              "r": int(nbytes[a:b][isr[a:b]].sum()), "w": int(nbytes[a:b][isw[a:b]].sum())}
+        # 동작 줄: 같은 op·같은 파일이 50ms 안에 이어지면 접기, SQLite 는 접지 않음
+        items = []
+        last = None
+        for j in range(a, b):
+            o = int(op[j])
+            fj = int(fidx[j])
+            if o == 15:
+                items.append([round(float(t[j]), 3), 15, -int(dbnum[fj]) if fj < len(fl) and isdb[fj] else None, int(rq["len"][j] & 0x1F), int(pages[j])])
+                last = None
+                continue
+            tgt = None if o == 16 or fj >= len(fl) else (-int(dbnum[fj]) if isdb[fj] else fj)
+            if last is not None and last[1] == o and last[2] == tgt and t[j] - last_t <= SEQ_FOLD:
+                last[3] += 1
+                last[4] += int(nbytes[j])
+                last_t = t[j]
+                continue
+            last = [round(float(t[j]), 3), o, tgt, 1, int(nbytes[j])]
+            last_t = t[j]
+            items.append(last)
+        bu["ni"] = len(items)
+        if cut_at is None and (k >= SEQ_ITEM_BURSTS or nitems + len(items) > SEQ_ITEM_CAP):
+            cut_at = k
+        if cut_at is None:
+            bu["it"] = items
+            nitems += len(items)
+        bursts.append(bu)
+
+    st = {"dur": round(dur, 1), "files": int((~isdb).sum()), "prefill": int(pre.sum()), "prefillMB": round(float(fl["size"][pre].sum()) / 1e6, 1),
+          "dbs": int(isdb.sum()), "ops": {str(o): c for o, c in sorted(ops.items(), key=lambda x: -x[1])}, "n": int(len(op)),
+          "rMB": round(float(nbytes[isr].sum()) / 1e6, 1), "wMB": round(float(nbytes[isw].sum()) / 1e6, 1)}
+    return {"seg": r["seg"], **st, "tl": timeline, "bursts": bursts, "itemsUpTo": cut_at, "steps": rep_steps}
+
+
+def export_seq(d, meta, cur, cat_of):
+    out = OUT.parent
+    sizes = []
+    for fid, v in meta["funcs"].items():
+        labels, loops, runs, marks = _steps_of(fid)
+        reps = []
+        for r in v["reps"]:
+            repeat = int(r["seg"].split("-")[-1])
+            reps.append(_rep_seq(d, r, runs.get(repeat, [])))
+        cm = cur.get(fid) or {}
+        checks = [{"k": CHECK_KO.get(k, k), "o": c.get("orig"), "t": c.get("tc"), "ok": c.get("ok")} for k, c in (cm.get("checks") or {}).items()]
+        doc = {"id": fid, "name": v["name"], "g": cat_of.get(fid), "gk": GROUP_KO.get(cat_of.get(fid), ""), "allSteps": labels, "loops": loops,
+               "marks": {str(i): ty for i, ty in marks.items()}, "reps": reps, "checks": checks, "pass": cm.get("pass"), "of": cm.get("of"),
+               "checkRep": cm.get("rep"), "gap": SEQ_GAP, "fold": SEQ_FOLD}
+        p = out / f"tcseq-{fid}.json"
+        p.write_text(json.dumps(doc, ensure_ascii=False, separators=(",", ":")))
+        sizes.append((p.stat().st_size, fid))
+    sizes.sort()
+    print(f"  tcseq-*.json: 함수 {len(sizes)}개, 합 {sum(s for s, _ in sizes) / 1e6:.1f} MB, 가장 큰 것 {sizes[-1][1]} {sizes[-1][0] / 1024:.0f} KB")
+
 
 if __name__ == "__main__":
     export()

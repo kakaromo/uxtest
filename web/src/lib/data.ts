@@ -1,7 +1,7 @@
 // static/data/*.json 읽기 (export_web.py → scripts/copy-data.mjs 가 넣은 것)
 import { asset } from '$app/paths';
 
-export type Manifest = { v: number; types: Record<string, string[]> };
+export type Manifest = { v: number; types: Record<string, string[]>; tcseq?: string[] };
 
 const cache = new Map<string, Promise<unknown>>();
 

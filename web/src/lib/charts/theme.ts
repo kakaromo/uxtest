@@ -21,6 +21,8 @@ export function theme() {
 		primary: css('--primary'),
 		read: css('--read'),
 		write: css('--write'),
+		wd: css('--wd'),
+		db: css('--db'),
 		ramp: ['--r1', '--r2', '--r3', '--r4', '--r5'].map(css),
 		axisLabel: { color: mute, fontFamily: font, fontSize: 11 },
 		split: { lineStyle: { color: css('--muted') } },

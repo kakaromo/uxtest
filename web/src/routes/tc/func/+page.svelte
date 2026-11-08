@@ -239,7 +239,7 @@
 		<section class="mb-12 space-y-4">
 			<h2 id="funcs" class="text-h2 font-bold">시나리오 함수 구조</h2>
 			<p class="max-w-[760px] text-body-2 text-muted-foreground">
-				함수마다 회차 하나의 평균이에요. W MB는 파일 동작으로 재생하는 Write예요. DB Write는 SQL 묶음으로 바뀌어 빠져 있어요.
+				함수마다 회차 하나의 평균이에요. W MB는 파일 동작으로 재생하는 Write예요. DB Write는 SQL 묶음으로 바뀌어 빠져 있어요. 함수 이름을 누르면 그 함수의 동작 순서 페이지로 가요.
 			</p>
 			<div class="chips" role="group" aria-label="유형 거르기">
 				<button type="button" class="chip" aria-pressed={fsel === 'all'} onclick={() => (fsel = 'all')}>전체</button>
@@ -253,7 +253,7 @@
 							<tr class="grp"><td colspan="14">{g.gk}</td></tr>
 							{#each doc.funcs.filter((x) => x.g === g.g) as x (x.id)}
 								{@const s = x.s}
-								<tr><td class="whitespace-nowrap"><a href={resolve('/s/[id]', { id: x.id })} class="hover:text-primary">{s.name}</a></td><td class="num">{s.dur}</td><td class="num">{s.files}</td><td class="num">{s.rmb}</td><td class="num">{s.wmb}</td><td class="num">{s.R}</td><td class="num">{s.W}</td><td class="num">{s.WD}</td><td class="num">{s.FS}</td><td class="num">{s.UN}</td><td class="num">{s.AW}</td><td class="num">{s.SQL}</td><td class="num">{s.db}</td><td class="num">{s.reps}</td></tr>
+								<tr><td class="whitespace-nowrap"><a href={resolve('/tc/func/[id]', { id: x.id })} class="hover:text-primary">{s.name}</a></td><td class="num">{s.dur}</td><td class="num">{s.files}</td><td class="num">{s.rmb}</td><td class="num">{s.wmb}</td><td class="num">{s.R}</td><td class="num">{s.W}</td><td class="num">{s.WD}</td><td class="num">{s.FS}</td><td class="num">{s.UN}</td><td class="num">{s.AW}</td><td class="num">{s.SQL}</td><td class="num">{s.db}</td><td class="num">{s.reps}</td></tr>
 							{/each}
 						{/each}
 					</tbody>
@@ -280,7 +280,7 @@
 							{#each doc.funcs.filter((x) => x.g === g.g) as x (x.id)}
 								{@const r = x.p / x.n}
 								<tr>
-									<td class="whitespace-nowrap">{x.s.name}</td>
+									<td class="whitespace-nowrap"><a href={resolve('/tc/func/[id]', { id: x.id })} class="hover:text-primary">{x.s.name}</a></td>
 									<td class="num">{x.p}/{x.n}</td>
 									<td class="num"><span class="pill" class:ok={r >= 0.85} class:ng={r < 0.7}>{f(r * 100, 0)}</span></td>
 									<td class="num whitespace-nowrap text-ink-3">{x.prev.join(' · ') || '–'}</td>
