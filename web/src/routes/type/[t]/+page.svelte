@@ -9,7 +9,7 @@
 	import MiniTimeline from '#lib/components/MiniTimeline.svelte';
 	import { app } from '#lib/state.svelte.js';
 	import { volSpec, mapSpec, stackSpec, miniOption, PROV_TRACE } from '#lib/charts/build.js';
-	import { label, rowsOf, nameOf, rowOf, PAIRS, cname, variants, STANDBY_POWER } from '#lib/view.js';
+	import { label, rowsOf, nameOf, rowOf, PAIRS, cname, variants, variantsOf, STANDBY_POWER } from '#lib/view.js';
 	import { copy, copyGrid } from '#lib/clipboard.js';
 	import { theme } from '#lib/charts/theme.js';
 	import { chartsHTML } from '#lib/charts/source.js';
@@ -19,15 +19,19 @@
 	import { Table2, CodeXml } from '@lucide/svelte';
 
 	const t = $derived(page.params.t!);
-	const rs = $derived(rowsOf(t));
-	const ids = $derived([...new Set(rs.map((r) => r.id))]);
+	// 변형(참고용 항목, 예: S5-usb)은 Volume·signature·Distributions·Timelines·Scenarios 에 원래 시나리오 바로 뒤로 넣는다.
+	// 유형 Summary 문장, 시나리오 수, 비교 쌍, Jank 에는 넣지 않는다 (ids 는 원래 시나리오만)
+	const base = $derived(rowsOf(t));
+	const rs = $derived(base.flatMap((r, i) => (base[i + 1]?.id === r.id ? [r] : [r, ...variantsOf(r.id)])));
+	const ids = $derived([...new Set(base.map((r) => r.id))]);
+	const cards = $derived(ids.flatMap((id) => [id, ...variantsOf(id).map((v) => v.id)]));
+	const isVar = (id: string) => variants().some((v) => v.id === id);
+	const rowAny = (id: string) => rowOf(id) ?? variants().find((v) => v.id === id)!;
 	const art = $derived(app.content?.types[t]);
 	const B = $derived(app.index!.meta.buckets);
 	const pairs = $derived(PAIRS.filter((p) => ids.includes(p.a) || ids.includes(p.b)));
 	const jank = $derived((app.index?.jank ?? []).filter((j) => ids.includes(j.scenario) && j.jank));
 	const cats = $derived(rs.map(cname));
-	// 변형(참고용 항목)은 위 집계·차트에 넣지 않고 Scenarios 아래에 따로 보여 준다
-	const vrs = $derived(variants().filter((v) => v.type === t));
 	const stby = $derived(ids.includes(STANDBY_POWER.base));
 	// Distributions 의 Read·Write 차트를 HTML 조각 하나로 복사 (Confluence HTML macro 하나에 붙이기)
 	async function copyDist(keys: (keyof typeof distSpecs)[], name: string) {
@@ -250,12 +254,13 @@
 <section class="mb-12 space-y-4">
 	<h2 id="scenarios" class="text-h2 font-bold">Scenarios</h2>
 	<div class="grid gap-3 sm:grid-cols-2">
-		{#each ids as id (id)}
-			{@const r = rowOf(id)!}
-			<a href={resolve('/s/[id]', { id })} class="flex flex-col gap-1 rounded-xl border bg-card p-4 transition-colors hover:border-primary">
+		{#each cards as id (id)}
+			{@const r = rowAny(id)}
+			{@const v = isVar(id)}
+			<a href={resolve('/s/[id]', { id })} class="flex flex-col gap-1 rounded-xl border bg-card p-4 transition-colors hover:border-primary {v ? 'border-dashed' : ''}">
 				<div class="flex items-center gap-2">
 					<b class="text-[15px]">{id}</b>
-					<Badge variant="secondary">P{r.prio}</Badge>
+					{#if v}<Badge variant="outline">참고용</Badge>{:else}<Badge variant="secondary">P{r.prio}</Badge>{/if}
 					{#if !r.success}<Badge variant="destructive">중간에 끊김</Badge>{/if}
 					<span class="ml-auto text-body-3 text-ink-3 tabular-nums">R {mb(r.readMB.med)} · W {mb(r.writeMB.med)}</span>
 				</div>
@@ -263,26 +268,14 @@
 			</a>
 		{/each}
 	</div>
-	{#if vrs.length || stby}
-		<h3 id="reference" class="pt-2 text-title-1 font-semibold">참고용 측정</h3>
-		<p class="text-body-2 text-muted-foreground">조건 하나만 바꿔 잰 항목이에요. 위의 Volume·signature·Distributions·Workload map 과 TC 비교에는 넣지 않았어요.</p>
+	{#if stby}
+		<h3 id="reference" class="pt-2 text-title-1 font-semibold">USB 연결 비교</h3>
+		<p class="text-body-2 text-muted-foreground">참고용 항목(점선 칸)은 조건 하나만 바꿔 잰 측정이에요. 위 차트와 표에는 원래 시나리오 바로 뒤에 같이 넣었지만, 유형 Summary·비교 쌍·TC 비교에는 넣지 않았어요.</p>
 		<div class="grid gap-3 sm:grid-cols-2">
-			{#each vrs as v (v.id)}
-				<a href={resolve('/s/[id]', { id: v.id })} class="flex flex-col gap-1 rounded-xl border border-dashed bg-card p-4 transition-colors hover:border-primary">
-					<div class="flex items-center gap-2">
-						<b class="text-[15px]">{v.id}</b>
-						<Badge variant="outline">참고용</Badge>
-						<span class="ml-auto text-body-3 text-ink-3 tabular-nums">R {mb(v.readMB.med)} · W {mb(v.writeMB.med)}</span>
-					</div>
-					<p class="text-body-2">{nameOf(v)}</p>
-				</a>
-			{/each}
-			{#if stby}
-				<a href={resolve('/standby-power')} class="flex flex-col gap-1 rounded-xl border border-dashed bg-card p-4 transition-colors hover:border-primary">
-					<div class="flex items-center gap-2"><b class="text-[15px]">비교</b><Badge variant="outline">배터리 ↔ USB</Badge></div>
-					<p class="text-body-2">대기 3시간 USB·배터리 비교 (suspend, burst, Hibern8)</p>
-				</a>
-			{/if}
+			<a href={resolve('/standby-power')} class="flex flex-col gap-1 rounded-xl border border-dashed bg-card p-4 transition-colors hover:border-primary">
+				<div class="flex items-center gap-2"><b class="text-[15px]">비교</b><Badge variant="outline">배터리 ↔ USB</Badge></div>
+				<p class="text-body-2">대기 3시간 USB·배터리 비교 (suspend, burst, Hibern8)</p>
+			</a>
 		</div>
 	{/if}
 </section>
