@@ -9,6 +9,12 @@
 	import { load } from '#lib/data.js';
 	import { stbyStripSpec, stbyWindowSpec } from '#lib/charts/build.js';
 	import { STANDBY_POWER } from '#lib/view.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { copy, copyGrid } from '#lib/clipboard.js';
+	import { theme } from '#lib/charts/theme.js';
+	import { chartsHTML } from '#lib/charts/source.js';
+	import { toast } from 'svelte-sonner';
+	import { Table2, CodeXml } from '@lucide/svelte';
 	import { f, n0 } from '#lib/fmt.js';
 	import type { StandbyPower, StbyRun } from '#lib/types.js';
 
@@ -74,6 +80,25 @@
 			spec: stbyStripSpec(m.k, runs.map((r) => ({ label: r.label, usb: r.power === 'usb', v: m.get(r) })), m.unit, m.d)
 		}))
 	);
+
+	// 측정마다 같은 차이: 차트 2개씩 묶어 HTML 하나·데이터 표 하나로 복사 (Confluence HTML macro 하나에 붙이기)
+	const pairs = $derived([0, 2, 4].map((i) => strips.slice(i, i + 2)).filter((p) => p.length));
+	const cap = (s: (typeof strips)[number]) => `배터리 ${rng(bat, s.get, s.d, s.unit)} · USB ${rng(usb, s.get, s.d, s.unit)}`;
+	async function copyPair(p: typeof strips) {
+		const th = theme();
+		const html = chartsHTML(
+			p.map((s) => ({ o: s.spec.option(th), title: `${s.k} (${cap(s)})`, height: 130 })),
+			{ title: `대기 3시간 · ${p.map((s) => s.k).join(' · ')}`, bg: th.surface, fg: th.fg, caption: '점 하나가 측정 1회예요(회색 배터리, 파랑 USB 연결).' }
+		);
+		(await copy(html)) ? toast.success(`차트 ${p.length}개를 HTML 하나로 복사했어요. Confluence HTML macro에 붙이면 돼요`) : toast.error('복사하지 못했어요');
+	}
+	function copyPairData(p: typeof strips) {
+		copyGrid(
+			{ cols: ['측정', '전원', ...p.map((s) => `${s.k} (${s.unit})`)], rows: runs.map((r) => [r.label, r.power === 'usb' ? 'USB' : '배터리', ...p.map((s) => s.get(r))]) },
+			`대기 3시간 · ${p.map((s) => s.k).join(' · ')}`,
+			'데이터'
+		);
+	}
 
 	type Line = [string, (r: StbyRun) => string];
 	const T_SUSP: Line[] = [
@@ -244,11 +269,22 @@
 		<section class="mb-12 space-y-4">
 			<h2 id="repeat" class="text-h2 font-bold">측정마다 같은 차이가 나와요</h2>
 			<p class="text-body-2 text-muted-foreground">점 하나가 측정 1회예요(회색 배터리, 파랑 USB 연결). 배터리와 USB 의 범위가 겹치지 않아요.</p>
-			<div class="grid gap-3 lg:grid-cols-2">
-				{#each strips as s (s.k)}
-					<Chart spec={s.spec} height={130} caption="배터리 {rng(bat, s.get, s.d, s.unit)} · USB {rng(usb, s.get, s.d, s.unit)}" />
-				{/each}
-			</div>
+			{#each pairs as p (p[0].k)}
+				<div class="space-y-2">
+					<div class="flex flex-wrap items-center gap-2">
+						<span class="text-body-3 text-ink-3">{p.map((s) => s.k).join(' · ')}</span>
+						<span class="ml-auto flex gap-1">
+							<Button variant="quiet" size="xs" onclick={() => copyPair(p)}><CodeXml />2개 HTML 복사</Button>
+							<Button variant="quiet" size="xs" onclick={() => copyPairData(p)}><Table2 />2개 데이터 복사</Button>
+						</span>
+					</div>
+					<div class="grid gap-3 lg:grid-cols-2">
+						{#each p as s (s.k)}
+							<Chart spec={s.spec} height={130} caption={cap(s)} />
+						{/each}
+					</div>
+				</div>
+			{/each}
 		</section>
 
 		<section class="mb-12 space-y-4">
