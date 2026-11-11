@@ -189,6 +189,19 @@
 			<p class="text-body-3 text-ink-3">범위는 측정 회차의 최솟값~최댓값이에요. suspend 시도는 기록을 넣은 뒤 잰 배터리 {batS.length}회, USB {usbS.length}회 값이에요. burst 는 3시간을 다 잰 측정만 봤어요.</p>
 		</section>
 
+		<section id="burst-def" class="mb-12 space-y-3 rounded-2xl bg-muted p-5">
+			<h2 class="text-title-1 font-semibold">burst 란</h2>
+			<p class="text-body-2">
+				대기 중에는 request 가 고르게 오지 않고, 몇 개가 한꺼번에 몰려 왔다가 한동안 아무것도 오지 않아요. 이렇게 몰려 온 request 한 묶음을 burst 라고 불러요.
+			</p>
+			<ul class="list-disc space-y-1 pl-5 text-body-2 text-muted-foreground">
+				<li><b class="text-foreground">나누는 기준:</b> Read·Write·Flush·Discard request 를 시간순으로 놓고, {f(D.params.burstGapSec, 0)}초 이상 아무 request 가 없으면 거기서 burst 를 끊어요. 한 burst 는 보통 0.1초 안에 끝나요.</li>
+				<li><b class="text-foreground">burst 주기:</b> 한 burst 가 시작하고 다음 burst 가 시작할 때까지의 간격이에요. 이 간격이 일정하면 무언가가 정해진 주기로 저장장치를 깨운다는 뜻이에요.</li>
+				<li><b class="text-foreground">왜 보나:</b> burst 마다 UFS 가 Hibern8 에서 깨어나요. 그래서 burst 가 자주 올수록 저장장치가 덜 쉬어요. Wakeups 와 거의 같은 수예요.</li>
+				<li><b class="text-foreground">예:</b> 배터리는 약 2.2초마다 Flush·Checkpoint 위주로 13~18개짜리 burst 가 오고, USB 는 약 5.1초마다 일반 Write 4~6개짜리 burst 가 와요. 아래 30초 그림의 세로선 묶음 하나가 burst 하나예요.</li>
+			</ul>
+		</section>
+
 		<section class="mb-12 space-y-4">
 			<h2 id="window" class="text-h2 font-bold">30초 동안 실제로 온 request</h2>
 			{#if winSpec}<Chart spec={winSpec} height={190} caption={noRead ? '이 30초에는 Read 가 없었어요.' : ''} />{/if}
