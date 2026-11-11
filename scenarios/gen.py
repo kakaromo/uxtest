@@ -841,7 +841,14 @@ WAKE = sh("input keyevent KEYCODE_WAKEUP; sleep 1; wm dismiss-keyguard; sleep 1;
 SCREEN_OFF = sh("input keyevent KEYCODE_SLEEP; sleep 1; dumpsys power | grep -m1 mWakefulness=", "화면 끄기")
 STBY_PRE = [WAKE] + [launch(p_, f"{n_} 띄워 두기", wait=5) for p_, n_ in STBY_APPS] + [HOME, sleep(5)]
 STBY_LOG = sh("dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; "
-              "dumpsys power | grep -m1 mWakefulness=", "대기 상태·배터리 기록")
+              "dumpsys power | grep -m1 mWakefulness=; "
+              # system suspend 누적 횟수 (부팅 후). 측정 전후 차이 = 측정 중 suspend 횟수. wakeup_count 는 읽다가 막힐 수 있어 안 읽는다
+              "echo uptime=$(cut -d' ' -f1 /proc/uptime); "
+              "for f in success fail failed_freeze failed_prepare failed_suspend failed_suspend_late failed_suspend_noirq "
+              "failed_resume last_hw_sleep total_hw_sleep max_hw_sleep; do "
+              "[ -r /sys/power/suspend_stats/$f ] && echo suspend_$f=$(cat /sys/power/suspend_stats/$f); done; "
+              "[ -r /sys/power/suspend_stats/success ] || echo suspend_stats=unreadable",
+              "대기 상태·배터리·suspend 기록")
 STBY_NEEDS = ["무선 adb 연결 (USB 분리, 충전 없음)", "UX_DEVICE=<ip:port> UX_SERIAL=<ip:port>"]
 
 scenario("S1", "S", 3, "화면 꺼짐 대기 30분",

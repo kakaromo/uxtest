@@ -4,6 +4,7 @@
   python3 report/extract.py            # 시나리오마다 가장 최근 본 측정(dry 아님) 사용
   python3 report/extract.py S          # S 로 시작하는 시나리오만 다시 뽑아 기존 data.json 에 합친다
 
+변형(VARIANTS, 예: S5-usb = USB 전원 대기)은 runs/<base>/<시각>-<tag>.json 을 회차로 묶어 data.json 의 variants 에 따로 둔다.
 trace 1개 = 표본 1개. 시나리오 값은 3회 median(+최소·최대). G 는 1회차 cold / 2·3회차 warm 을 따로 낸다.
 
 판정 기준
@@ -316,11 +317,35 @@ def jank_io(fr, pq, app_pid):
     return out
 
 
+RUN_NAME = re.compile(r"^\d{8}-\d{6}$")   # 본 측정 실행 파일 이름. -dry(시험)·-usb(변형) 같은 꼬리가 붙은 건 본 측정이 아니다
+
+# 변형(variant): 같은 시나리오를 조건 하나만 바꿔 잰 참고용 항목. 실행 파일 이름 꼬리(runs/<base>/<시각>-<tag>.json)로 구분하고
+# 실행 파일 하나 = 회차 하나(시각 순)로 묶는다. data.json 의 scenarios 가 아니라 variants 에 두어 유형 집계·순위·TC 비교에 섞이지 않게 한다
+VARIANTS = {
+    "S5-usb": {"base": "S5", "tag": "usb", "name": "아무것도 안 하는 대기 3시간 (USB 연결)",
+               "description": "[S5-usb · P3] 아무것도 안 하는 대기 3시간과 같은 순서로, USB 케이블로 전원만 넣은 채(무선 adb, 충전 중) 잰 참고용 측정이에요. "
+                              "실행마다 1회씩 3번 잰 것을 Run 1~3 으로 묶었어요. 대기 유형 집계·순위와 TC 비교에는 넣지 않아요."},
+}
+
+
 def scenario_info(sid):
     p = glob.glob(str(ROOT / "scenarios" / "*" / f"{sid}.scenario.json"))[0]
     sc = json.load(open(p))
-    run = sorted(f for f in glob.glob(str(ROOT / "runs" / sid / "*.json")) if not f.endswith("-dry.json"))[-1]
+    run = sorted(f for f in glob.glob(str(ROOT / "runs" / sid / "*.json")) if RUN_NAME.match(Path(f).stem))[-1]
     return sc, json.load(open(run)), run
+
+
+def variant_runs(vid):
+    """변형의 실행 파일들 → [(회차, 실행 파일 경로, run json, traceJob)]. 실행 하나에 trace 1개(repeat 1회)라 시각 순으로 회차를 매긴다"""
+    v = VARIANTS[vid]
+    out = []
+    for f in sorted(glob.glob(str(ROOT / "runs" / v["base"] / f"2*-{v['tag']}.json"))):
+        if not RUN_NAME.match(Path(f).stem[:-len(v["tag"]) - 1]):
+            continue
+        run = json.load(open(f))
+        for tj in sorted(run["results"][0].get("traceJobs") or [], key=lambda x: x["repeatIndex"]):
+            out.append((len(out) + 1, f, run, tj))
+    return out
 
 
 def checks(raw):
@@ -449,17 +474,52 @@ def main():
                 jank.append(j)
                 print(f"  {sid} r{m['repeat']} frames={len(fr)} jank={j.get('jank', {}).get('frames')}")
 
+    variants = []
+    for vid, v in VARIANTS.items():
+        if v["base"] not in ids:
+            continue
+        sc, _, _ = scenario_info(v["base"])
+        vr = variant_runs(vid)
+        ms = []
+        for rep, f, run, tj in vr:
+            pq = parquet_of(tj["traceJobId"])
+            if not pq:
+                print(f"  ! {vid} parquet 없음 {tj['traceJobId']}")
+                continue
+            m = trace_metrics(pq, lba_max)
+            m["repeat"], m["traceJobId"], m["runFile"] = rep, tj["traceJobId"], os.path.relpath(f, ROOT)
+            for p in m["procs"]:
+                p["name"] = proc_name(p, names.get(p["pid"]), m["t0"])
+            for fl in m["files"]:
+                fl["kind"] = file_kind(fl["name"])
+            ms.append(m)
+            print(f"  {vid} r{rep}: R {m['readMB']:.0f}MB W {m['writeMB']:.0f}MB {m['durSec']}s")
+        if not ms:
+            continue
+        b = v["base"]
+        variants.append({"id": vid, "key": vid, "variantOf": b, "type": b[0], "typeName": TYPES[b[0]],
+                         "name": f"[UX-fsio] {vid} {v['name']}", "prio": 3, "description": v["description"],
+                         "steps": [{"type": s["type"], "label": (s.get("params") or {}).get("label", "")} for s in sc["steps"]],
+                         "repeats": len(ms), "elapsedSec": sum(r.get("elapsedSec") or 0 for _, _, r, _ in vr),
+                         "runFile": ", ".join(m["runFile"] for m in ms),
+                         "success": all(x.get("success") for _, _, r, _ in vr for x in r["results"]), "checks": {},
+                         "toolFixed": all(Path(m["runFile"]).stem >= FIX_AT for m in ms), "cache": None,
+                         "perRun": [{k: m[k] for k in ("repeat", "readMB", "writeMB", "discardMB", "durSec", "traceJobId", "runFile")}
+                                    for m in ms]} | aggregate(ms))
+
     meta = {"device": "OnePlus CPH2749", "serial": SERIAL, "trace": "fsiotrace fsio_ufs (eBPF)",
             "lbaMaxGB": round(lba_max * 4096 / 2**30, 1),
             "buckets": {"size": SIZE_B, "dtoc": DTOC_B, "gap": GAP_B, "ctod": CTOD_B, "flow": FLOW_B}}
-    for m in scen:
+    for m in scen + variants:
         m.pop("pq", None)
     if only:
         old = json.loads((HERE / "data.json").read_text())
         scen = [m for m in old["scenarios"] if m["id"] not in ids] + scen
         jank = [j for j in old["jank"] if j["scenario"] not in ids] + jank
         meta["lbaMaxGB"] = old["meta"]["lbaMaxGB"]
-    (HERE / "data.json").write_text(json.dumps({"meta": meta, "types": TYPES, "scenarios": scen, "jank": jank},
+        done = {v["id"] for v in variants}
+        variants = [v for v in old.get("variants", []) if v["id"] not in done] + variants
+    (HERE / "data.json").write_text(json.dumps({"meta": meta, "types": TYPES, "scenarios": scen, "jank": jank, "variants": variants},
                                                ensure_ascii=False, default=float))
     print(f"wrote {HERE / 'data.json'} ({len(scen)} rows, {len(jank)} jank runs)")
 

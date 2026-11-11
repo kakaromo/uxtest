@@ -29,6 +29,7 @@
 !/report/extract.py
 !/report/export_web.py
 !/report/perstep.py
+!/report/export_standby_power.py
 !/report/terms.py
 !/report/publish.sh
 !/report/audit.py

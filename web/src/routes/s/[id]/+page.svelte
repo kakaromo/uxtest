@@ -10,7 +10,7 @@
 	import { app, TYPE_ORDER } from '#lib/state.svelte.js';
 	import { load } from '#lib/data.js';
 	import { lbaPatternSpec, explorerSpec, overlaySpec, runsSpec, latSpec, lbaSpec, stackSpec, rwBarSpec, jankSpec, PROV_TRACE } from '#lib/charts/build.js';
-	import { rows, rowsOf, nameOf, label } from '#lib/view.js';
+	import { rows, rowsOf, nameOf, label, rowOf, variantsOf, STANDBY_POWER } from '#lib/view.js';
 	import { findings, rank } from '#lib/insight.js';
 	import RankStrip from '#lib/components/RankStrip.svelte';
 	import { mb, f, n0, x, sec } from '#lib/fmt.js';
@@ -48,7 +48,11 @@
 	const typeIds = $derived(app.man?.types[doc?.rows[0].type ?? ''] ?? []);
 	const idx = $derived(typeIds.indexOf(id));
 	const desc = $derived((row?.description ?? '').replace(/^\[[^\]]*\]\s*/, ''));
-	const peers = $derived(doc ? rowsOf(doc.rows[0].type) : []);
+	// 변형(참고용 항목)은 유형 목록에 없어서 같은 유형 비교 표에 자기 줄을 붙인다
+	const base = $derived(row?.variantOf ? rowOf(row.variantOf) : undefined);
+	const vars = $derived(variantsOf(id));
+	const stbyLink = $derived(id === STANDBY_POWER.base || id === STANDBY_POWER.variant);
+	const peers = $derived(doc ? [...rowsOf(doc.rows[0].type), ...(row?.variantOf ? [row] : [])] : []);
 	const all = $derived(rows());
 	const repRun = $derived(doc?.runs.find((r) => r.repeat === row?.rep.repeat) ?? doc?.runs[0]);
 	const facts = $derived(row ? findings(row, repRun, all) : []);
@@ -155,7 +159,15 @@
 			<Badge variant="secondary">trace window {sec(row.durSec.med)}</Badge>
 			{#if row.cache}<Badge variant="secondary">{row.cache === 'cold' ? '캐시 없음(cold)' : '캐시 있음(warm)'}</Badge>{/if}
 			{#if !row.success}<Badge variant="destructive">중간에 끊김 · 남은 구간만</Badge>{/if}
+			{#if row.variantOf}<Badge variant="outline">참고용 · 유형 집계·순위·TC 비교에서 빠져요</Badge>{/if}
 		</div>
+		{#if base || vars.length || stbyLink}
+			<div class="mt-4 flex max-w-[760px] flex-col gap-1 rounded-xl border bg-card px-4 py-3 text-body-3">
+				{#if base}<span>같은 순서를 배터리로 잰 원래 시나리오: <a class="font-semibold text-primary" href={resolve('/s/[id]', { id: base.id })}>{nameOf(base)}</a></span>{/if}
+				{#each vars as v (v.id)}<span>같은 순서를 USB 전원으로 잰 참고용 항목: <a class="font-semibold text-primary" href={resolve('/s/[id]', { id: v.id })}>{nameOf(v)}</a> ({v.repeats} runs)</span>{/each}
+				{#if stbyLink}<span>두 조건의 suspend·burst·Hibern8 차이: <a class="font-semibold text-primary" href={resolve('/standby-power')}>대기 USB·배터리 비교</a></span>{/if}
+			</div>
+		{/if}
 		{#if doc.rows.length > 1}
 			<div class="mt-4 flex items-center gap-3">
 				<span class="text-label-s font-semibold text-muted-foreground">조건</span>
@@ -180,7 +192,7 @@
 		</ol>
 		<div class="mt-4 rounded-2xl bg-card px-5 py-4 ring-1 ring-border">
 			<h3 id="position" class="text-title-1 font-semibold" data-toc="전체 중 위치">전체 {all.length}개 중 위치</h3>
-			<p class="text-body-3 text-ink-3">회색 점이 다른 시나리오, 파란 점이 {label(row)}예요. 오른쪽일수록 커요{pos.some((m) => m.log) ? ' (MB·MB/s는 로그 눈금)' : ''}.</p>
+			<p class="text-body-3 text-ink-3">{#if row.variantOf}참고용 항목이라 전체 {all.length}개에는 넣지 않고 그 위에 파란 점으로 놓았어요. {/if}회색 점이 다른 시나리오, 파란 점이 {label(row)}예요. 오른쪽일수록 커요{pos.some((m) => m.log) ? ' (MB·MB/s는 로그 눈금)' : ''}.</p>
 			<div class="mt-3 space-y-3">
 				{#each pos as m (m.k)}
 					<div class="grid grid-cols-[120px_1fr_110px] items-center gap-4 max-sm:grid-cols-[90px_1fr_90px]">
@@ -275,7 +287,7 @@
 			</div>
 			<CopyTable title="{id} Run별 지표" note="CV = Run Volume의 표준편차 ÷ 평균.">
 				<table>
-					<thead><tr><th class="num">Run</th><th>Cache</th><th class="num">Duration s</th><th class="num">Read MB</th><th class="num">Write MB</th><th class="num">discard MB</th><th class="num">Peak MB/s</th><th class="num">Latency p99 R/W</th><th class="num">QD p99</th><th class="num">Idle %</th><th>trace job</th></tr></thead>
+					<thead><tr><th class="num">Run</th><th>Cache</th><th class="num">Duration s</th><th class="num">Read MB</th><th class="num">Write MB</th><th class="num">discard MB</th><th class="num">Peak MB/s</th><th class="num">Latency p99 R/W</th><th class="num">QD p99</th><th class="num">Idle %</th><th>trace job</th>{#if row.variantOf}<th>Run file</th>{/if}</tr></thead>
 					<tbody>
 						{#each doc.runs as r (r.repeat)}
 							<tr>
@@ -285,6 +297,7 @@
 								<td class="num" data-v={r.peakMBs}>{f(r.peakMBs, 0)}</td><td class="num">{f(r.dtocP99.R, 2)} / {f(r.dtocP99.W, 2)}</td>
 								<td class="num" data-v={r.qdP99}>{r.qdP99}</td><td class="num" data-v={r.idlePct}>{f(r.idlePct, 0)}</td>
 								<td class="font-mono text-[11px] text-ink-3">{r.traceJobId}</td>
+								{#if row.variantOf}<td class="font-mono text-[11px] text-ink-3">{row.perRun.find((p) => p.repeat === r.repeat)?.runFile ?? ''}</td>{/if}
 							</tr>
 						{/each}
 					</tbody>

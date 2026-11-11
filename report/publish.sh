@@ -1,10 +1,11 @@
 #!/bin/bash
 # 측정 결과 → 사이트 데이터 → 커밋·push (Pages 가 web/** push 로 배포)
-#   extract.py → build_report.py → export_web.py → copy-data.mjs. 데이터가 안 바뀌었으면 커밋하지 않는다
+#   extract.py → export_standby_power.py → build_report.py → export_web.py → copy-data.mjs. 데이터가 안 바뀌었으면 커밋하지 않는다
 #   PUBLISH_NO_PUSH=1 이면 커밋까지만
 set -eu
 cd "$(dirname "$0")/.."
 python3 report/extract.py > /dev/null
+python3 report/export_standby_power.py > /dev/null   # 대기 USB·배터리 비교 (build_report 가 burst 간격을 읽는다)
 python3 report/build_report.py > /dev/null
 python3 report/export_web.py > /dev/null
 node web/scripts/copy-data.mjs > /dev/null

@@ -703,3 +703,69 @@ export function tcSeqSpec(tl: SeqTl, steps: SeqStep[], title: string, prov: stri
 		}
 	};
 }
+
+/** 대기 USB·배터리 비교: 지표 하나를 배터리·USB 두 줄에 측정 1회 = 점 1개로 */
+export const PROV_STBY =
+	'<code>report/export_standby_power.py</code> → <code>standby-power.json</code>. 지표 정의는 시나리오 페이지와 같은 <code>report/extract.py</code> 를 써요.';
+export function stbyStripSpec(title: string, pts: { label: string; usb: boolean; v: number }[], unit: string, dec: number): ChartSpec {
+	const cats = ['USB 연결', '배터리'];
+	return {
+		title,
+		prov: PROV_STBY,
+		data: () => ({ cols: ['측정', '전원', `${title} (${unit})`], rows: pts.map((p) => [p.label, p.usb ? 'USB' : '배터리', p.v]) }),
+		option: (t) => ({
+			grid: { left: 8, right: 24, top: 8, bottom: 24, containLabel: true },
+			tooltip: { ...t.tip, trigger: 'item', formatter: (p: any) => (p.data && p.data.tip) || '' },
+			xAxis: { type: 'value', min: 0, axisLabel: t.axisLabel, splitLine: t.split, axisLine: { show: false } },
+			yAxis: catAxis(t, cats),
+			series: [
+				{
+					type: 'scatter',
+					symbolSize: 13,
+					data: pts.map((p) => ({
+						value: [p.v, p.usb ? 0 : 1],
+						tip: `${p.label} · ${p.v.toLocaleString('ko-KR', { maximumFractionDigits: dec })}${unit}`,
+						itemStyle: { color: p.usb ? t.primary : t.ink, borderColor: t.surface, borderWidth: 2 }
+					}))
+				}
+			]
+		})
+	};
+}
+
+/** 대기 USB·배터리 비교: 30초 동안 온 request 하나 = 세로 선 하나 (종류별 색) */
+export function stbyWindowSpec(lanes: { name: string; ev: [number, string][] }[], len: number): ChartSpec {
+	const KIND: Record<string, [string, number]> = { F: ['Flush·Checkpoint·Discard', 0], C: ['Flush·Checkpoint·Discard', 0], D: ['Flush·Checkpoint·Discard', 0], W: ['일반 Write', 1], R: ['Read', 2] };
+	const names = ['Flush·Checkpoint·Discard', '일반 Write', 'Read'];
+	const cats = lanes.map((l) => l.name).reverse();
+	return {
+		title: `${len}초 동안 온 request (request 하나 = 세로 선 하나)`,
+		prov: PROV_STBY + ' 측정 시작(첫 이벤트) 1시간 뒤부터 30초 동안의 send_req 예요. 종류: Flush, Discard, Checkpoint·node·meta Write(f2fs), 그 밖의 Write, Read.',
+		data: () => ({
+			cols: ['조건', '초', '종류'],
+			rows: lanes.flatMap((l) => l.ev.map(([s, k]) => [l.name, s, k === 'F' ? 'Flush' : k === 'D' ? 'Discard' : k === 'C' ? 'Checkpoint·node·meta Write' : k === 'W' ? 'Write' : 'Read']))
+		}),
+		option: (t) => {
+			const col = [t.wd, t.primary, t.mute];
+			return {
+				grid: { left: 8, right: 16, top: 30, bottom: 26, containLabel: true },
+				legend: { ...t.legend, top: 0, left: 0, data: names },
+				tooltip: { ...t.tip, trigger: 'item', formatter: (p: any) => (p.data && p.data.tip) || '' },
+				xAxis: { type: 'value', min: 0, max: len, interval: 5, axisLabel: { ...t.axisLabel, formatter: (v: number) => v + '초' }, splitLine: t.split },
+				yAxis: catAxis(t, cats),
+				series: names.map((n, si) => ({
+					type: 'scatter',
+					name: n,
+					symbol: 'rect',
+					symbolSize: [2, 26],
+					itemStyle: { color: col[si] },
+					data: lanes.flatMap((l, li) =>
+						l.ev
+							.filter(([, k]) => KIND[k][1] === si)
+							.map(([s, k]) => ({ value: [s, lanes.length - 1 - li], tip: `${l.name} · ${s.toFixed(3)}초 · ${k === 'F' ? 'Flush' : k === 'D' ? 'Discard' : k === 'C' ? 'Checkpoint·node·meta Write' : k === 'W' ? 'Write' : 'Read'}` }))
+					)
+				}))
+			};
+		}
+	};
+}

@@ -15,10 +15,12 @@ export type Row = {
 	success: boolean;
 	/** 수집 도구 귀속 수정(2026-10-28) 뒤에 잰 측정 */
 	toolFixed?: boolean;
+	/** 변형(참고용 항목)이면 원래 시나리오 ID. 유형 집계·순위·TC 비교에 넣지 않는다 */
+	variantOf?: string;
 	runFile: string;
 	steps: { type: string; label: string }[];
 	checks: Record<string, { focus: string | null; captured: string | null; launchMs: number[] }>;
-	perRun: { repeat: number; readMB: number; writeMB: number; discardMB: number; durSec: number; traceJobId: string }[];
+	perRun: { repeat: number; readMB: number; writeMB: number; discardMB: number; durSec: number; traceJobId: string; runFile?: string }[];
 	readMB: Range;
 	writeMB: Range;
 	discardMB: Range;
@@ -80,6 +82,8 @@ export type Index = {
 	types: Record<string, string>;
 	scenarios: Row[];
 	jank: Jank[];
+	/** 변형(참고용 항목, 예: S5-usb). scenarios 와 따로 둔다 */
+	variants?: Row[];
 };
 
 export type Content = {
@@ -191,4 +195,72 @@ export type TcDoc = {
 	metrics: { key: string; kind: 'ratio' | 'diff' | 'dist'; th: number; info: boolean; buckets?: string[] }[];
 	cats: string[];
 	runs: TcRun[];
+};
+
+/** 대기 USB·배터리 비교 (report/export_standby_power.py → standby-power.json) */
+export type StbySuspend = { success: number; fail: number; failed_freeze: number; failed_suspend: number; attempt: number };
+export type StbyBurst = {
+	n: number;
+	perMin: number;
+	ibiP50: number;
+	ibiP90: number;
+	period: number;
+	periodPct: number;
+	reqP50: number;
+	reqP90: number;
+	durP50: number;
+	/** 주기 burst 하나에 든 request 평균: F Flush, CK Checkpoint Write, NM node·meta Write, FC 그 밖의 f2fs Write, D Discard, W 일반 Write, R Read */
+	comp: Record<'F' | 'CK' | 'NM' | 'FC' | 'D' | 'W' | 'R', number>;
+	who: [string, number][];
+	opener: [string, number][];
+};
+export type StbyRun = {
+	label: string;
+	power: 'battery' | 'usb';
+	start: string;
+	durSec: number;
+	link: { id: string; repeat: number } | null;
+	suspend: StbySuspend | null;
+	readMB: number;
+	writeMB: number;
+	discardMB: number;
+	flushN: number;
+	readN: number;
+	writeN: number;
+	wakesPerMin: number;
+	h8PerMin: number;
+	h8Pct: number;
+	h8EnterMs: number;
+	h8ExitMs: number;
+	ufsSuspend: number;
+	ssu: number;
+	ckptMB: number;
+	gcMB: number;
+	dexMB: number;
+	size4k: RW<number>;
+	seq: RW<number>;
+	dtocP50: RW<number>;
+	dtocP99: RW<number>;
+	qdP99: number;
+	gap1ms: number;
+	ctod0: number;
+	ctod200: number;
+	syncPct: number;
+	ah8: number;
+	ah8Sec: number;
+	ah8Long: number;
+	swh8: number;
+	swh8Sec: number;
+	dwellP50: number;
+	burst: StbyBurst | null;
+};
+export type StbyWindow = { label: string; from: number; len: number; n: number; ev: [number, 'F' | 'C' | 'D' | 'R' | 'W'][]; kinds: Record<string, number> };
+export type StandbyPower = {
+	generated: string;
+	scenario: string;
+	variant: string;
+	settings: { k: string; v: string; note: string }[];
+	params: { burstGapSec: number; periodTolSec: number; ah8IdleMs: number };
+	runs: StbyRun[];
+	window: { battery?: StbyWindow; usb?: StbyWindow };
 };

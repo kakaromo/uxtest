@@ -9,16 +9,24 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { app, TYPE_ORDER } from '#lib/state.svelte.js';
 	import { toggleMode } from 'mode-watcher';
-	import { ChevronRight, House, Moon, Sun, HardDrive, FlaskConical } from '@lucide/svelte';
+	import { ChevronRight, House, Moon, Sun, HardDrive, FlaskConical, BatteryCharging } from '@lucide/svelte';
 
 	const sidebar = Sidebar.useSidebar();
 	let heads = $state<{ id: string; text: string; level: number }[]>([]);
 	let active = $state('');
 
 	const curType = $derived(
-		page.params.t ?? (page.params.id ? TYPE_ORDER.find((t) => app.man?.types[t]?.includes(page.params.id!)) : undefined)
+		page.params.t ??
+			(page.params.id
+				? TYPE_ORDER.find((t) => app.man?.types[t]?.includes(app.man?.variants?.[page.params.id!] ?? page.params.id!))
+				: page.route.id === '/standby-power'
+					? 'S'
+					: undefined)
 	);
 	const types = $derived(TYPE_ORDER.filter((t) => app.man?.types[t]));
+	// 변형(참고용 항목)은 원래 시나리오 바로 아래에 붙인다
+	const subIds = (t: string) =>
+		(app.man?.types[t] ?? []).flatMap((id) => [id, ...Object.entries(app.man?.variants ?? {}).filter(([, b]) => b === id).map(([v]) => v)]);
 
 	let io: IntersectionObserver | null = null;
 	async function scan() {
@@ -94,6 +102,13 @@
 						{/snippet}
 					</Sidebar.MenuButton>
 				</Sidebar.MenuItem>
+				<Sidebar.MenuItem>
+					<Sidebar.MenuButton isActive={page.route.id === '/standby-power'}>
+						{#snippet child({ props })}
+							<a href={resolve('/standby-power')} onclick={close} {...props}><BatteryCharging />대기 USB·배터리 비교</a>
+						{/snippet}
+					</Sidebar.MenuButton>
+				</Sidebar.MenuItem>
 				{#each types as t (t)}
 					<Collapsible.Root open={curType === t} class="group/collapsible">
 						<Sidebar.MenuItem>
@@ -114,12 +129,12 @@
 							</Collapsible.Trigger>
 							<Collapsible.Content>
 								<Sidebar.MenuSub>
-									{#each app.man?.types[t] ?? [] as id (id)}
+									{#each subIds(t) as id (id)}
 										<Sidebar.MenuSubItem>
 											<Sidebar.MenuSubButton isActive={page.params.id === id}>
 												{#snippet child({ props })}
 													<a href={resolve('/s/[id]', { id })} onclick={close} {...props}>
-														<span class="w-8 shrink-0 font-semibold tabular-nums">{id}</span>
+														<span class="{id.includes('-') ? 'w-14' : 'w-8'} shrink-0 font-semibold tabular-nums">{id}</span>
 														<span class="truncate text-ink-3">{app.names[id] ?? ''}</span>
 													</a>
 												{/snippet}

@@ -22,7 +22,7 @@
 
 <Sidebar.Provider style="--sidebar-width: 17rem;">
 	<AppSidebar />
-	<Sidebar.Inset class="bg-background">
+	<Sidebar.Inset class="min-w-0 bg-background">
 		<header class="sticky top-0 z-20 flex h-12 items-center gap-2 border-b bg-background/90 px-4 backdrop-blur md:hidden">
 			<Sidebar.Trigger aria-label="목차 열기" />
 			<span class="text-[15px] font-semibold">UX I/O 분석</span>

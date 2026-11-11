@@ -8,6 +8,7 @@
 index.json = data.json 의 집계 행(시간축·LBA 같은 큰 배열은 뺌) + meta + jank 요약.
 p-<ID>-<회차>.json = 요청 하나하나 (agent Trace 의 LBA 패턴처럼 점으로 그리는 용도, 시나리오 페이지가 그 회차를 고를 때만 읽음).
   열 단위: t(요청 보낸 시각, ms, 앞 점과의 차이), lba(4KB 칸), d(R/W/D/F 글자열), kb, qd, lat(dtoc, µs), lun(여러 LUN 일 때만).
+변형(data.json variants, 예: S5-usb)도 s-<ID>.json·p-<ID>-<회차>.json 을 같은 모양으로 만든다 (index.json 에서는 variants 에 따로).
 s-<ID>.json = 그 시나리오의 집계 행(G 는 cold/warm 둘) + 회차마다 상세:
   1초 시간축(R/W MB/s, QD, 지연 p99, discard·flush 건수), 100ms 시간축(15분 이하만), 측정 구간 안 스텝별 양,
   크기·QD 구간별 지연 백분위, 느린 요청 상위 30, 파일 종류별 양, 프로세스·스레드·파일 상위.
@@ -204,7 +205,8 @@ def main():
     meta = D["meta"] | {"buckets": D["meta"]["buckets"] | {"flow": FLOW}, "qdBuckets": QD_B, "generated": __import__("datetime").datetime.now().isoformat(timespec="minutes")}
     (OUT / "index.json").write_text(json.dumps(
         {"meta": meta, "types": D["types"], "scenarios": [slim(s) for s in D["scenarios"]],
-         "jank": [{k: v for k, v in j.items() if k not in ("series",)} for j in D["jank"]]},
+         "jank": [{k: v for k, v in j.items() if k not in ("series",)} for j in D["jank"]],
+         "variants": [slim(v) for v in D.get("variants", [])]},
         ensure_ascii=False, separators=(",", ":"), default=float))
     ids = list(dict.fromkeys(s["id"] for s in D["scenarios"]))
     if only:
@@ -213,32 +215,45 @@ def main():
         rows = [s for s in D["scenarios"] if s["id"] == sid]
         sc, run, runpath = X.scenario_info(sid)
         res = run["results"][0]
-        names = {p["pid"]: p["name"] for r in rows for p in r["rep"]["procs"]}
-        runs = []
-        for tj in sorted(res.get("traceJobs") or [], key=lambda x: x["repeatIndex"]):
-            pq = X.parquet_of(tj["traceJobId"])
-            if not pq:
-                continue
-            steps = [b for b in res.get("stepBoundaries") or []
-                     if b["repeatIndex"] == tj["repeatIndex"] and b.get("startedMono")]
-            d = run_detail(pq, lba_max, steps, names)
-            t0p = X.q("select min(time) from ev")[0][0]   # run_detail 과 같은 0초
-            pts = points(t0p)
-            pts["mg"] = mgmt_points(pq, t0p)
-            (OUT / f"p-{sid}-{tj['repeatIndex']}.json").write_text(json.dumps(pts, separators=(",", ":")))
-            d |= {"repeat": tj["repeatIndex"], "traceJobId": tj["traceJobId"],
-                  "cache": ("cold" if tj["repeatIndex"] == 1 else "warm") if sid in X.COLD_FIRST else rows[0]["cache"]}
-            runs.append(d)
-        doc = {"id": sid, "rows": [{k: v for k, v in r.items() if k != "rep"} | {"name": en(r["name"]), "rep": {"repeat": r["rep"]["repeat"]}}
-                                   for r in rows],
-               "steps": [{"type": s["type"], "label": (s.get("params") or {}).get("label", "")} for s in sc["steps"]],
-               "runFile": rows[0]["runFile"], "runs": runs,
-               "jank": [j for j in D["jank"] if j["scenario"] == sid]}
-        p = OUT / f"s-{sid}.json"
-        p.write_text(json.dumps(doc, ensure_ascii=False, separators=(",", ":"), default=float))
-        print(f"  {sid}: {len(runs)}회차 {p.stat().st_size / 1024:.0f} KB")
+        jobs = [(tj["repeatIndex"], tj, res) for tj in sorted(res.get("traceJobs") or [], key=lambda x: x["repeatIndex"])]
+        export_doc(sid, rows, jobs, sc, D, lba_max)
+    # 변형(참고용 항목): 실행 파일 하나 = 회차 하나. 각 실행 안에서는 repeat 1 이라 Step 경계도 그 실행 것을 쓴다
+    for v in D.get("variants", []):
+        if only and not v["id"].startswith(only) and not v["variantOf"].startswith(only):
+            continue
+        sc, _, _ = X.scenario_info(v["variantOf"])
+        jobs = [(rep, tj, run["results"][0]) for rep, _, run, tj in X.variant_runs(v["id"])]
+        export_doc(v["id"], [v], jobs, sc, D, lba_max)
     tc_export()
     mask_accounts()
+
+
+def export_doc(sid, rows, jobs, sc, D, lba_max):
+    """s-<ID>.json 과 p-<ID>-<회차>.json. jobs = [(회차, traceJob, 그 회차의 run 결과)]"""
+    names = {p["pid"]: p["name"] for r in rows for p in r["rep"]["procs"]}
+    runs = []
+    for rep, tj, res in jobs:
+        pq = X.parquet_of(tj["traceJobId"])
+        if not pq:
+            continue
+        steps = [b for b in res.get("stepBoundaries") or []
+                 if b["repeatIndex"] == tj["repeatIndex"] and b.get("startedMono")]
+        d = run_detail(pq, lba_max, steps, names)
+        t0p = X.q("select min(time) from ev")[0][0]   # run_detail 과 같은 0초
+        pts = points(t0p)
+        pts["mg"] = mgmt_points(pq, t0p)
+        (OUT / f"p-{sid}-{rep}.json").write_text(json.dumps(pts, separators=(",", ":")))
+        d |= {"repeat": rep, "traceJobId": tj["traceJobId"],
+              "cache": ("cold" if rep == 1 else "warm") if sid in X.COLD_FIRST else rows[0]["cache"]}
+        runs.append(d)
+    doc = {"id": sid, "rows": [{k: v for k, v in r.items() if k != "rep"} | {"name": en(r["name"]), "rep": {"repeat": r["rep"]["repeat"]}}
+                               for r in rows],
+           "steps": [{"type": s["type"], "label": (s.get("params") or {}).get("label", "")} for s in sc["steps"]],
+           "runFile": rows[0]["runFile"], "runs": runs,
+           "jank": [j for j in D["jank"] if j["scenario"] == sid]}
+    p = OUT / f"s-{sid}.json"
+    p.write_text(json.dumps(doc, ensure_ascii=False, separators=(",", ":"), default=float))
+    print(f"  {sid}: {len(runs)}회차 {p.stat().st_size / 1024:.0f} KB")
 
 
 # trace 의 파일 이름에 계정 이메일이 들어 있다 (com.google.<계정>%40gmail.com.metalog, <...>_<계정>@gmail.com.db 등).
@@ -300,6 +315,9 @@ def mask_accounts():
             n += 1
     for p in OUT.glob("*.json"):
         t = p.read_text()
+        # @·%40 이 없으면 계정이 있을 수 없다. request 점 파일(p-*.json)의 긴 방향 글자열에서 정규식이 오래 걸리는 것을 피한다
+        if "@" not in t and "%40" not in t:
+            continue
         m, k = ACCOUNT.subn("account", t)
         if k:
             p.write_text(m)

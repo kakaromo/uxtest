@@ -6,6 +6,11 @@ export const label = (r: Row) => r.id + (r.cache && (r.id === 'G1' || r.id === '
 export const rows = () => app.index?.scenarios ?? [];
 export const rowsOf = (t: string) => rows().filter((r) => r.type === t);
 export const rowOf = (id: string) => rows().find((r) => r.id === id);
+/** 변형(참고용 항목, 예: S5-usb). rows() 에는 없다 */
+export const variants = () => app.index?.variants ?? [];
+export const variantsOf = (id: string) => variants().filter((v) => v.variantOf === id);
+/** 대기 USB·배터리 비교 페이지가 다루는 시나리오와 변형 */
+export const STANDBY_POWER = { base: 'S5', variant: 'S5-usb' };
 export const nameOf = (r: Row) => r.name.replace(/^\[UX-fsio\]\s*\S+\s*/, '');
 /** 차트 축·점 라벨: ID 대신 시나리오 이름 (갤러리 cold·warm 은 뒤에 붙임) */
 export const cname = (r: Row) => nameOf(r) + (r.cache && (r.id === 'G1' || r.id === 'G2' || r.id === 'G3') ? ` ${r.cache}` : '');

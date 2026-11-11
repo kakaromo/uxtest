@@ -1,7 +1,8 @@
 // static/data/*.json 읽기 (export_web.py → scripts/copy-data.mjs 가 넣은 것)
 import { asset } from '$app/paths';
 
-export type Manifest = { v: number; types: Record<string, string[]>; tcseq?: string[] };
+/** variants: 변형 ID → 원래 시나리오 ID (참고용 항목, 유형 집계에 넣지 않음) */
+export type Manifest = { v: number; types: Record<string, string[]>; variants?: Record<string, string>; tcseq?: string[] };
 
 const cache = new Map<string, Promise<unknown>>();
 

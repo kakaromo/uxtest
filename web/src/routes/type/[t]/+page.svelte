@@ -9,7 +9,7 @@
 	import MiniTimeline from '#lib/components/MiniTimeline.svelte';
 	import { app } from '#lib/state.svelte.js';
 	import { volSpec, mapSpec, stackSpec, miniOption, PROV_TRACE } from '#lib/charts/build.js';
-	import { label, rowsOf, nameOf, rowOf, PAIRS, cname } from '#lib/view.js';
+	import { label, rowsOf, nameOf, rowOf, PAIRS, cname, variants, STANDBY_POWER } from '#lib/view.js';
 	import { copy, copyGrid } from '#lib/clipboard.js';
 	import { theme } from '#lib/charts/theme.js';
 	import { chartsHTML } from '#lib/charts/source.js';
@@ -26,6 +26,9 @@
 	const pairs = $derived(PAIRS.filter((p) => ids.includes(p.a) || ids.includes(p.b)));
 	const jank = $derived((app.index?.jank ?? []).filter((j) => ids.includes(j.scenario) && j.jank));
 	const cats = $derived(rs.map(cname));
+	// 변형(참고용 항목)은 위 집계·차트에 넣지 않고 Scenarios 아래에 따로 보여 준다
+	const vrs = $derived(variants().filter((v) => v.type === t));
+	const stby = $derived(ids.includes(STANDBY_POWER.base));
 	// Distributions 의 Read·Write 차트를 HTML 조각 하나로 복사 (Confluence HTML macro 하나에 붙이기)
 	async function copyDist(keys: (keyof typeof distSpecs)[], name: string) {
 		const th = theme();
@@ -260,4 +263,26 @@
 			</a>
 		{/each}
 	</div>
+	{#if vrs.length || stby}
+		<h3 id="reference" class="pt-2 text-title-1 font-semibold">참고용 측정</h3>
+		<p class="text-body-2 text-muted-foreground">조건 하나만 바꿔 잰 항목이에요. 위의 Volume·signature·Distributions·Workload map 과 TC 비교에는 넣지 않았어요.</p>
+		<div class="grid gap-3 sm:grid-cols-2">
+			{#each vrs as v (v.id)}
+				<a href={resolve('/s/[id]', { id: v.id })} class="flex flex-col gap-1 rounded-xl border border-dashed bg-card p-4 transition-colors hover:border-primary">
+					<div class="flex items-center gap-2">
+						<b class="text-[15px]">{v.id}</b>
+						<Badge variant="outline">참고용</Badge>
+						<span class="ml-auto text-body-3 text-ink-3 tabular-nums">R {mb(v.readMB.med)} · W {mb(v.writeMB.med)}</span>
+					</div>
+					<p class="text-body-2">{nameOf(v)}</p>
+				</a>
+			{/each}
+			{#if stby}
+				<a href={resolve('/standby-power')} class="flex flex-col gap-1 rounded-xl border border-dashed bg-card p-4 transition-colors hover:border-primary">
+					<div class="flex items-center gap-2"><b class="text-[15px]">비교</b><Badge variant="outline">배터리 ↔ USB</Badge></div>
+					<p class="text-body-2">대기 3시간 USB·배터리 비교 (suspend, burst, Hibern8)</p>
+				</a>
+			{/if}
+		</div>
+	{/if}
 </section>

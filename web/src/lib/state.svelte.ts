@@ -18,7 +18,7 @@ export async function init() {
 	try {
 		[app.man, app.index, app.content] = await Promise.all([manifest(), load<Index>('index'), load<Content>('content')]);
 		const names: Record<string, string> = {};
-		for (const s of app.index.scenarios) names[s.id] ??= s.name.replace(/^\[UX-fsio\]\s*\S+\s*/, '');
+		for (const s of [...app.index.scenarios, ...(app.index.variants ?? [])]) names[s.id] ??= s.name.replace(/^\[UX-fsio\]\s*\S+\s*/, '');
 		app.names = names;
 	} catch {
 		app.error = '데이터를 불러오지 못했어요. 새로고침해 주세요.';

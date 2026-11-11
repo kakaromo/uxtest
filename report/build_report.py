@@ -105,7 +105,7 @@ DOING = {
     "S2": "S1 과 같은 상태에서 deep doze 로 강제 진입시키고 30분",
     "S3": "앱 4개를 띄워 둔 채 측정을 켜고 화면을 끈 뒤 5분",
     "S4": "앱 4개를 띄워 둔 뒤 홈 화면을 켜 둔 채 입력 없이 10분",
-    "S5": "앱을 따로 띄우지 않고 홈에서 화면을 끄고 3시간 (10-29 재측정은 131분에서 기록이 끊김)",
+    "S5": "앱을 따로 띄우지 않고 홈에서 화면을 끄고 3시간 (배터리. USB 전원으로 잰 것은 따로 참고용)",
     "S6": "충전기를 꽂은 채 화면을 끄고 6시간 (밤 idle maintenance 확인용)",
 }
 
@@ -298,6 +298,11 @@ s_wake = [med(k, "wakesPerMin") for k in s_ids]
 s_flush = [med(k, "flushPerSec") for k in s_ids]
 s_upd = max(S["S2"]["perRun"], key=lambda r: r["readMB"] + r["writeMB"])   # 대기 중 앱 업데이트가 낀 회차 (10-29 재측정: deep doze 3회차)
 s_rest = [r for r in S["S2"]["perRun"] if r is not s_upd]
+# 오래 둔 대기(S5): USB 전원 변형(data.json variants)과 burst 간격(export_standby_power.py 결과, 사이트 사본 이전 단계)
+V5 = next(v for v in D.get("variants", []) if v["id"] == "S5-usb")
+_sp = json.loads((HERE.parent / "web/.private/data/standby-power.json").read_text())
+_ibi = [r["burst"]["ibiP50"] for r in _sp["runs"] if r["power"] == "battery" and r["burst"]]
+s5_ibi = f"{min(_ibi):.1f}" if f"{min(_ibi):.1f}" == f"{max(_ibi):.1f}" else f"{min(_ibi):.1f}~{max(_ibi):.1f}"
 VOL_H = 22 * len(ORDER) + 60
 
 CHART_DATA = {
@@ -581,10 +586,10 @@ PAGE = f"""<title>UX 워크로드 I/O 패턴 보고서</title>
       <li>시간당 쓰기는 화면 켜진 홈 {s_wph['S4']:.0f}MB, 화면 꺼짐 {s_wph['S1']:.0f}MB, 강제 deep doze {s_wph['S2']:.0f}MB예요. deep doze로 바꿔도 줄지 않았어요. 가장 조용한 회차는 세 경우 모두 시간당 약 200MB였고, deep doze에서도 앱 설치·업데이트와 DB 백업이 그대로 돌아 더 많이 쓴 회차가 있어요. 쓰기는 건수로 약 90% 이상이 16KB 이하의 작은 요청이고, 파일시스템 메타데이터(NODE·META)가 쓰기의 {S['S2']['metaPct']['min']:.0f}~{S['S2']['metaPct']['max']:.0f}%예요(조용한 회차일수록 커요).{chk('S2')}</li>
       <li><b>지운 블록은 대기 중에 반납해요.</b> 화면 꺼짐 30분 동안 {mb(med('S1', 'discardMB'))}를 반납했어요(회차별 {S['S1']['discardMB']['min']:.0f}~{S['S1']['discardMB']['max']:.0f}MB). 화면이 켜져 있을 때도 배터리 상태라면 파일을 지운 직후 반납이 나가요(1GB 파일 삭제).</li>
       <li><b>배경 앱 업데이트와 DB 작업이 가장 커요.</b> 강제 deep doze 30분의 세 번째 회차는 읽기 {s_upd['readMB']:.0f}MB·쓰기 {s_upd['writeMB']:.0f}MB로 다른 두 회차(읽기 {min(r['readMB'] for r in s_rest):.0f}~{max(r['readMB'] for r in s_rest):.0f}MB, 쓰기 {min(r['writeMB'] for r in s_rest):.0f}~{max(r['writeMB'] for r in s_rest):.0f}MB)의 몇 배예요. 설치 세션이 앱 임시 파일(YouTube APK 61MB 등)을 쓰고 dex2oat가 odex를 만들었고, 백그라운드 스레드가 Google 앱 APK 192MB를 읽었어요. Play 스토어 자동 업데이트로 보여요. 화면 꺼짐 30분에서는 세 번째 회차 28분째 1분 동안 OxygenOS 사용 패턴 DB(<code>obrain.db</code>)에 약 150MB를 쓴 것이 가장 컸고, 바로 블록 반납 약 100MB가 이어졌어요.{chk('S1', 'S2')}</li>
-      <li><b>오래 둔 대기에도 배경 작업이 몰리는 순간이 있어요.</b> 앱을 따로 띄우지 않고 화면을 끈 기록은 {S['S5']['durSec']['med'] / 60:.0f}분이에요(3시간을 계획했지만 무선 adb 연결이 끊겨 기록이 먼저 끝났어요). 그동안 읽기 {mb(med('S5', 'readMB'))}·쓰기 {mb(med('S5', 'writeMB'))}·블록 반납 {mb(med('S5', 'discardMB'))}가 나갔어요. 평소에는 10분에 쓰기 20~40MB인데, 두 번 크게 튀었어요. 31~32분째에는 Google Home·OnePlus 멤버십 앱 설치로 1분에 읽기 약 130MB·쓰기 약 210MB가 나가고, 바로 다음 분에 블록 반납 약 185MB가 이어졌어요. 94~95분째에는 Google 메시지와 카메라 앱의 APK를 읽어 2분에 읽기 약 170MB가 나갔어요. 이 4분이 기록 총량의 절반쯤이에요.{chk('S5')}</li>
+      <li><b>오래 둔 대기는 배터리일 때 약 {s5_ibi}초마다 깨어나요.</b> 앱을 따로 띄우지 않고 화면을 끈 {S['S5']['durSec']['med'] / 60:.0f}분 동안 읽기 {mb(med('S5', 'readMB'))}·쓰기 {mb(med('S5', 'writeMB'))}·블록 반납 {mb(med('S5', 'discardMB'))}가 나갔고, 캐시 비우기(flush) 요청이 초당 {med('S5', 'flushPerSec'):.1f}번 왔어요. 같은 대기를 USB 전원을 꽂고 잰 {V5['repeats']}회는 초당 {V5['flushPerSec']['min']:.1f}~{V5['flushPerSec']['max']:.1f}번이었어요. USB 를 꽂으면 폰이 suspend 를 시도하지 않아 이 주기 묶음이 사라져요. 자세한 비교는 대기 USB·배터리 비교 페이지에 있어요.</li>
     </ul>
     <div class="tl-row"><div class="chart" data-tl="S2" style="height:140px"></div><div class="chart" data-tl="S5" style="height:140px"></div></div>
-    <p class="sowhat"><b>무엇을 뜻하나</b> 대기 중 저장장치는 쉬는 시간이 몇 초를 넘지 않아요. 짧은 유휴에서 빨리 절전에 들어가고 빨리 깨어나는 능력, 그리고 배경 블록 반납 처리가 대기 전력과 수명에 중요해요. 다만 무선 adb로 기록을 계속 보내는 동안이라 측정 자체가 깨어남을 늘렸을 수 있어요(한계 참고).</p>
+    <p class="sowhat"><b>무엇을 뜻하나</b> 대기 중 저장장치는 쉬는 시간이 몇 초를 넘지 않아요. 짧은 유휴에서 빨리 절전에 들어가고 빨리 깨어나는 능력, 그리고 배경 블록 반납 처리가 대기 전력과 수명에 중요해요. 배터리 대기에서는 약 2초마다 오는 깨어남 대부분이 suspend 시도 때의 sync 예요(대기 USB·배터리 비교 페이지 참고).</p>
     <a class="more-link" href="type-S.html">이 유형의 시나리오 전체 보기 →</a>
   </article>
 </section>
@@ -625,7 +630,7 @@ PAGE = f"""<title>UX 워크로드 I/O 패턴 보고서</title>
   <div class="tw" data-name="시나리오 목록"><table>
     <thead><tr><th>ID</th><th>시나리오</th><th>측정한 동작</th><th class="num">측정 시간(초)</th><th>끝난 뒤 확인</th><th class="num">성공</th></tr></thead>
     <tbody>{scen_table()}</tbody></table></div>
-  <p class="cap">대기를 뺀 {n_main}개 × 3번 = {3 * n_main}번 모두 성공한 결과예요. 대기는 오래 둔 대기를 뺀 4개가 3번씩 모두 성공했어요. 오래 둔 대기는 3시간을 기다렸지만 131분째(03:34)에 무선 adb 연결이 끊겨 그 뒤가 기록되지 않았어요. P2의 지도 이동·확대, YouTube 1080p, Chrome 100MB 다운로드는 첫 시도에서 한 회차가 실패해 3번을 다시 쟀어요(아래 한계 참고). Chrome cold start, cold start 순회, 무거운 앱 cold start는 마지막에 홈으로 돌아가서 확인 화면이 런처예요. 갤러리 사진은 NASA의 퍼블릭 도메인 사진 1000장(1.67GiB)이에요.</p>
+  <p class="cap">대기를 뺀 {n_main}개 × 3번 = {3 * n_main}번 모두 성공한 결과예요. 대기는 오래 둔 대기를 뺀 4개가 3번씩 모두 성공했어요. 오래 둔 대기는 배터리로 {S['S5']['durSec']['med'] / 60:.0f}분을 1번 기록했어요(USB 전원으로 잰 {V5['repeats']}번은 참고용으로 따로 둬요). P2의 지도 이동·확대, YouTube 1080p, Chrome 100MB 다운로드는 첫 시도에서 한 회차가 실패해 3번을 다시 쟀어요(아래 한계 참고). Chrome cold start, cold start 순회, 무거운 앱 cold start는 마지막에 홈으로 돌아가서 확인 화면이 런처예요. 갤러리 사진은 NASA의 퍼블릭 도메인 사진 1000장(1.67GiB)이에요.</p>
 </section>
 
 <section id="limits" aria-labelledby="h-lim">
@@ -641,8 +646,8 @@ PAGE = f"""<title>UX 워크로드 I/O 패턴 보고서</title>
     <li><b>검색어 입력:</b> 자동화 도구의 글자 입력은 키보드가 한국어 모드면 영문이 자모로 바뀌어요. P2부터는 매번 영문 키보드로 바꿨지만, P1의 YouTube 검색(검색+결과 스크롤 "nasa 우주", 영상 3분 "nasa 4k")은 의도와 다른 검색어로 들어갔을 수 있어요. 결과 목록이나 영상은 열렸기 때문에 측정 자체는 유효해요.</li>
     <li><b>다시 잰 시나리오:</b> 지도 이동·확대는 자동화 도구가 콤마가 든 명령을 회차별 값 목록으로 잘라 쓰는 문제로 실패했어요(<code>benchmark/scenario.go</code>의 <code>resolveLoopVariable</code>). 콤마를 기기에서 만들어 넣도록 바꿨어요. YouTube 1080p는 한 회차에서 재생 확인이 시간 안에 안 됐고, Chrome 100MB 다운로드는 "다시 다운로드" 확인 창이 늦게 떠서 한 회차가 실패했어요. 셋 다 3번을 새로 쟀어요.</li>
     <li><b>권한 창:</b> 지도는 위치 권한이 정해지지 않아 실행할 때 권한 창이 뜰 수 있어요. 최근 앱 전환과 지도 이동·확대는 권한 창이 있으면 뒤로 키로 닫기만 했어요(본 측정에서는 뜨지 않았어요).</li>
-    <li><b>대기 측정의 영향:</b> 대기 중에는 무선 adb로 기록을 계속 내보냈어요. 기록 자체는 저장장치에 쓰지 않지만, Wi-Fi와 adb가 켜져 있어 기기가 완전히 잠들지 못했을 수 있어요. 약 2초마다 깨어나는 주기가 측정 경로 때문인지는 USB 없이 기기 안에 기록을 쌓는 방식으로 다시 확인해야 해요. OxygenOS는 화면을 끄고 5분 안에 deep doze에 들어갔어요.</li>
-    <li><b>오래 둔 대기의 기록 끊김:</b> fsiotrace는 기록을 무선 adb로 Mac에 바로 보내서, 연결이 끊기면 그 뒤가 남지 않아요. 10월 29일 재측정은 131분째(03:34)에 연결이 5분 끊겨 거기서 기록이 끝났어요. 10월 25일 첫 측정도 66분째(04:35)에 끊겼는데, 그때는 OxygenOS 배터리 앱의 Deep Sleep 모드가 학습한 수면 시간대(23:30~07:00)에 Wi-Fi를 끈 것이었어요. 수면 대기 최적화를 끈 10월 26일 측정은 3시간을 채웠어요. 이번 끊김의 원인은 아직 확인하지 못했어요. 이 설정을 끈 만큼 실제 사용자의 밤보다 Wi-Fi가 더 오래 켜져 있었을 수 있어요. 대기 시나리오의 앱 이름은 측정 뒤 프로세스 목록 없이 스레드 이름으로 붙였어요.</li>
+    <li><b>대기 측정의 영향:</b> 대기 중에도 무선 adb 연결과 Wi-Fi 는 켜져 있어요. 기록은 폰 메모리(/dev)에 쌓아서 측정이 UFS 를 깨우지는 않아요. 약 2초마다 깨어나는 주기는 커널의 suspend 시도 주기와 같고(3시간에 5,066번 시도, 성공 48번), 시도 때마다 하는 sync 가 Flush 와 f2fs Checkpoint 를 만들어요. OxygenOS는 화면을 끄고 5분 안에 deep doze에 들어갔어요.</li>
+    <li><b>오래 둔 대기의 기록 끊김:</b> 처음에는 fsiotrace 기록을 무선 adb로 Mac에 바로 보내서, 연결이 끊기면 그 뒤가 남지 않았어요. 10월 29일 재측정은 131분째(03:34)에 연결이 5분 끊겨 거기서 기록이 끝났어요. 10월 25일 첫 측정도 66분째(04:35)에 끊겼는데, 그때는 OxygenOS 배터리 앱의 Deep Sleep 모드가 학습한 수면 시간대(23:30~07:00)에 Wi-Fi를 끈 것이었어요. 수면 대기 최적화를 끈 10월 26일 측정은 3시간을 채웠어요. 10월 29일 끊김의 원인은 확인하지 못했어요. 지금은 기록을 폰 메모리(<code>/dev</code>)에 쌓았다가 측정이 끝난 뒤 가져와서, 사이트의 오래 둔 대기는 3시간을 다 기록한 측정이에요. 이 설정을 끈 만큼 실제 사용자의 밤보다 Wi-Fi가 더 오래 켜져 있었을 수 있어요. 대기 시나리오의 앱 이름은 측정 뒤 프로세스 목록 없이 스레드 이름으로 붙였어요.</li>
     <li><b>측정하지 않은 것:</b> Facebook 피드는 로그아웃 상태라, 메시지는 계정 연결 화면이 떠서 뺐어요. Netflix는 쓰지 않았어요. Instagram 피드·릴스는 사용자가 로그인한 뒤, TikTok은 첫 실행 동의 창을 사용자가 처리한 뒤 10월 27일에 따로 쟀어요. YouTube Shorts는 10월 27일 밤 USB를 뽑고 무선으로 쟀어요. 알림 같은 권한 요청 창이 뜨면 '허용 안함'을 눌러 닫도록 했어요. 좋아요·팔로우가 남지 않도록 영상과 게시물은 탭하지 않고 스크롤만 했어요. 릴스에는 광고도 섞여 나와요.</li>
     <li><b>다음 단계:</b> 다시 잰 값으로 파일 종류별(DB, 캐시, 앱 파일, 미디어) 분석과 Chrome 다운로드 2배 쓰기의 원인을 추가해요. 화면이 꺼진 대기 시나리오 4개도 고친 도구로 다시 재요. 삭제 후 블록 반납 시점은 측정 구간을 늘려 따로 봐요.</li>
   </ul></div>

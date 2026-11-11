@@ -7032,8 +7032,8 @@
       {
         "type": "shell",
         "params": {
-          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
-          "label": "대기 상태·배터리 기록"
+          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=; echo uptime=$(cut -d' ' -f1 /proc/uptime); for f in success fail failed_freeze failed_prepare failed_suspend failed_suspend_late failed_suspend_noirq failed_resume last_hw_sleep total_hw_sleep max_hw_sleep; do [ -r /sys/power/suspend_stats/$f ] && echo suspend_$f=$(cat /sys/power/suspend_stats/$f); done; [ -r /sys/power/suspend_stats/success ] || echo suspend_stats=unreadable",
+          "label": "대기 상태·배터리·suspend 기록"
         }
       },
       {
@@ -7063,8 +7063,8 @@
       {
         "type": "shell",
         "params": {
-          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
-          "label": "대기 상태·배터리 기록"
+          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=; echo uptime=$(cut -d' ' -f1 /proc/uptime); for f in success fail failed_freeze failed_prepare failed_suspend failed_suspend_late failed_suspend_noirq failed_resume last_hw_sleep total_hw_sleep max_hw_sleep; do [ -r /sys/power/suspend_stats/$f ] && echo suspend_$f=$(cat /sys/power/suspend_stats/$f); done; [ -r /sys/power/suspend_stats/success ] || echo suspend_stats=unreadable",
+          "label": "대기 상태·배터리·suspend 기록"
         }
       },
       {
@@ -7207,8 +7207,8 @@
       {
         "type": "shell",
         "params": {
-          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
-          "label": "대기 상태·배터리 기록"
+          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=; echo uptime=$(cut -d' ' -f1 /proc/uptime); for f in success fail failed_freeze failed_prepare failed_suspend failed_suspend_late failed_suspend_noirq failed_resume last_hw_sleep total_hw_sleep max_hw_sleep; do [ -r /sys/power/suspend_stats/$f ] && echo suspend_$f=$(cat /sys/power/suspend_stats/$f); done; [ -r /sys/power/suspend_stats/success ] || echo suspend_stats=unreadable",
+          "label": "대기 상태·배터리·suspend 기록"
         }
       },
       {
@@ -7238,8 +7238,8 @@
       {
         "type": "shell",
         "params": {
-          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
-          "label": "대기 상태·배터리 기록"
+          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=; echo uptime=$(cut -d' ' -f1 /proc/uptime); for f in success fail failed_freeze failed_prepare failed_suspend failed_suspend_late failed_suspend_noirq failed_resume last_hw_sleep total_hw_sleep max_hw_sleep; do [ -r /sys/power/suspend_stats/$f ] && echo suspend_$f=$(cat /sys/power/suspend_stats/$f); done; [ -r /sys/power/suspend_stats/success ] || echo suspend_stats=unreadable",
+          "label": "대기 상태·배터리·suspend 기록"
         }
       },
       {
@@ -7368,8 +7368,8 @@
       {
         "type": "shell",
         "params": {
-          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
-          "label": "대기 상태·배터리 기록"
+          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=; echo uptime=$(cut -d' ' -f1 /proc/uptime); for f in success fail failed_freeze failed_prepare failed_suspend failed_suspend_late failed_suspend_noirq failed_resume last_hw_sleep total_hw_sleep max_hw_sleep; do [ -r /sys/power/suspend_stats/$f ] && echo suspend_$f=$(cat /sys/power/suspend_stats/$f); done; [ -r /sys/power/suspend_stats/success ] || echo suspend_stats=unreadable",
+          "label": "대기 상태·배터리·suspend 기록"
         }
       },
       {
@@ -7406,8 +7406,8 @@
       {
         "type": "shell",
         "params": {
-          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
-          "label": "대기 상태·배터리 기록"
+          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=; echo uptime=$(cut -d' ' -f1 /proc/uptime); for f in success fail failed_freeze failed_prepare failed_suspend failed_suspend_late failed_suspend_noirq failed_resume last_hw_sleep total_hw_sleep max_hw_sleep; do [ -r /sys/power/suspend_stats/$f ] && echo suspend_$f=$(cat /sys/power/suspend_stats/$f); done; [ -r /sys/power/suspend_stats/success ] || echo suspend_stats=unreadable",
+          "label": "대기 상태·배터리·suspend 기록"
         }
       },
       {
@@ -7536,8 +7536,8 @@
       {
         "type": "shell",
         "params": {
-          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
-          "label": "대기 상태·배터리 기록"
+          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=; echo uptime=$(cut -d' ' -f1 /proc/uptime); for f in success fail failed_freeze failed_prepare failed_suspend failed_suspend_late failed_suspend_noirq failed_resume last_hw_sleep total_hw_sleep max_hw_sleep; do [ -r /sys/power/suspend_stats/$f ] && echo suspend_$f=$(cat /sys/power/suspend_stats/$f); done; [ -r /sys/power/suspend_stats/success ] || echo suspend_stats=unreadable",
+          "label": "대기 상태·배터리·suspend 기록"
         }
       },
       {
@@ -7567,8 +7567,8 @@
       {
         "type": "shell",
         "params": {
-          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
-          "label": "대기 상태·배터리 기록"
+          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=; echo uptime=$(cut -d' ' -f1 /proc/uptime); for f in success fail failed_freeze failed_prepare failed_suspend failed_suspend_late failed_suspend_noirq failed_resume last_hw_sleep total_hw_sleep max_hw_sleep; do [ -r /sys/power/suspend_stats/$f ] && echo suspend_$f=$(cat /sys/power/suspend_stats/$f); done; [ -r /sys/power/suspend_stats/success ] || echo suspend_stats=unreadable",
+          "label": "대기 상태·배터리·suspend 기록"
         }
       },
       {
@@ -7668,8 +7668,8 @@
       {
         "type": "shell",
         "params": {
-          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
-          "label": "대기 상태·배터리 기록"
+          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=; echo uptime=$(cut -d' ' -f1 /proc/uptime); for f in success fail failed_freeze failed_prepare failed_suspend failed_suspend_late failed_suspend_noirq failed_resume last_hw_sleep total_hw_sleep max_hw_sleep; do [ -r /sys/power/suspend_stats/$f ] && echo suspend_$f=$(cat /sys/power/suspend_stats/$f); done; [ -r /sys/power/suspend_stats/success ] || echo suspend_stats=unreadable",
+          "label": "대기 상태·배터리·suspend 기록"
         }
       },
       {
@@ -7699,8 +7699,8 @@
       {
         "type": "shell",
         "params": {
-          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
-          "label": "대기 상태·배터리 기록"
+          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=; echo uptime=$(cut -d' ' -f1 /proc/uptime); for f in success fail failed_freeze failed_prepare failed_suspend failed_suspend_late failed_suspend_noirq failed_resume last_hw_sleep total_hw_sleep max_hw_sleep; do [ -r /sys/power/suspend_stats/$f ] && echo suspend_$f=$(cat /sys/power/suspend_stats/$f); done; [ -r /sys/power/suspend_stats/success ] || echo suspend_stats=unreadable",
+          "label": "대기 상태·배터리·suspend 기록"
         }
       },
       {
@@ -7781,8 +7781,8 @@
       {
         "type": "shell",
         "params": {
-          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
-          "label": "대기 상태·배터리 기록"
+          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=; echo uptime=$(cut -d' ' -f1 /proc/uptime); for f in success fail failed_freeze failed_prepare failed_suspend failed_suspend_late failed_suspend_noirq failed_resume last_hw_sleep total_hw_sleep max_hw_sleep; do [ -r /sys/power/suspend_stats/$f ] && echo suspend_$f=$(cat /sys/power/suspend_stats/$f); done; [ -r /sys/power/suspend_stats/success ] || echo suspend_stats=unreadable",
+          "label": "대기 상태·배터리·suspend 기록"
         }
       },
       {
@@ -7812,8 +7812,8 @@
       {
         "type": "shell",
         "params": {
-          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=",
-          "label": "대기 상태·배터리 기록"
+          "cmd": "dumpsys deviceidle | grep -E 'mState=|mLightState='; dumpsys battery | grep -E 'level|AC powered|USB powered'; dumpsys power | grep -m1 mWakefulness=; echo uptime=$(cut -d' ' -f1 /proc/uptime); for f in success fail failed_freeze failed_prepare failed_suspend failed_suspend_late failed_suspend_noirq failed_resume last_hw_sleep total_hw_sleep max_hw_sleep; do [ -r /sys/power/suspend_stats/$f ] && echo suspend_$f=$(cat /sys/power/suspend_stats/$f); done; [ -r /sys/power/suspend_stats/success ] || echo suspend_stats=unreadable",
+          "label": "대기 상태·배터리·suspend 기록"
         }
       },
       {

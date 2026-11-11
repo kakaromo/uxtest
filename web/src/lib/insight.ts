@@ -26,7 +26,10 @@ export function findings(row: Row, run: Run | undefined, all: Row[]): Finding[] 
 	const big = W >= R ? { k: 'Write', v: W, get: (o: Row) => o.writeMB.med } : { k: 'Read', v: R, get: (o: Row) => o.readMB.med };
 	const rk = rank(all, big.get, row);
 	const dir = wp >= 80 ? '거의 Write예요' : wp <= 20 ? '거의 Read예요' : 'Read와 Write가 섞여 있어요';
-	out.push({ stat: mb(big.v), text: `${big.k}가 전체 ${rk.n}개 중 ${rk.k}번째로 많아요. ${dir} (Write ${f(wp, 0)}%).` });
+	const where = row.variantOf
+		? `참고용 측정이라 순위에는 넣지 않았어요. 시나리오 ${rk.n}개 사이에 넣으면 ${big.k}가 ${rk.k}번째로 많은 수준이에요.`
+		: `${big.k}가 전체 ${rk.n}개 중 ${rk.k}번째로 많아요.`;
+	out.push({ stat: mb(big.v), text: `${where} ${dir} (Write ${f(wp, 0)}%).` });
 
 	// 2. 어느 Step에 몰렸나
 	if (run?.steps.length) {
